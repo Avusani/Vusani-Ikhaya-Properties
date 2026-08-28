@@ -1,15 +1,20 @@
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
-const PORT = Number(process.env.PORT || 3000);
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ===== CONFIGURATION =====
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "database");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 const sessions = new Set();
 
+// ===== DEFAULT DATABASE STRUCTURE =====
 const defaultDB = {
   rooms: { pending: [], approved: [], taken: [], declined: [], removed: [] },
   reviews: { pending: [], approved: [], declined: [] },
@@ -18,6 +23,12 @@ const defaultDB = {
   receipts: []
 };
 
+// ===== MIDDLEWARE =====
+app.use(cors());
+app.use(express.json({ limit: '80mb' }));
+app.use(express.static(ROOT));
+
+// ===== DATABASE HELPERS =====
 function normalizeSection(section, defaults) {
   const source = section && typeof section === "object" && !Array.isArray(section) ? section : {};
   return Object.fromEntries(
@@ -60,6 +71,7 @@ function writeDB(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(normalizeDB(db), null, 2));
 }
 
+// ===== HELPER FUNCTIONS =====
 function send(res, status, body, type = "application/json") {
   res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
   res.end(type === "application/json" ? JSON.stringify(body) : body);
@@ -80,79 +92,6 @@ function sendMedia(res, src) {
 
 function encodePart(value) {
   return encodeURIComponent(String(value || ""));
-}
-
-function publicRoom(room) {
-  return {
-    ...room,
-    images: (room.images || []).map((_, index) => `/api/room-media/${encodePart(room.id)}/image/${index}`),
-    video: room.video ? `/api/room-media/${encodePart(room.id)}/video` : ""
-  };
-}
-
-function publicTransport(driver) {
-  return {
-    id: driver.id,
-    firstName: driver.firstName,
-    surname: driver.surname,
-    carPicture: driver.carPicture ? `/api/transport-media/${encodePart(driver.id)}/carPicture` : "",
-    localPrice: driver.localPrice,
-    outsidePrice: driver.outsidePrice,
-    status: driver.status
-  };
-}
-
-function adminMediaURL(section, status, id, field, index, token) {
-  const base = `/api/admin/media/${encodePart(section)}/${encodePart(status)}/${encodePart(id)}/${encodePart(field)}`;
-  const suffix = field === "images" ? `/${index}` : "";
-  return `${base}${suffix}?token=${encodePart(token)}`;
-}
-
-function adminItem(item, section, status, token) {
-  const next = { ...item };
-  if (Array.isArray(next.images)) {
-    next.images = next.images.map((_, index) => adminMediaURL(section, status, next.id, "images", index, token));
-  }
-  if (next.video) next.video = adminMediaURL(section, status, next.id, "video", 0, token);
-  if (next.carPicture) next.carPicture = adminMediaURL(section, status, next.id, "carPicture", 0, token);
-  if (next.idPicture) next.idPicture = adminMediaURL(section, status, next.id, "idPicture", 0, token);
-  return next;
-}
-
-function adminSection(sectionName, section, token) {
-  return Object.fromEntries(
-    Object.entries(section).map(([status, list]) => [
-      status,
-      (Array.isArray(list) ? list : []).map((item) => adminItem(item, sectionName, status, token))
-    ])
-  );
-}
-
-function adminDB(db, token) {
-  return {
-    rooms: adminSection("rooms", db.rooms, token),
-    reviews: db.reviews,
-    reports: db.reports,
-    transports: adminSection("transports", db.transports, token),
-    receipts: db.receipts
-  };
-}
-
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk;
-      if (body.length > 80 * 1024 * 1024) reject(new Error("Request too large"));
-    });
-    req.on("end", () => {
-      try {
-        resolve(body ? JSON.parse(body) : {});
-      } catch {
-        reject(new Error("Invalid JSON"));
-      }
-    });
-  });
 }
 
 function cleanText(value, max = 600) {
@@ -209,17 +148,76 @@ function cleanReceipt(details) {
   };
 }
 
-function adminToken(req, url) {
-  return String(req.headers.authorization || "").replace(/^Bearer\s+/i, "") || String(url?.searchParams.get("token") || "");
+// ===== PUBLIC HELPERS =====
+function publicRoom(room) {
+  return {
+    ...room,
+    images: (room.images || []).map((_, index) => `/api/room-media/${encodePart(room.id)}/image/${index}`),
+    video: room.video ? `/api/room-media/${encodePart(room.id)}/video` : ""
+  };
 }
 
-function requireAdmin(req, res, url) {
-  const token = adminToken(req, url);
+function publicTransport(driver) {
+  return {
+    id: driver.id,
+    firstName: driver.firstName,
+    surname: driver.surname,
+    carPicture: driver.carPicture ? `/api/transport-media/${encodePart(driver.id)}/carPicture` : "",
+    localPrice: driver.localPrice,
+    outsidePrice: driver.outsidePrice,
+    status: driver.status
+  };
+}
+
+// ===== ADMIN HELPERS =====
+function adminToken(req) {
+  const auth = req.headers.authorization || "";
+  return auth.replace(/^Bearer\s+/i, "");
+}
+
+function requireAdmin(req, res) {
+  const token = adminToken(req);
   if (!token || !sessions.has(token)) {
-    send(res, 401, { error: "Admin login required" });
+    res.status(401).json({ error: "Admin login required" });
     return false;
   }
   return token;
+}
+
+function adminMediaURL(section, status, id, field, index, token) {
+  const base = `/api/admin/media/${encodePart(section)}/${encodePart(status)}/${encodePart(id)}/${encodePart(field)}`;
+  const suffix = field === "images" ? `/${index}` : "";
+  return `${base}${suffix}?token=${encodePart(token)}`;
+}
+
+function adminItem(item, section, status, token) {
+  const next = { ...item };
+  if (Array.isArray(next.images)) {
+    next.images = next.images.map((_, index) => adminMediaURL(section, status, next.id, "images", index, token));
+  }
+  if (next.video) next.video = adminMediaURL(section, status, next.id, "video", 0, token);
+  if (next.carPicture) next.carPicture = adminMediaURL(section, status, next.id, "carPicture", 0, token);
+  if (next.idPicture) next.idPicture = adminMediaURL(section, status, next.id, "idPicture", 0, token);
+  return next;
+}
+
+function adminSection(sectionName, section, token) {
+  return Object.fromEntries(
+    Object.entries(section).map(([status, list]) => [
+      status,
+      (Array.isArray(list) ? list : []).map((item) => adminItem(item, sectionName, status, token))
+    ])
+  );
+}
+
+function adminDB(db, token) {
+  return {
+    rooms: adminSection("rooms", db.rooms, token),
+    reviews: db.reviews,
+    reports: db.reports,
+    transports: adminSection("transports", db.transports, token),
+    receipts: db.receipts
+  };
 }
 
 function moveItem(db, section, from, to, id) {
@@ -236,231 +234,305 @@ function deleteItem(db, section, from, id) {
   db[section][from] = db[section][from].filter((entry) => entry.id !== id);
 }
 
-async function api(req, res, url) {
+// ===== API ROUTES =====
+
+// PUBLIC ROUTES
+app.get('/api/public', (req, res) => {
   const db = readDB();
+  res.json({
+    rooms: db.rooms.approved.map(publicRoom),
+    reviews: db.reviews.approved,
+    transports: db.transports.approved.map(publicTransport)
+  });
+});
 
-  if (req.method === "GET" && url.pathname.startsWith("/api/room-image/")) {
-    const [, , , id, indexText] = url.pathname.split("/");
-    const room = db.rooms.approved.find((entry) => entry.id === decodeURIComponent(id || ""));
-    const index = Math.max(0, Number(indexText) || 0);
-    return sendMedia(res, room?.images?.[index]);
+// Get all properties (public)
+app.get('/api/properties', (req, res) => {
+  const db = readDB();
+  res.json(db.rooms.approved || []);
+});
+
+// Get single property (public)
+app.get('/api/properties/:id', (req, res) => {
+  const db = readDB();
+  const property = db.rooms.approved.find(p => p.id === req.params.id);
+  if (property) {
+    res.json(property);
+  } else {
+    res.status(404).json({ error: 'Property not found' });
+  }
+});
+
+// Room media
+app.get('/api/room-media/:id/:kind', (req, res) => {
+  const db = readDB();
+  const room = db.rooms.approved.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
+  if (req.params.kind === "video") return sendMedia(res, room?.video);
+  return sendMedia(res, room?.images?.[0]);
+});
+
+app.get('/api/room-media/:id/image/:index', (req, res) => {
+  const db = readDB();
+  const room = db.rooms.approved.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
+  const index = Math.max(0, Number(req.params.index) || 0);
+  return sendMedia(res, room?.images?.[index]);
+});
+
+app.get('/api/room-media/:id/video', (req, res) => {
+  const db = readDB();
+  const room = db.rooms.approved.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
+  return sendMedia(res, room?.video);
+});
+
+// Transport media
+app.get('/api/transport-media/:id/carPicture', (req, res) => {
+  const db = readDB();
+  const driver = db.transports.approved.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
+  return sendMedia(res, driver?.carPicture);
+});
+
+// Submit room listing
+app.post('/api/rooms', async (req, res) => {
+  const db = readDB();
+  const body = req.body;
+  db.rooms.pending.unshift({
+    id: "post-" + Date.now(),
+    title: cleanText(body.title, 120),
+    location: cleanText(body.location, 80),
+    address: cleanText(body.address, 220),
+    type: cleanText(body.type, 40),
+    roomType: cleanText(body.roomType || "Any", 40),
+    amount: cleanText(body.amount, 40),
+    deposit: cleanText(body.deposit || "No deposit stated", 80),
+    childFriendly: cleanText(body.childFriendly, 10),
+    parking: cleanText(body.parking, 10),
+    bath: cleanText(body.bath, 120),
+    images: cleanImages(body.images),
+    video: cleanVideo(body.video),
+    posterName: cleanText(body.posterName, 100),
+    posterContact: cleanText(body.posterContact, 160),
+    notes: cleanText(body.notes, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true });
+});
+
+// Submit review
+app.post('/api/reviews', async (req, res) => {
+  const db = readDB();
+  const body = req.body;
+  db.reviews.pending.unshift({
+    id: "review-" + Date.now(),
+    roomId: cleanText(body.roomId, 80),
+    roomTitle: cleanText(body.roomTitle, 140),
+    name: cleanText(body.name, 100),
+    rating: Math.max(1, Math.min(5, Number(body.rating) || 5)),
+    comment: cleanText(body.comment, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true });
+});
+
+// Submit report
+app.post('/api/reports', async (req, res) => {
+  const db = readDB();
+  const body = req.body;
+  db.reports.pending.unshift({
+    id: "report-" + Date.now(),
+    room: cleanText(body.room, 180),
+    reporterContact: cleanText(body.reporterContact, 160),
+    reason: cleanText(body.reason, 1000),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true });
+});
+
+// Submit transport
+app.post('/api/transports', async (req, res) => {
+  const db = readDB();
+  const body = req.body;
+  db.transports.pending.unshift({
+    id: "transport-" + Date.now(),
+    firstName: cleanText(body.firstName, 100),
+    surname: cleanText(body.surname, 100),
+    phone: cleanText(body.phone, 80),
+    email: cleanText(body.email, 160),
+    carPicture: cleanImages([body.carPicture])[0] || "",
+    idPicture: cleanImages([body.idPicture])[0] || "",
+    localPrice: cleanText(body.localPrice, 80),
+    outsidePrice: cleanText(body.outsidePrice, 80),
+    notes: cleanText(body.notes, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true });
+});
+
+// Contact form
+app.post('/api/contact', async (req, res) => {
+  const db = readDB();
+  const body = req.body;
+  const message = {
+    id: Date.now(),
+    name: cleanText(body.name, 100),
+    email: cleanText(body.email, 160),
+    phone: cleanText(body.phone, 80),
+    message: cleanText(body.message, 1000),
+    date: new Date().toISOString()
+  };
+  db.contacts = db.contacts || [];
+  db.contacts.push(message);
+  writeDB(db);
+  res.status(201).json({ success: true, message: 'Message sent successfully!' });
+});
+
+// ===== ADMIN ROUTES =====
+
+// Admin login
+app.post('/api/admin/login', async (req, res) => {
+  const body = req.body;
+  if (body.password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Incorrect password" });
+  }
+  const token = crypto.randomBytes(24).toString("hex");
+  sessions.add(token);
+  res.json({ token });
+});
+
+// Admin data
+app.get('/api/admin/data', (req, res) => {
+  const token = requireAdmin(req, res);
+  if (!token) return;
+  const db = readDB();
+  res.json(adminDB(db, token));
+});
+
+// Admin media
+app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
+  const token = requireAdmin(req, res);
+  if (!token) return;
+  const db = readDB();
+  const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
+  const item = list.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
+  return sendMedia(res, item?.[decodeURIComponent(req.params.field || "")]);
+});
+
+app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
+  const token = requireAdmin(req, res);
+  if (!token) return;
+  const db = readDB();
+  const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
+  const item = list.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
+  const index = Math.max(0, Number(req.params.index) || 0);
+  return sendMedia(res, item?.images?.[index]);
+});
+
+// Admin actions
+app.post('/api/admin/action', async (req, res) => {
+  const token = requireAdmin(req, res);
+  if (!token) return;
+  
+  const db = readDB();
+  const body = req.body;
+
+  if (body.action === "move") {
+    moveItem(db, body.section, body.from, body.to, body.id);
   }
 
-  if (req.method === "GET" && url.pathname.startsWith("/api/room-media/")) {
-    const [, , , id, kind, indexText] = url.pathname.split("/");
-    const room = db.rooms.approved.find((entry) => entry.id === decodeURIComponent(id || ""));
-    if (kind === "video") return sendMedia(res, room?.video);
-    const index = Math.max(0, Number(indexText) || 0);
-    return sendMedia(res, room?.images?.[index]);
+  if (body.action === "mark-taken") {
+    const room = db.rooms.approved.find((entry) => entry.id === body.id);
+    if (room) {
+      const receipt = cleanReceipt({
+        ...(body.receipt || {}),
+        roomAddress: body.receipt?.roomAddress || room.address,
+        rentAmount: body.receipt?.rentAmount || room.amount,
+        depositAmount: body.receipt?.depositAmount || room.deposit
+      });
+      db.rooms.approved = db.rooms.approved.filter((entry) => entry.id !== body.id);
+      db.rooms.taken = db.rooms.taken.filter((entry) => entry.id !== body.id);
+      db.rooms.taken.unshift({ ...room, status: "taken", receipt, takenAt: new Date().toISOString() });
+      db.receipts.unshift({ ...receipt, roomId: room.id, manual: false });
+    }
   }
 
-  if (req.method === "GET" && url.pathname.startsWith("/api/transport-media/")) {
-    const [, , , id, field] = url.pathname.split("/");
-    const driver = db.transports.approved.find((entry) => entry.id === decodeURIComponent(id || ""));
-    return sendMedia(res, field === "carPicture" ? driver?.carPicture : "");
-  }
-
-  if (req.method === "GET" && url.pathname === "/api/public") {
-    send(res, 200, {
-      rooms: db.rooms.approved.map(publicRoom),
-      reviews: db.reviews.approved,
-      transports: db.transports.approved.map(publicTransport)
-    });
-    return;
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/rooms") {
-    const body = await readBody(req);
-    db.rooms.pending.unshift({
-      id: "post-" + Date.now(),
-      title: cleanText(body.title, 120),
-      location: cleanText(body.location, 80),
-      address: cleanText(body.address, 220),
-      type: cleanText(body.type, 40),
+  if (body.action === "manual-receipt") {
+    const receipt = cleanReceipt(body.receipt || {});
+    const manualRoom = {
+      id: `manual-${Date.now()}`,
+      title: cleanText(body.title || "Manual receipt", 120),
+      address: receipt.roomAddress,
+      type: cleanText(body.type || "Manual room", 40),
       roomType: cleanText(body.roomType || "Any", 40),
-      amount: cleanText(body.amount, 40),
-      deposit: cleanText(body.deposit || "No deposit stated", 80),
-      childFriendly: cleanText(body.childFriendly, 10),
-      parking: cleanText(body.parking, 10),
-      bath: cleanText(body.bath, 120),
-      images: cleanImages(body.images),
-      video: cleanVideo(body.video),
-      posterName: cleanText(body.posterName, 100),
-      posterContact: cleanText(body.posterContact, 160),
-      notes: cleanText(body.notes, 800),
-      status: "pending",
-      createdAt: new Date().toISOString()
-    });
-    writeDB(db);
-    send(res, 201, { ok: true });
-    return;
+      amount: receipt.rentAmount,
+      deposit: receipt.depositAmount,
+      images: [],
+      video: "",
+      status: "taken",
+      receipt,
+      manual: true,
+      takenAt: new Date().toISOString()
+    };
+    db.rooms.taken.unshift(manualRoom);
+    db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
   }
 
-  if (req.method === "POST" && url.pathname === "/api/reviews") {
-    const body = await readBody(req);
-    db.reviews.pending.unshift({
-      id: "review-" + Date.now(),
-      roomId: cleanText(body.roomId, 80),
-      roomTitle: cleanText(body.roomTitle, 140),
-      name: cleanText(body.name, 100),
-      rating: Math.max(1, Math.min(5, Number(body.rating) || 5)),
-      comment: cleanText(body.comment, 800),
-      status: "pending",
-      createdAt: new Date().toISOString()
-    });
-    writeDB(db);
-    send(res, 201, { ok: true });
-    return;
+  if (body.action === "delete") {
+    deleteItem(db, body.section, body.from, body.id);
   }
 
-  if (req.method === "POST" && url.pathname === "/api/reports") {
-    const body = await readBody(req);
-    db.reports.pending.unshift({
-      id: "report-" + Date.now(),
-      room: cleanText(body.room, 180),
-      reporterContact: cleanText(body.reporterContact, 160),
-      reason: cleanText(body.reason, 1000),
-      status: "pending",
-      createdAt: new Date().toISOString()
-    });
-    writeDB(db);
-    send(res, 201, { ok: true });
-    return;
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/transports") {
-    const body = await readBody(req);
-    db.transports.pending.unshift({
-      id: "transport-" + Date.now(),
-      firstName: cleanText(body.firstName, 100),
-      surname: cleanText(body.surname, 100),
-      phone: cleanText(body.phone, 80),
-      email: cleanText(body.email, 160),
-      carPicture: cleanImages([body.carPicture])[0] || "",
-      idPicture: cleanImages([body.idPicture])[0] || "",
-      localPrice: cleanText(body.localPrice, 80),
-      outsidePrice: cleanText(body.outsidePrice, 80),
-      notes: cleanText(body.notes, 800),
-      status: "pending",
-      createdAt: new Date().toISOString()
-    });
-    writeDB(db);
-    send(res, 201, { ok: true });
-    return;
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/admin/login") {
-    const body = await readBody(req);
-    if (body.password !== ADMIN_PASSWORD) return send(res, 401, { error: "Incorrect password" });
-    const token = crypto.randomBytes(24).toString("hex");
-    sessions.add(token);
-    send(res, 200, { token });
-    return;
-  }
-
-  if (url.pathname.startsWith("/api/admin/")) {
-    const token = requireAdmin(req, res, url);
-    if (!token) return;
-
-    if (req.method === "GET" && url.pathname.startsWith("/api/admin/media/")) {
-      const [, , , , section, status, id, field, indexText] = url.pathname.split("/");
-      const list = db[decodeURIComponent(section || "")]?.[decodeURIComponent(status || "")] || [];
-      const item = list.find((entry) => entry.id === decodeURIComponent(id || ""));
-      if (field === "images") return sendMedia(res, item?.images?.[Math.max(0, Number(indexText) || 0)]);
-      return sendMedia(res, item?.[decodeURIComponent(field || "")]);
+  if (body.action === "repost") {
+    const section = db[body.section];
+    const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
+    const item = fromList.find((entry) => entry.id === body.id);
+    if (item && Array.isArray(section.pending)) {
+      section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
     }
-
-    if (req.method === "GET" && url.pathname === "/api/admin/data") return send(res, 200, adminDB(db, token));
-
-    if (req.method === "POST" && url.pathname === "/api/admin/action") {
-      const body = await readBody(req);
-      if (body.action === "move") moveItem(db, body.section, body.from, body.to, body.id);
-      if (body.action === "mark-taken") {
-        const room = db.rooms.approved.find((entry) => entry.id === body.id);
-        if (room) {
-          const receipt = cleanReceipt({
-            ...(body.receipt || {}),
-            roomAddress: body.receipt?.roomAddress || room.address,
-            rentAmount: body.receipt?.rentAmount || room.amount,
-            depositAmount: body.receipt?.depositAmount || room.deposit
-          });
-          db.rooms.approved = db.rooms.approved.filter((entry) => entry.id !== body.id);
-          db.rooms.taken = db.rooms.taken.filter((entry) => entry.id !== body.id);
-          db.rooms.taken.unshift({ ...room, status: "taken", receipt, takenAt: new Date().toISOString() });
-          db.receipts.unshift({ ...receipt, roomId: room.id, manual: false });
-        }
-      }
-      if (body.action === "manual-receipt") {
-        const receipt = cleanReceipt(body.receipt || {});
-        const manualRoom = {
-          id: `manual-${Date.now()}`,
-          title: cleanText(body.title || "Manual receipt", 120),
-          address: receipt.roomAddress,
-          type: cleanText(body.type || "Manual room", 40),
-          roomType: cleanText(body.roomType || "Any", 40),
-          amount: receipt.rentAmount,
-          deposit: receipt.depositAmount,
-          images: [],
-          video: "",
-          status: "taken",
-          receipt,
-          manual: true,
-          takenAt: new Date().toISOString()
-        };
-        db.rooms.taken.unshift(manualRoom);
-        db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
-      }
-      if (body.action === "delete") deleteItem(db, body.section, body.from, body.id);
-      if (body.action === "repost") {
-        const section = db[body.section];
-        const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
-        const item = fromList.find((entry) => entry.id === body.id);
-        if (item && Array.isArray(section.pending)) {
-          section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
-        }
-      }
-      if (body.action === "remove-image") {
-        const section = db[body.section];
-        const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
-        const room = fromList.find((entry) => entry.id === body.id);
-        if (room) room.images = (room.images || []).filter((_, index) => index !== Number(body.index));
-      }
-      if (body.action === "remove-video") {
-        const section = db[body.section];
-        const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
-        const room = fromList.find((entry) => entry.id === body.id);
-        if (room) room.video = "";
-      }
-      writeDB(db);
-      send(res, 200, { ok: true });
-      return;
-    }
-
   }
 
-  send(res, 404, { error: "Not found" });
-}
-
-function serveFile(req, res, url) {
-  let pathname = decodeURIComponent(url.pathname);
-  if (pathname === "/") pathname = "/index.html";
-  const file = path.join(ROOT, path.normalize(pathname).replace(/^(\.\.[/\\])+/, ""));
-  if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-    send(res, 404, { error: "Not found" });
-    return;
+  if (body.action === "remove-image") {
+    const section = db[body.section];
+    const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
+    const room = fromList.find((entry) => entry.id === body.id);
+    if (room) room.images = (room.images || []).filter((_, index) => index !== Number(body.index));
   }
-  const ext = path.extname(file).toLowerCase();
-  const type = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".zip": "application/zip" }[ext] || "application/octet-stream";
-  send(res, 200, fs.readFileSync(file), type);
-}
 
-ensureDB();
-http.createServer(async (req, res) => {
-  try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.pathname.startsWith("/api/")) return await api(req, res, url);
-    serveFile(req, res, url);
-  } catch (error) {
-    send(res, 500, { error: error.message || "Server error" });
+  if (body.action === "remove-video") {
+    const section = db[body.section];
+    const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
+    const room = fromList.find((entry) => entry.id === body.id);
+    if (room) room.video = "";
   }
-}).listen(PORT, () => console.log(`VUSANI IKHAYA PROPERTIES running at http://localhost:${PORT}`));
+
+  writeDB(db);
+  res.json({ ok: true });
+});
+
+// ===== FRONTEND ROUTES =====
+app.get('/', (req, res) => {
+  res.sendFile(path.join(ROOT, 'index.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(ROOT, 'admin.html'));
+});
+
+// ===== FALLBACK =====
+app.get('*', (req, res) => {
+  res.sendFile(path.join(ROOT, 'index.html'));
+});
+
+// ===== START SERVER =====
+app.listen(PORT, () => {
+  console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
+  console.log(`📄 Frontend: http://localhost:${PORT}/`);
+  console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
+  console.log(`📡 API: http://localhost:${PORT}/api/properties`);
+  console.log(`🔒 Admin password: ${ADMIN_PASSWORD}`);
+});
