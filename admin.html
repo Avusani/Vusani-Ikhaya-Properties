@@ -640,12 +640,37 @@
     }
 
     function imageURL(value) {
-      const src = String(value || "");
-      if (src.startsWith("/api/")) return src;
-      if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(src)) {
-        return value;
-      }
-
+  const src = String(value || "");
+  
+  // If it's already a full data URL
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(src)) {
+    return src;
+  }
+  
+  // If it's an admin URL without token, add it
+  if (src.startsWith("/api/admin/")) {
+    const token = localStorage.getItem("adminToken") || "";
+    if (token && !src.includes("token=")) {
+      return src + (src.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token);
+    }
+    return src;
+  }
+  
+  // Public API URLs - just return as-is
+  if (src.startsWith("/api/")) return src;
+  
+  // External URLs
+  try {
+    const url = new URL(src, window.location.origin);
+    if (["http:", "https:"].includes(url.protocol)) {
+      return url.href;
+    }
+  } catch (e) {
+    // fall through to fallback
+  }
+  
+  return fallbackImage;
+}
       try {
         const url = new URL(src, window.location.origin);
         return ["http:", "https:"].includes(url.protocol) ? url.href : fallbackImage;
