@@ -723,7 +723,7 @@
   <div class="modal">
     <button class="close" onclick="closeEditRoomModal()">✕</button>
     <h3>✏️ Edit Room</h3>
-    <form id="editRoomForm">
+    <form id="editRoomForm" enctype="multipart/form-data">
       <input type="hidden" id="editRoomId">
       <input type="hidden" id="editRoomFrom">
       
@@ -751,7 +751,7 @@
       <textarea id="editRoomNotes"></textarea>
       
       <!-- Media Management -->
-      <label style="margin-top:16px;">📸 Media Management</label>
+      <label style="margin-top:16px;">📸 Media Management (Images & Videos)</label>
       <div class="media-manager">
         <div id="editMediaList" class="media-list"></div>
         <div class="add-media-area">
@@ -821,7 +821,7 @@
   let currentMediaIndex = 0;
   let editingRoomId = null;
   let editingRoomFrom = null;
-  let tempMediaFiles = [];
+  let tempUploadedFiles = []; // Store files to upload
 
   // ========================================
   // DOM REFS
@@ -983,6 +983,7 @@
 
     let html = '';
     rooms.forEach(room => {
+      // Get all media URLs - these should be actual URLs from the database
       const images = room.images || [];
       const videos = room.videos || [];
       const allMedia = [...images, ...videos];
@@ -991,7 +992,7 @@
       if (allMedia.length > 0) {
         const displayMedia = allMedia.slice(0, 4);
         mediaHtml = displayMedia.map((media, idx) => {
-          const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
+          const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i) || media.includes('video');
           if (isVideo) {
             return `<video src="${media}" class="media-item" onclick="openMediaViewer(${JSON.stringify(allMedia)}, ${idx})" muted></video>`;
           }
@@ -1185,7 +1186,6 @@
 
     editingRoomId = id;
     editingRoomFrom = from;
-    tempMediaFiles = [];
 
     document.getElementById('editRoomId').value = id;
     document.getElementById('editRoomFrom').value = from;
@@ -1218,7 +1218,7 @@
 
     let html = '';
     allMedia.forEach((media, idx) => {
-      const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
+      const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i) || media.includes('video');
       const typeLabel = isVideo ? '🎬 Video' : '🖼️ Image';
       
       html += `
@@ -1264,7 +1264,7 @@
       renderEditMedia(room);
       // Re-render the room list
       renderRoomTab(currentRoomTab);
-      showNotice('Media removed from preview', 'success');
+      showNotice('Media removed', 'success');
     }
   }
 
@@ -1287,6 +1287,7 @@
     }
 
     // Process each file
+    let addedCount = 0;
     Array.from(files).forEach(file => {
       // Check if it's an image or video
       const isVideo = file.type.startsWith('video/');
@@ -1309,6 +1310,7 @@
         if (!room.images) room.images = [];
         room.images.push(url);
       }
+      addedCount++;
     });
 
     // Update the room in allRooms
@@ -1319,7 +1321,7 @@
     
     renderEditMedia(room);
     renderRoomTab(currentRoomTab);
-    status.textContent = `✅ Added ${files.length} file(s) to preview`;
+    status.textContent = `✅ Added ${addedCount} file(s) to preview. Click Save to apply permanently.`;
     status.style.color = '#0f7a5f';
     fileInput.value = '';
   }
@@ -1343,6 +1345,11 @@
       return;
     }
 
+    // IMPORTANT: Keep the actual media URLs, not blob URLs
+    // Filter out blob URLs from the media arrays and keep only real URLs
+    const validImages = (room.images || []).filter(url => !url.startsWith('blob:'));
+    const validVideos = (room.videos || []).filter(url => !url.startsWith('blob:'));
+
     const updatedRoom = {
       title: document.getElementById('editRoomTitle').value,
       location: document.getElementById('editRoomLocation').value,
@@ -1352,9 +1359,19 @@
       posterName: document.getElementById('editRoomPosterName').value,
       posterContact: document.getElementById('editRoomPosterContact').value,
       notes: document.getElementById('editRoomNotes').value,
-      images: room.images || [],
-      videos: room.videos || []
+      images: validImages,
+      videos: validVideos,
+      // Keep the original media if no valid ones exist
+      _originalImages: room.images || [],
+      _originalVideos: room.videos || []
     };
+
+    // If no valid media but we have original media, use those
+    if (validImages.length === 0 && validVideos.length === 0) {
+      // Keep the original media if they exist
+      updatedRoom.images = room.images || [];
+      updatedRoom.videos = room.videos || [];
+    }
 
     try {
       // Delete old room
@@ -1372,7 +1389,7 @@
         })
       });
 
-      // Create updated room
+      // Create updated room with preserved media
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: {
@@ -1387,10 +1404,11 @@
         closeEditRoomModal();
         loadData();
       } else {
-        showNotice('Failed to update room', 'error');
+        const errorData = await res.json();
+        showNotice('Failed to update room: ' + (errorData.error || 'Unknown error'), 'error');
       }
     } catch (err) {
-      showNotice('Update failed', 'error');
+      showNotice('Update failed: ' + err.message, 'error');
     }
   });
 
@@ -1614,7 +1632,7 @@
     
     counter.textContent = `${currentMediaIndex + 1} / ${currentMediaList.length}`;
     
-    const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
+    const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i) || media.includes('video');
     if (isVideo) {
       content.innerHTML = `<video src="${media}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`;
     } else {
