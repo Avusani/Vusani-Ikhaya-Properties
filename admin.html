@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin | VUSANI IKHAYA PROPERTIES</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -19,11 +20,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .topbar a { color: #fff; text-decoration: none; }
     .brand { font-weight: 900; font-size: 20px; }
     .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
-    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+
+    /* Login */
     .login-box {
       max-width: 400px;
       margin: 60px auto;
@@ -56,20 +61,95 @@
     .error.show { display: block; }
     .panel { display: none; }
     .panel.show { display: block; }
-    .top-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-    .top-actions button {
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #cad8cf;
+      text-align: center;
+    }
+    .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
+    .stat-card .label { font-size: 12px; color: #637268; }
+
+    /* Tabs - Main */
+    .main-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #cad8cf;
+    }
+    .main-tabs button {
+      padding: 10px 20px;
+      border: 1px solid #cad8cf;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .main-tabs button.active {
+      background: #0f7a5f;
+      color: #fff;
+      border-color: #0f7a5f;
+    }
+    .main-tabs button .count {
+      background: #eef3ee;
+      padding: 1px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* Sub Tabs */
+    .sub-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #cad8cf;
+    }
+    .sub-tabs button {
       padding: 8px 16px;
       border: 1px solid #cad8cf;
       border-radius: 6px;
       background: #fff;
       cursor: pointer;
       font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
     }
-    .top-actions button.active {
+    .sub-tabs button.active {
       background: #0f7a5f;
       color: #fff;
       border-color: #0f7a5f;
     }
+    .sub-tabs button .count {
+      background: #eef3ee;
+      padding: 1px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* Room Card */
     .room-card {
       background: #fff;
       border-radius: 10px;
@@ -85,17 +165,30 @@
       grid-template-columns: 1fr 1fr;
       gap: 6px;
     }
-    .room-card .images img {
+    .room-card .images img,
+    .room-card .images video {
       width: 100%;
       height: 100px;
       object-fit: cover;
       border-radius: 6px;
       background: #eef3ee;
+      cursor: pointer;
     }
-    .room-card .info { display: grid; gap: 6px; }
+    .room-card .images .no-image {
+      background: #edf4ee;
+      height: 100px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #637268;
+      font-size: 12px;
+    }
+    .room-card .info { display: grid; gap: 4px; }
     .room-card .info .title { font-weight: 700; font-size: 18px; }
     .room-card .info .detail { font-size: 14px; color: #637268; }
-    .room-card .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .room-card .info .landlord { font-size: 13px; color: #0f7a5f; font-weight: 600; }
+    .room-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .room-card .actions button {
       padding: 5px 12px;
       border: 1px solid #cad8cf;
@@ -104,12 +197,29 @@
       cursor: pointer;
       font-size: 12px;
       font-weight: 600;
+      transition: all 0.2s;
     }
     .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
     .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
     .room-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
     .room-card .actions .repost { background: #e5a638; color: #fff; border-color: #e5a638; }
-    .empty { color: #637268; text-align: center; padding: 40px; }
+    .room-card .actions .taken { background: #1e40af; color: #fff; border-color: #1e40af; }
+    .room-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge.pending { background: #fef3c7; color: #92400e; }
+    .badge.approved { background: #d1fae5; color: #065f46; }
+    .badge.taken { background: #dbeafe; color: #1e40af; }
+    .badge.declined { background: #fee2e2; color: #991b1b; }
+    .badge.removed { background: #f3f4f6; color: #4b5563; }
+
+    .empty { color: #637268; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #cad8cf; }
+
     .notice {
       padding: 12px;
       border-radius: 8px;
@@ -120,21 +230,167 @@
     .notice.show { display: block; }
     .notice.success { background: #dbf4e9; color: #0d4c3a; }
     .notice.error { background: #fde5df; color: #7f2318; }
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    .badge.pending { background: #fef3c7; color: #92400e; }
-    .badge.approved { background: #d1fae5; color: #065f46; }
-    .badge.taken { background: #dbeafe; color: #1e40af; }
-    .badge.declined { background: #fee2e2; color: #991b1b; }
-    .badge.removed { background: #f3f4f6; color: #4b5563; }
-    @media (max-width: 600px) {
-      .room-card { grid-template-columns: 1fr; }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      position: relative;
+    }
+    .modal .close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #637268;
+      background: none;
+      border: none;
+    }
+    .modal h3 { margin-top: 0; }
+    .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
+    .modal input, .modal textarea, .modal select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cad8cf;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .modal textarea { min-height: 80px; resize: vertical; }
+    .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
+    .modal .btn-save:hover { background: #095741; }
+
+    /* Revenue / Stats Section */
+    .stats-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #cad8cf;
+    }
+    .stats-section .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stats-section .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .stats-section .filters select,
+    .stats-section .filters input {
+      padding: 8px 12px;
+      border: 1px solid #cad8cf;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stats-grid .stat-item {
+      background: #f8faf9;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stats-grid .stat-item .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
+    .stats-grid .stat-item .label { font-size: 12px; color: #637268; }
+    .chart-container { height: 300px; margin-top: 16px; }
+
+    /* Transport Card */
+    .transport-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #cad8cf;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 16px;
+    }
+    .transport-card .info { display: grid; gap: 4px; }
+    .transport-card .info .title { font-weight: 700; font-size: 18px; }
+    .transport-card .info .detail { font-size: 14px; color: #637268; }
+    .transport-card .info .driver { font-size: 13px; color: #0f7a5f; font-weight: 600; }
+    .transport-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .transport-card .actions button {
+      padding: 5px 12px;
+      border: 1px solid #cad8cf;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .transport-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .transport-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
+    .transport-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
+    .transport-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
+
+    /* Media Viewer */
+    .media-viewer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .media-viewer.show { display: flex; }
+    .media-viewer img, .media-viewer video {
+      max-width: 95vw;
+      max-height: 90vh;
+      border-radius: 8px;
+    }
+    .media-viewer .close {
+      position: fixed;
+      top: 20px;
+      right: 30px;
+      font-size: 40px;
+      color: #fff;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    /* Section toggle */
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+
+    @media (max-width: 700px) {
+      .room-card, .transport-card { grid-template-columns: 1fr; }
       .room-card .images { grid-template-columns: 1fr 1fr; }
+      .modal .form-row { grid-template-columns: 1fr; }
+      .stats-section .header { flex-direction: column; align-items: stretch; }
+      .topbar { flex-direction: column; align-items: stretch; text-align: center; }
     }
   </style>
 </head>
@@ -145,7 +401,11 @@
     VUSANI IKHAYA PROPERTIES
     <small>Trusted rooms. Real people. Real value.</small>
   </div>
-  <a href="/" style="color:rgba(255,255,255,0.7);">View Public Site</a>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <a href="/" target="_blank">🌐 View Public Site</a>
+    <span id="adminUser" style="color:rgba(255,255,255,0.6);font-size:13px;"></span>
+    <button onclick="logout()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);padding:4px 12px;border-radius:4px;cursor:pointer;">Logout</button>
+  </div>
 </div>
 
 <div class="container">
@@ -153,7 +413,7 @@
   <!-- LOGIN -->
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
-    <p style="color:#637268;font-size:14px;">Log in to approve new room posts, decline posts, remove public rooms, and repost removed rooms.</p>
+    <p style="color:#637268;font-size:14px;">Log in to manage room posts, transport listings, approve, decline, and track revenue.</p>
     <form id="loginForm">
       <div style="margin-bottom:16px;">
         <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
@@ -161,46 +421,160 @@
       </div>
       <div id="loginError" class="error"></div>
       <button type="submit">Log In</button>
-      <p style="font-size:12px;color:#637268;margin-top:12px;">Use the admin password provided by Vusani Ikhaya Properties.</p>
     </form>
   </div>
 
   <!-- ADMIN PANEL -->
   <div id="adminPanel" class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-      <h2 style="margin:0;">📋 Admin Dashboard</h2>
-      <div style="display:flex;gap:10px;">
-        <button onclick="refreshData()" style="padding:8px 16px;border:1px solid #cad8cf;border-radius:6px;background:#fff;cursor:pointer;font-weight:600;">🔄 Refresh</button>
-        <button onclick="logout()" style="padding:8px 16px;border:1px solid #b8493b;border-radius:6px;background:#b8493b;color:#fff;cursor:pointer;font-weight:600;">🚪 Log Out</button>
-      </div>
-    </div>
 
     <div id="notice" class="notice"></div>
 
-    <!-- TABS -->
-    <div class="top-actions">
-      <button class="active" data-tab="pending" onclick="switchTab('pending')">⏳ Pending (<span id="pendingCount">0</span>)</button>
-      <button data-tab="approved" onclick="switchTab('approved')">✅ Approved (<span id="approvedCount">0</span>)</button>
-      <button data-tab="taken" onclick="switchTab('taken')">📦 Taken (<span id="takenCount">0</span>)</button>
-      <button data-tab="declined" onclick="switchTab('declined')">❌ Declined (<span id="declinedCount">0</span>)</button>
-      <button data-tab="removed" onclick="switchTab('removed')">🗑️ Removed (<span id="removedCount">0</span>)</button>
+    <!-- STATS BAR -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
+      <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
+      <div class="stat-card"><div class="number" id="statTransportPending">0</div><div class="label">🚗 Transport Pending</div></div>
+      <div class="stat-card"><div class="number" id="statTransportApproved">0</div><div class="label">✅ Transport Approved</div></div>
+      <div class="stat-card"><div class="number" id="statRevenue">R0</div><div class="label">💰 Total Revenue</div></div>
     </div>
 
-    <div id="roomList"></div>
-  </div>
+    <!-- MAIN TABS: Rooms | Transport -->
+    <div class="main-tabs">
+      <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
+      <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
+    </div>
 
+    <!-- ROOMS SECTION -->
+    <div id="roomsSection" class="section-content active">
+      <!-- Revenue / Stats Section -->
+      <div class="stats-section">
+        <div class="header">
+          <h3 style="margin:0;">📊 Revenue & Statistics</h3>
+          <div class="filters">
+            <select id="monthFilter" onchange="updateStats()">
+              <option value="all">All Months</option>
+              <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+              <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+              <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+              <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+            </select>
+            <select id="yearFilter" onchange="updateStats()"></select>
+            <button onclick="updateStats()" style="padding:8px 16px;background:#0f7a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Update</button>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item"><div class="value" id="monthlyCount">0</div><div class="label">📦 Rooms Taken</div></div>
+          <div class="stat-item"><div class="value" id="monthlyRevenue">R0</div><div class="label">💰 Revenue</div></div>
+          <div class="stat-item"><div class="value" id="monthlyServiceFee">R0</div><div class="label">📊 Service Fees</div></div>
+          <div class="stat-item"><div class="value" id="monthlyDeposit">R0</div><div class="label">🏦 Deposits</div></div>
+        </div>
+        <div class="chart-container">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Room Sub Tabs -->
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchRoomTab('pending')">⏳ Pending <span class="count" id="countPending">0</span></button>
+        <button data-tab="approved" onclick="switchRoomTab('approved')">✅ Approved <span class="count" id="countApproved">0</span></button>
+        <button data-tab="taken" onclick="switchRoomTab('taken')">📦 Taken <span class="count" id="countTaken">0</span></button>
+        <button data-tab="declined" onclick="switchRoomTab('declined')">❌ Declined <span class="count" id="countDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchRoomTab('removed')">🗑️ Removed <span class="count" id="countRemoved">0</span></button>
+      </div>
+
+      <div id="roomList"></div>
+    </div>
+
+    <!-- TRANSPORT SECTION -->
+    <div id="transportSection" class="section-content">
+      <!-- Transport Sub Tabs -->
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
+        <button data-tab="approved" onclick="switchTransportTab('approved')">✅ Approved <span class="count" id="countTransportApproved">0</span></button>
+        <button data-tab="declined" onclick="switchTransportTab('declined')">❌ Declined <span class="count" id="countTransportDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchTransportTab('removed')">🗑️ Removed <span class="count" id="countTransportRemoved">0</span></button>
+      </div>
+
+      <div id="transportList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ROOM MODAL -->
+<div class="modal-overlay" id="editRoomModal">
+  <div class="modal">
+    <button class="close" onclick="closeEditRoomModal()">✕</button>
+    <h3>✏️ Edit Room</h3>
+    <form id="editRoomForm">
+      <input type="hidden" id="editRoomId">
+      <input type="hidden" id="editRoomFrom">
+      <label>Title</label>
+      <input type="text" id="editRoomTitle">
+      <label>Location</label>
+      <input type="text" id="editRoomLocation">
+      <label>Address</label>
+      <input type="text" id="editRoomAddress">
+      <div class="form-row">
+        <div><label>Amount (R)</label><input type="text" id="editRoomAmount"></div>
+        <div><label>Deposit (R)</label><input type="text" id="editRoomDeposit"></div>
+      </div>
+      <label>Landlord Name</label>
+      <input type="text" id="editRoomPosterName">
+      <label>Landlord Contact</label>
+      <input type="text" id="editRoomPosterContact">
+      <label>Notes</label>
+      <textarea id="editRoomNotes"></textarea>
+      <button type="submit" class="btn-save">💾 Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT TRANSPORT MODAL -->
+<div class="modal-overlay" id="editTransportModal">
+  <div class="modal">
+    <button class="close" onclick="closeEditTransportModal()">✕</button>
+    <h3>✏️ Edit Transport</h3>
+    <form id="editTransportForm">
+      <input type="hidden" id="editTransportId">
+      <input type="hidden" id="editTransportFrom">
+      <label>Title / Service</label>
+      <input type="text" id="editTransportTitle">
+      <label>Description</label>
+      <textarea id="editTransportDescription"></textarea>
+      <label>Location</label>
+      <input type="text" id="editTransportLocation">
+      <div class="form-row">
+        <div><label>Price (R)</label><input type="text" id="editTransportPrice"></div>
+        <div><label>Contact</label><input type="text" id="editTransportContact"></div>
+      </div>
+      <label>Driver Name</label>
+      <input type="text" id="editTransportDriverName">
+      <button type="submit" class="btn-save">💾 Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- MEDIA VIEWER -->
+<div class="media-viewer" id="mediaViewer">
+  <button class="close" onclick="closeMediaViewer()">✕</button>
+  <div id="mediaContent"></div>
 </div>
 
 <script>
   // ========================================
-  // SESSION KEY - DEFINED FIRST!
+  // CONFIGURATION
   // ========================================
   const SESSION_KEY = "adminSession";
   const ADMIN_PASSWORD = "Av98012@12";
 
-  let currentTab = 'pending';
+  let currentRoomTab = 'pending';
+  let currentTransportTab = 'pending';
+  let currentSection = 'rooms';
   let allRooms = { pending: [], approved: [], taken: [], declined: [], removed: [] };
+  let allTransport = { pending: [], approved: [], declined: [], removed: [] };
+  let allReceipts = [];
   let adminToken = null;
+  let revenueChart = null;
 
   // ========================================
   // DOM REFS
@@ -210,6 +584,7 @@
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
   const roomList = document.getElementById('roomList');
+  const transportList = document.getElementById('transportList');
   const notice = document.getElementById('notice');
 
   // ========================================
@@ -232,6 +607,7 @@
         adminToken = data.token;
         localStorage.setItem('adminToken', adminToken);
         sessionStorage.setItem(SESSION_KEY, 'yes');
+        document.getElementById('adminUser').textContent = '👤 Admin';
         showAdminPanel();
       } else {
         loginError.textContent = data.error || 'Invalid password';
@@ -264,61 +640,106 @@
         headers: { 'Authorization': 'Bearer ' + token }
       });
 
-      if (res.status === 401) {
-        logout();
-        return;
-      }
+      if (res.status === 401) { logout(); return; }
 
       const data = await res.json();
       if (data.rooms) {
         allRooms = data.rooms;
-        updateCounts();
-        renderRooms(currentTab);
       }
+      if (data.transport) {
+        allTransport = data.transport;
+      }
+      if (data.receipts) {
+        allReceipts = data.receipts || [];
+      }
+      updateAllCounts();
+      updateStats();
+      renderRoomTab(currentRoomTab);
+      renderTransportTab(currentTransportTab);
+      renderChart();
     } catch (err) {
       showNotice('Failed to load data', 'error');
     }
   }
 
   // ========================================
-  // RENDER ROOMS
+  // SECTION SWITCHING
   // ========================================
-  function renderRooms(tab) {
+  function switchSection(section) {
+    currentSection = section;
+    document.querySelectorAll('.main-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.section === section);
+    });
+    document.querySelectorAll('.section-content').forEach(el => {
+      el.classList.toggle('active', el.id === section + 'Section');
+    });
+    if (section === 'rooms') {
+      renderRoomTab(currentRoomTab);
+    } else {
+      renderTransportTab(currentTransportTab);
+    }
+  }
+
+  // ========================================
+  // ROOM FUNCTIONS
+  // ========================================
+  function switchRoomTab(tab) {
+    currentRoomTab = tab;
+    document.querySelectorAll('#roomsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderRoomTab(tab);
+  }
+
+  function renderRoomTab(tab) {
     const rooms = allRooms[tab] || [];
-    currentTab = tab;
+    currentRoomTab = tab;
 
     if (rooms.length === 0) {
-      roomList.innerHTML = `<div class="empty">No rooms in ${tab}</div>`;
+      roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`;
       return;
     }
 
     let html = '';
     rooms.forEach(room => {
       const images = room.images || [];
-      const imgHtml = images.length > 0
-        ? images.map(img => `<img src="${img}" alt="Room" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22100%22%3E%3Crect fill=%22%23edf4ee%22 width=%22200%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 fill=%22%23637268%22 font-size=%2214%22%3ENo image%3C/text%3E%3C/svg%3E'">`).join('')
-        : '<div style="background:#edf4ee;height:100px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#637268;font-size:12px;">No image</div>';
+      let imgHtml = '';
+      if (images.length > 0) {
+        imgHtml = images.slice(0, 4).map(img =>
+          `<img src="${img}" alt="Room" onclick="viewMedia('${img}','image')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22100%22%3E%3Crect fill=%22%23edf4ee%22 width=%22200%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 fill=%22%23637268%22 font-size=%2214%22%3ENo image%3C/text%3E%3C/svg%3E'">`
+        ).join('');
+        if (room.video) {
+          imgHtml += `<video src="${room.video}" onclick="viewMedia('${room.video}','video')" style="width:100%;height:100px;object-fit:cover;border-radius:6px;background:#eef3ee;cursor:pointer;"></video>`;
+        }
+      } else {
+        imgHtml = `<div class="no-image">📷 No media</div>`;
+      }
 
       const statusBadge = `<span class="badge ${tab}">${tab}</span>`;
+      const landlord = room.posterName ? `👤 ${room.posterName} ${room.posterContact ? '📞 '+room.posterContact : ''}` : '';
 
       html += `
         <div class="room-card">
           <div class="images">${imgHtml}</div>
           <div class="info">
             <div class="title">${room.title || 'Untitled'}</div>
-            <div class="detail">📍 ${room.location || 'No location'} | 💰 ${room.amount || 'Ask price'}</div>
-            <div class="detail">${statusBadge} ${room.address || ''}</div>
+            <div class="landlord">${landlord}</div>
+            <div class="detail">📍 ${room.location || 'No location'} | 💰 ${room.amount || 'Ask price'} | 🏠 ${room.type || 'Any'}</div>
+            <div class="detail">${statusBadge} ${room.address || ''} ${room.roomType ? '| 🛏️ '+room.roomType : ''}</div>
+            <div class="detail" style="font-size:12px;color:#637268;">📅 ${room.createdAt ? new Date(room.createdAt).toLocaleDateString() : ''}</div>
             <div class="actions">
               ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
               ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
               ${tab === 'approved' ? `<button class="decline" onclick="moveRoom('${room.id}','approved','declined')">❌ Decline</button>` : ''}
-              ${tab === 'approved' ? `<button onclick="moveRoom('${room.id}','approved','taken')">📦 Mark Taken</button>` : ''}
+              ${tab === 'approved' ? `<button class="taken" onclick="markTaken('${room.id}')">📦 Mark Taken</button>` : ''}
               ${tab === 'approved' ? `<button class="delete" onclick="deleteRoom('${room.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'taken' ? `<button class="repost" onclick="moveRoom('${room.id}','taken','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'taken' ? `<button class="delete" onclick="deleteRoom('${room.id}','taken')">🗑️ Delete</button>` : ''}
               ${tab === 'declined' ? `<button class="repost" onclick="moveRoom('${room.id}','declined','pending')">🔄 Repost</button>` : ''}
               ${tab === 'declined' ? `<button class="delete" onclick="deleteRoom('${room.id}','declined')">🗑️ Delete</button>` : ''}
-              ${tab === 'taken' ? `<button class="delete" onclick="deleteRoom('${room.id}','taken')">🗑️ Delete</button>` : ''}
               ${tab === 'removed' ? `<button class="repost" onclick="moveRoom('${room.id}','removed','pending')">🔄 Repost</button>` : ''}
               ${tab === 'removed' ? `<button class="delete" onclick="deleteRoom('${room.id}','removed')">🗑️ Delete</button>` : ''}
+              ${tab !== 'taken' ? `<button class="edit" onclick="openEditRoomModal('${room.id}','${tab}')">✏️ Edit</button>` : ''}
             </div>
           </div>
         </div>
@@ -329,7 +750,7 @@
   }
 
   // ========================================
-  // MOVE ROOM (Approve/Decline/Repost)
+  // MOVE ROOM
   // ========================================
   async function moveRoom(id, from, to) {
     const token = localStorage.getItem('adminToken');
@@ -360,6 +781,67 @@
     } catch (err) {
       showNotice('Action failed', 'error');
     }
+  }
+
+  // ========================================
+  // MARK TAKEN with Receipt
+  // ========================================
+  async function markTaken(id) {
+    const room = allRooms.approved.find(r => r.id === id);
+    if (!room) return;
+
+    const rentAmount = parseFloat(room.amount?.replace(/[^0-9.]/g, '') || 0);
+    const depositAmount = parseFloat(room.deposit?.replace(/[^0-9.]/g, '') || 0);
+    const serviceFee = calculateServiceFee(rentAmount);
+
+    const tenantName = prompt('📋 Enter tenant name:', '') || 'Unknown tenant';
+    if (tenantName === null) return;
+    const tenantNumber = prompt('📞 Enter tenant phone number:', '') || '';
+
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'mark-taken',
+          section: 'rooms',
+          id: id,
+          receipt: {
+            tenantName: tenantName,
+            tenantNumber: tenantNumber,
+            rentAmount: String(rentAmount),
+            depositAmount: String(depositAmount),
+            serviceFee: serviceFee,
+            date: new Date().toISOString().slice(0,10),
+            paymentType: 'Cash',
+            roomAddress: room.address
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showNotice(`📦 Room marked as TAKEN! Tenant: ${tenantName}`, 'success');
+        loadData();
+      } else {
+        showNotice(data.error || 'Failed to mark as taken', 'error');
+      }
+    } catch (err) {
+      showNotice('Action failed', 'error');
+    }
+  }
+
+  function calculateServiceFee(rent) {
+    if (rent >= 800 && rent <= 1500) return 200;
+    if (rent >= 1600 && rent <= 2000) return 250;
+    if (rent >= 2100 && rent <= 3000) return 300;
+    if (rent >= 3100 && rent <= 5000) return 400;
+    return 0;
   }
 
   // ========================================
@@ -398,97 +880,460 @@
   }
 
   // ========================================
-  // SWITCH TAB
+  // EDIT ROOM
   // ========================================
-  function switchTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.top-actions button').forEach(btn => {
+  function openEditRoomModal(id, from) {
+    const room = allRooms[from]?.find(r => r.id === id);
+    if (!room) return;
+
+    document.getElementById('editRoomId').value = id;
+    document.getElementById('editRoomFrom').value = from;
+    document.getElementById('editRoomTitle').value = room.title || '';
+    document.getElementById('editRoomLocation').value = room.location || '';
+    document.getElementById('editRoomAddress').value = room.address || '';
+    document.getElementById('editRoomAmount').value = room.amount || '';
+    document.getElementById('editRoomDeposit').value = room.deposit || '';
+    document.getElementById('editRoomPosterName').value = room.posterName || '';
+    document.getElementById('editRoomPosterContact').value = room.posterContact || '';
+    document.getElementById('editRoomNotes').value = room.notes || '';
+
+    document.getElementById('editRoomModal').classList.add('show');
+  }
+
+  function closeEditRoomModal() {
+    document.getElementById('editRoomModal').classList.remove('show');
+  }
+
+  document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editRoomId').value;
+    const from = document.getElementById('editRoomFrom').value;
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    const updatedRoom = {
+      title: document.getElementById('editRoomTitle').value,
+      location: document.getElementById('editRoomLocation').value,
+      address: document.getElementById('editRoomAddress').value,
+      amount: document.getElementById('editRoomAmount').value,
+      deposit: document.getElementById('editRoomDeposit').value,
+      posterName: document.getElementById('editRoomPosterName').value,
+      posterContact: document.getElementById('editRoomPosterContact').value,
+      notes: document.getElementById('editRoomNotes').value
+    };
+
+    try {
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          section: 'rooms',
+          from: from,
+          id: id
+        })
+      });
+
+      const res = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(updatedRoom)
+      });
+
+      if (res.ok) {
+        showNotice('✅ Room updated successfully!', 'success');
+        closeEditRoomModal();
+        loadData();
+      } else {
+        showNotice('Failed to update room', 'error');
+      }
+    } catch (err) {
+      showNotice('Update failed', 'error');
+    }
+  });
+
+  // ========================================
+  // TRANSPORT FUNCTIONS
+  // ========================================
+  function switchTransportTab(tab) {
+    currentTransportTab = tab;
+    document.querySelectorAll('#transportSection .sub-tabs button').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    renderRooms(tab);
+    renderTransportTab(tab);
+  }
+
+  function renderTransportTab(tab) {
+    const transports = allTransport[tab] || [];
+    currentTransportTab = tab;
+
+    if (transports.length === 0) {
+      transportList.innerHTML = `<div class="empty">🚗 No transport listings in "${tab}"</div>`;
+      return;
+    }
+
+    let html = '';
+    transports.forEach(transport => {
+      const statusBadge = `<span class="badge ${tab}">${tab}</span>`;
+      const driver = transport.driverName ? `👤 ${transport.driverName} ${transport.contact ? '📞 '+transport.contact : ''}` : '';
+
+      html += `
+        <div class="transport-card">
+          <div class="images">
+            ${transport.images && transport.images.length > 0 ? 
+              transport.images.slice(0, 2).map(img =>
+                `<img src="${img}" alt="Transport" onclick="viewMedia('${img}','image')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22100%22%3E%3Crect fill=%22%23edf4ee%22 width=%22200%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 fill=%22%23637268%22 font-size=%2214%22%3ENo image%3C/text%3E%3C/svg%3E'">`
+              ).join('') :
+              `<div class="no-image">🚗 No image</div>`
+            }
+          </div>
+          <div class="info">
+            <div class="title">${transport.title || 'Untitled Transport'}</div>
+            <div class="driver">${driver}</div>
+            <div class="detail">📍 ${transport.location || 'No location'} | 💰 ${transport.price || 'Ask price'}</div>
+            <div class="detail">${statusBadge} ${transport.description || ''}</div>
+            <div class="detail" style="font-size:12px;color:#637268;">📅 ${transport.createdAt ? new Date(transport.createdAt).toLocaleDateString() : ''}</div>
+            <div class="actions">
+              ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${transport.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${transport.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="delete" onclick="deleteTransport('${transport.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'declined' ? `<button class="repost" onclick="moveTransport('${transport.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'declined' ? `<button class="delete" onclick="deleteTransport('${transport.id}','declined')">🗑️ Delete</button>` : ''}
+              ${tab === 'removed' ? `<button class="repost" onclick="moveTransport('${transport.id}','removed','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'removed' ? `<button class="delete" onclick="deleteTransport('${transport.id}','removed')">🗑️ Delete</button>` : ''}
+              ${tab !== 'taken' ? `<button class="edit" onclick="openEditTransportModal('${transport.id}','${tab}')">✏️ Edit</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    transportList.innerHTML = html;
+  }
+
+  // ========================================
+  // MOVE TRANSPORT
+  // ========================================
+  async function moveTransport(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'move',
+          section: 'transport',
+          from: from,
+          to: to,
+          id: id
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showNotice(`✅ Transport moved to ${to}`, 'success');
+        loadData();
+      } else {
+        showNotice(data.error || 'Action failed', 'error');
+      }
+    } catch (err) {
+      showNotice('Action failed', 'error');
+    }
+  }
+
+  // ========================================
+  // DELETE TRANSPORT
+  // ========================================
+  async function deleteTransport(id, from) {
+    if (!confirm('⚠️ Delete this transport listing permanently?')) return;
+
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          section: 'transport',
+          from: from,
+          id: id
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showNotice('🗑️ Transport deleted', 'success');
+        loadData();
+      } else {
+        showNotice(data.error || 'Delete failed', 'error');
+      }
+    } catch (err) {
+      showNotice('Delete failed', 'error');
+    }
+  }
+
+  // ========================================
+  // EDIT TRANSPORT
+  // ========================================
+  function openEditTransportModal(id, from) {
+    const transport = allTransport[from]?.find(t => t.id === id);
+    if (!transport) return;
+
+    document.getElementById('editTransportId').value = id;
+    document.getElementById('editTransportFrom').value = from;
+    document.getElementById('editTransportTitle').value = transport.title || '';
+    document.getElementById('editTransportDescription').value = transport.description || '';
+    document.getElementById('editTransportLocation').value = transport.location || '';
+    document.getElementById('editTransportPrice').value = transport.price || '';
+    document.getElementById('editTransportContact').value = transport.contact || '';
+    document.getElementById('editTransportDriverName').value = transport.driverName || '';
+
+    document.getElementById('editTransportModal').classList.add('show');
+  }
+
+  function closeEditTransportModal() {
+    document.getElementById('editTransportModal').classList.remove('show');
+  }
+
+  document.getElementById('editTransportForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editTransportId').value;
+    const from = document.getElementById('editTransportFrom').value;
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    const updatedTransport = {
+      title: document.getElementById('editTransportTitle').value,
+      description: document.getElementById('editTransportDescription').value,
+      location: document.getElementById('editTransportLocation').value,
+      price: document.getElementById('editTransportPrice').value,
+      contact: document.getElementById('editTransportContact').value,
+      driverName: document.getElementById('editTransportDriverName').value
+    };
+
+    try {
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          section: 'transport',
+          from: from,
+          id: id
+        })
+      });
+
+      const res = await fetch('/api/transport', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(updatedTransport)
+      });
+
+      if (res.ok) {
+        showNotice('✅ Transport updated successfully!', 'success');
+        closeEditTransportModal();
+        loadData();
+      } else {
+        showNotice('Failed to update transport', 'error');
+      }
+    } catch (err) {
+      showNotice('Update failed', 'error');
+    }
+  });
+
+  // ========================================
+  // MEDIA VIEWER
+  // ========================================
+  function viewMedia(src, type) {
+    const viewer = document.getElementById('mediaViewer');
+    const content = document.getElementById('mediaContent');
+    if (type === 'video') {
+      content.innerHTML = `<video src="${src}" controls autoplay style="max-width:95vw;max-height:90vh;"></video>`;
+    } else {
+      content.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:90vh;">`;
+    }
+    viewer.classList.add('show');
+  }
+
+  function closeMediaViewer() {
+    document.getElementById('mediaViewer').classList.remove('show');
+    document.getElementById('mediaContent').innerHTML = '';
   }
 
   // ========================================
   // UPDATE COUNTS
   // ========================================
-  function updateCounts() {
-    ['pending', 'approved', 'taken', 'declined', 'removed'].forEach(tab => {
-      const el = document.getElementById(tab + 'Count');
-      if (el) el.textContent = (allRooms[tab] || []).length;
+  function updateAllCounts() {
+    // Rooms
+    document.getElementById('countPending').textContent = (allRooms.pending || []).length;
+    document.getElementById('countApproved').textContent = (allRooms.approved || []).length;
+    document.getElementById('countTaken').textContent = (allRooms.taken || []).length;
+    document.getElementById('countDeclined').textContent = (allRooms.declined || []).length;
+    document.getElementById('countRemoved').textContent = (allRooms.removed || []).length;
+    
+    document.getElementById('statRoomsPending').textContent = (allRooms.pending || []).length;
+    document.getElementById('statRoomsApproved').textContent = (allRooms.approved || []).length;
+    
+    document.getElementById('mainRoomsCount').textContent = 
+      (allRooms.pending || []).length + (allRooms.approved || []).length + 
+      (allRooms.taken || []).length + (allRooms.declined || []).length + 
+      (allRooms.removed || []).length;
+
+    // Transport
+    document.getElementById('countTransportPending').textContent = (allTransport.pending || []).length;
+    document.getElementById('countTransportApproved').textContent = (allTransport.approved || []).length;
+    document.getElementById('countTransportDeclined').textContent = (allTransport.declined || []).length;
+    document.getElementById('countTransportRemoved').textContent = (allTransport.removed || []).length;
+    
+    document.getElementById('statTransportPending').textContent = (allTransport.pending || []).length;
+    document.getElementById('statTransportApproved').textContent = (allTransport.approved || []).length;
+    
+    document.getElementById('mainTransportCount').textContent = 
+      (allTransport.pending || []).length + (allTransport.approved || []).length + 
+      (allTransport.declined || []).length + (allTransport.removed || []).length;
+  }
+
+  // ========================================
+  // UPDATE STATS
+  // ========================================
+  function updateStats() {
+    const month = document.getElementById('monthFilter').value;
+    const year = parseInt(document.getElementById('yearFilter').value);
+    
+    let filteredReceipts = allReceipts;
+    if (month !== 'all') {
+      filteredReceipts = filteredReceipts.filter(r => {
+        const d = new Date(r.date);
+        return d.getMonth() === parseInt(month);
+      });
+    }
+    if (year !== 'all' && !isNaN(year)) {
+      filteredReceipts = filteredReceipts.filter(r => {
+        const d = new Date(r.date);
+        return d.getFullYear() === year;
+      });
+    }
+    
+    const totalRevenue = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.rentAmount || 0), 0);
+    const totalServiceFee = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
+    const totalDeposit = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.depositAmount || 0), 0);
+    
+    document.getElementById('monthlyCount').textContent = filteredReceipts.length;
+    document.getElementById('monthlyRevenue').textContent = 'R' + totalRevenue.toFixed(2);
+    document.getElementById('monthlyServiceFee').textContent = 'R' + totalServiceFee.toFixed(2);
+    document.getElementById('monthlyDeposit').textContent = 'R' + totalDeposit.toFixed(2);
+    
+    const totalAll = allReceipts.reduce((sum, r) => sum + parseFloat(r.rentAmount || 0), 0);
+    document.getElementById('statRevenue').textContent = 'R' + totalAll.toFixed(2);
+  }
+
+  // ========================================
+  // RENDER CHART
+  // ========================================
+  function renderChart() {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    if (revenueChart) revenueChart.destroy();
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyData = months.map((_, i) => {
+      return allReceipts.filter(r => new Date(r.date).getMonth() === i)
+        .reduce((sum, r) => sum + parseFloat(r.rentAmount || 0), 0);
     });
-  }
-
-  // ========================================
-  // REFRESH DATA
-  // ========================================
-  function refreshData() {
-    loadData();
-    showNotice('🔄 Refreshed', 'success');
-  }
-
-  // ========================================
-  // SHOW NOTICE
-  // ========================================
-  function showNotice(msg, type = 'success') {
-    notice.textContent = msg;
-    notice.className = 'notice show ' + type;
-    setTimeout(() => notice.classList.remove('show'), 4000);
+    
+    revenueChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Revenue (R)',
+          data: monthlyData,
+          backgroundColor: '#0f7a5f',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return 'R' + value.toFixed(0);
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   // ========================================
   // LOGOUT
   // ========================================
   function logout() {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      fetch('/api/admin/logout', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token }
-      }).catch(() => {});
-    }
     localStorage.removeItem('adminToken');
     sessionStorage.removeItem(SESSION_KEY);
-    adminToken = null;
-    loginScreen.style.display = 'block';
-    adminPanel.classList.remove('show');
-    document.getElementById('adminPassword').value = '';
+    location.reload();
   }
+
+  // ========================================
+  // SHOW NOTICE
+  // ========================================
+  function showNotice(message, type) {
+    notice.textContent = message;
+    notice.className = 'notice show ' + type;
+    setTimeout(() => {
+      notice.classList.remove('show');
+    }, 4000);
+  }
+
+  // ========================================
+  // POPULATE YEAR FILTER
+  // ========================================
+  (function populateYears() {
+    const yearSelect = document.getElementById('yearFilter');
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+    for (let y = currentYear; y >= currentYear - 5; y--) {
+      yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+    }
+  })();
 
   // ========================================
   // CHECK SESSION ON LOAD
   // ========================================
-  if (sessionStorage.getItem(SESSION_KEY) === 'yes') {
+  (function init() {
     const token = localStorage.getItem('adminToken');
-    if (token) {
+    if (token && sessionStorage.getItem(SESSION_KEY)) {
       adminToken = token;
+      document.getElementById('adminUser').textContent = '👤 Admin';
       showAdminPanel();
-    } else {
-      sessionStorage.removeItem(SESSION_KEY);
     }
-  }
-
-  // ========================================
-  // CHECK SESSION ON FOCUS
-  // ========================================
-  window.addEventListener('focus', () => {
-    if (sessionStorage.getItem(SESSION_KEY) === 'yes') {
-      const token = localStorage.getItem('adminToken');
-      if (token) {
-        fetch('/api/admin/check-session', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        })
-        .then(r => r.json())
-        .then(data => {
-          if (!data.valid) logout();
-        })
-        .catch(() => {});
-      }
-    }
-  });
-
-  console.log('✅ Admin panel loaded');
-  console.log('🔑 Password: ' + ADMIN_PASSWORD);
+  })();
 </script>
-
 </body>
 </html>
