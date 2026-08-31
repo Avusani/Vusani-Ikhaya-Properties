@@ -247,11 +247,17 @@ function publicTransport(driver) {
     status: driver.status
   };
 }
-
 // ===== ADMIN HELPERS =====
 function adminToken(req) {
   const auth = req.headers.authorization || "";
-  return auth.replace(/^Bearer\s+/i, "");
+  const headerToken = auth.replace(/^Bearer\s+/i, "");
+  
+  // FIX: Also check for token in the URL query string (required for <img> tags to load securely)
+  if (req.query && req.query.token) {
+    return req.query.token;
+  }
+  
+  return headerToken;
 }
 
 function requireAdmin(req, res) {
@@ -318,6 +324,7 @@ function deleteItem(db, section, from, id) {
   if (!db[section] || !Array.isArray(db[section][from])) return;
   db[section][from] = db[section][from].filter((entry) => entry.id !== id);
 }
+
 
 // ===== PUBLIC API ROUTES =====
 app.get('/api/public', (req, res) => {
