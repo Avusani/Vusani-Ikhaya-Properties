@@ -5,14 +5,16 @@ const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // ===== CONFIGURATION =====
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
+const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, "database");
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "database");
 const DB_FILE = path.join(DATA_DIR, "db.json");
-const sessions = new Set();
+const sessions = new Map(); // Use Map for better session management
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
 
 // ===== DEFAULT DATABASE STRUCTURE =====
 const defaultDB = {
@@ -20,7 +22,8 @@ const defaultDB = {
   reviews: { pending: [], approved: [], declined: [] },
   reports: { pending: [], approved: [], declined: [] },
   transports: { pending: [], approved: [], declined: [], removed: [] },
-  receipts: []
+  receipts: [],
+  contacts: []
 };
 
 // ===== MIDDLEWARE =====
@@ -46,29 +49,117 @@ function normalizeDB(db) {
   db.reports = normalizeSection(db.reports, defaultDB.reports);
   db.transports = normalizeSection(db.transports, defaultDB.transports);
   db.receipts = Array.isArray(db.receipts) ? db.receipts : [];
+  db.contacts = Array.isArray(db.contacts) ? db.contacts : [];
   return db;
 }
 
 function ensureDB() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DB_FILE)) writeDB(defaultDB);
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.log('📁 Database directory created');
+  }
+  if (!fs.existsSync(DB_FILE)) {
+    writeDB(defaultDB);
+    console.log('📁 New database created');
+  }
 }
 
 function readDB() {
   ensureDB();
-  let parsed;
   try {
     const raw = fs.readFileSync(DB_FILE, "utf8").replace(/^\uFEFF/, "");
-    parsed = raw.trim() ? JSON.parse(raw) : defaultDB;
-  } catch {
-    parsed = defaultDB;
+    const parsed = raw.trim() ? JSON.parse(raw) : defaultDB;
+    return normalizeDB(parsed);
+  } catch (error) {
+    console.error('❌ Failed to read database:', error.message);
+    // Try to restore from backup
+    const restored = restoreFromBackup();
+    if (restored) {
+      return readDB();
+    }
+    return defaultDB;
   }
-  return normalizeDB(parsed);
 }
 
 function writeDB(db) {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(DB_FILE, JSON.stringify(normalizeDB(db), null, 2));
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    
+    // Create backup before writing
+    backupDB();
+    
+    // Write to temp file first (atomic write - prevents corruption)
+    const tempFile = DB_FILE + '.tmp';
+    const data = JSON.stringify(normalizeDB(db), null, 2);
+    fs.writeFileSync(tempFile, data);
+    fs.renameSync(tempFile, DB_FILE);
+    
+    console.log('💾 Database saved successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to write database:', error.message);
+    return false;
+  }
+}
+
+// ===== DATABASE BACKUP FUNCTIONS =====
+function backupDB() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const backupFile = path.join(DATA_DIR, `db.backup.${Date.now()}.json`);
+      fs.copyFileSync(DB_FILE, backupFile);
+      console.log(`💾 Backup created: ${path.basename(backupFile)}`);
+      
+      // Keep only last 5 backups
+      const backups = fs.readdirSync(DATA_DIR)
+        .filter(f => f.startsWith('db.backup.'))
+        .sort();
+      
+      while (backups.length > 5) {
+        const oldBackup = backups.shift();
+        fs.unlinkSync(path.join(DATA_DIR, oldBackup));
+        console.log(`🗑️ Removed old backup: ${oldBackup}`);
+      }
+    }
+  } catch (error) {
+    console.log('⚠️ Backup failed:', error.message);
+  }
+}
+
+function restoreFromBackup() {
+  try {
+    const backups = fs.readdirSync(DATA_DIR)
+      .filter(f => f.startsWith('db.backup.'))
+      .sort();
+    
+    if (backups.length === 0) {
+      console.log('⚠️ No backups found');
+      return false;
+    }
+    
+    const latestBackup = backups[backups.length - 1];
+    const backupPath = path.join(DATA_DIR, latestBackup);
+    const data = fs.readFileSync(backupPath, 'utf8');
+    const parsed = JSON.parse(data);
+    
+    fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2));
+    console.log(`✅ Restored from backup: ${latestBackup}`);
+    return true;
+  } catch (error) {
+    console.log('⚠️ Restore failed:', error.message);
+    return false;
+  }
+}
+
+function clearAllData() {
+  console.log('⚠️ WARNING: Clearing all data!');
+  // Create backup before clearing
+  backupDB();
+  writeDB(defaultDB);
+  console.log('🗑️ All data cleared');
+  return true;
 }
 
 // ===== HELPER FUNCTIONS =====
@@ -177,10 +268,21 @@ function adminToken(req) {
 
 function requireAdmin(req, res) {
   const token = adminToken(req);
+  
+  // Check if token exists and is valid
   if (!token || !sessions.has(token)) {
     res.status(401).json({ error: "Admin login required" });
     return false;
   }
+  
+  // Check if session expired
+  const sessionData = sessions.get(token);
+  if (sessionData && Date.now() - sessionData.created > SESSION_TIMEOUT) {
+    sessions.delete(token);
+    res.status(401).json({ error: "Session expired, please login again" });
+    return false;
+  }
+  
   return token;
 }
 
@@ -234,9 +336,9 @@ function deleteItem(db, section, from, id) {
   db[section][from] = db[section][from].filter((entry) => entry.id !== id);
 }
 
-// ===== API ROUTES =====
+// ===== PUBLIC API ROUTES =====
 
-// PUBLIC ROUTES
+// Get public data
 app.get('/api/public', (req, res) => {
   const db = readDB();
   res.json({
@@ -316,7 +418,7 @@ app.post('/api/rooms', async (req, res) => {
     createdAt: new Date().toISOString()
   });
   writeDB(db);
-  res.status(201).json({ ok: true });
+  res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
 });
 
 // Submit review
@@ -393,17 +495,49 @@ app.post('/api/contact', async (req, res) => {
   res.status(201).json({ success: true, message: 'Message sent successfully!' });
 });
 
-// ===== ADMIN ROUTES =====
+// ===== ADMIN API ROUTES =====
 
 // Admin login
 app.post('/api/admin/login', async (req, res) => {
   const body = req.body;
+  
+  // Check password
   if (body.password !== ADMIN_PASSWORD) {
     return res.status(401).json({ error: "Incorrect password" });
   }
-  const token = crypto.randomBytes(24).toString("hex");
-  sessions.add(token);
-  res.json({ token });
+  
+  // Generate token
+  const token = crypto.randomBytes(32).toString('hex');
+  
+  // Store session with timestamp
+  sessions.set(token, {
+    created: Date.now(),
+    expires: Date.now() + SESSION_TIMEOUT
+  });
+  
+  console.log('✅ Admin logged in successfully');
+  
+  res.json({ 
+    token: token,
+    success: true 
+  });
+});
+
+// Admin logout
+app.post('/api/admin/logout', (req, res) => {
+  const token = adminToken(req);
+  if (token && sessions.has(token)) {
+    sessions.delete(token);
+    console.log('👋 Admin logged out');
+  }
+  res.json({ success: true });
+});
+
+// Check session
+app.get('/api/admin/check-session', (req, res) => {
+  const token = adminToken(req);
+  const valid = token && sessions.has(token);
+  res.json({ valid: valid });
 });
 
 // Admin data
@@ -510,6 +644,11 @@ app.post('/api/admin/action', async (req, res) => {
     if (room) room.video = "";
   }
 
+  // Clear all data (admin only - DANGEROUS)
+  if (body.action === "clear-all-data") {
+    clearAllData();
+  }
+
   writeDB(db);
   res.json({ ok: true });
 });
@@ -523,16 +662,22 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(ROOT, 'admin.html'));
 });
 
+app.get('/transport', (req, res) => {
+  res.sendFile(path.join(ROOT, 'transport.html'));
+});
+
 // ===== FALLBACK =====
 app.get('*', (req, res) => {
   res.sendFile(path.join(ROOT, 'index.html'));
 });
 
 // ===== START SERVER =====
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
   console.log(`📄 Frontend: http://localhost:${PORT}/`);
   console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
   console.log(`📡 API: http://localhost:${PORT}/api/properties`);
   console.log(`🔒 Admin password: ${ADMIN_PASSWORD}`);
+  console.log(`💾 Database: ${DB_FILE}`);
+  console.log(`📁 Data directory: ${DATA_DIR}`);
 });
