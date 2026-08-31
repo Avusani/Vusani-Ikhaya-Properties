@@ -3,10 +3,8 @@
   window.liveAdminBackendConnected = false;
 
   const TOKEN_KEY = "alexandra-admin-token";
-  const SESSION_KEY = "adminSession"; // Added missing constant
-  const ADMIN_PASSWORD = "Av98012@12"; // Your admin password
-  const APPROVED_KEY = "alexandra-room-approved";
-  const TAKEN_KEY = "alexandra-room-taken";
+  const SESSION_KEY = "adminSession"; 
+  // SECURITY FIX: Removed the hardcoded password. It is safely checked on the server only.
 
   const viewMap = {
     pending: ["rooms", "pending"],
@@ -139,11 +137,15 @@
     } catch {
       data = {};
     }
+    
+    // SECURITY FIX: If session expires, force logout instead of auto-logging in with a hardcoded password
     if (!response.ok) {
       const message = data.error || "Request failed";
       if (response.status === 401 && retryOnLogin && path !== "/api/admin/login") {
-        await loginWithPassword(ADMIN_PASSWORD);
-        return api(path, options, false);
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(SESSION_KEY);
+        if (typeof renderAuth === "function") renderAuth();
+        throw new Error("Session expired. Please log in again.");
       }
       throw new Error(message);
     }
