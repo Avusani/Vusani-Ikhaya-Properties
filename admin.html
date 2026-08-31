@@ -1536,20 +1536,43 @@
           if (action === "remove-video") await emergencyAction({ action: "remove-video", section, from, id });
           if (action === "recheck-review" || action === "recheck-report") await emergencyAction({ action: "move", section, from, to: "pending", id });
           if (action === "issue-receipt" || action === "download-receipt") return;
-          await emergencyRefreshAdmin();
-        } catch (error) {
-          permanentNotice(error.message || "Admin action failed.");
+                 // ===== ADMIN ACTION HANDLER =====
+        async function handleAdminAction(action, data) {
+          try {
+            const response = await fetch('/api/admin/action', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+              },
+              body: JSON.stringify({ action, ...data })
+            });
+            const result = await response.json();
+            if (result.ok) {
+              location.reload();
+            } else {
+              permanentNotice(result.error || "Action failed.");
+            }
+          } catch (error) {
+            permanentNotice(error.message || "Admin action failed.");
+          }
         }
-      }, true);
 
-      if (sessionStorage.getItem(SESSION_KEY) === "yes") {
-        setTimeout(emergencyRefreshAdmin, 500);
-      }
+        // ===== SESSION KEY FOR BROWSER STORAGE =====
+        const SESSION_KEY = "adminSession";
 
-      window.addEventListener("focus", () => {
-        if (sessionStorage.getItem(SESSION_KEY) === "yes") emergencyRefreshAdmin();
-      });
-    })();
-  </script>
-</body>
+        // ===== CHECK SESSION ON LOAD =====
+        if (sessionStorage.getItem(SESSION_KEY) === "yes") {
+          setTimeout(emergencyRefreshAdmin, 500);
+        }
+
+        // ===== CHECK SESSION ON FOCUS =====
+        window.addEventListener("focus", () => {
+          if (sessionStorage.getItem(SESSION_KEY) === "yes") {
+            emergencyRefreshAdmin();
+          }
+        });
+      })();
+    </script>
+  </body>
 </html>
