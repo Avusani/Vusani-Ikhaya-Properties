@@ -28,7 +28,6 @@
     .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
     .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
 
-    /* Login */
     .login-box {
       max-width: 400px;
       margin: 60px auto;
@@ -62,7 +61,6 @@
     .panel { display: none; }
     .panel.show { display: block; }
 
-    /* Stats Bar */
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -79,7 +77,6 @@
     .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
     .stat-card .label { font-size: 12px; color: #637268; }
 
-    /* Main Tabs */
     .main-tabs {
       display: flex;
       gap: 8px;
@@ -114,7 +111,6 @@
     }
     .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
 
-    /* Sub Tabs */
     .sub-tabs {
       display: flex;
       gap: 8px;
@@ -149,7 +145,6 @@
     }
     .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
 
-    /* Room Card with Media */
     .room-card {
       background: #fff;
       border-radius: 10px;
@@ -195,41 +190,6 @@
       color: #637268;
       font-size: 12px;
       grid-column: 1 / -1;
-    }
-    .room-card .media-grid .media-item-wrapper {
-      position: relative;
-    }
-    .room-card .media-grid .media-item-wrapper .remove-media {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(184, 73, 59, 0.9);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      font-size: 14px;
-      line-height: 22px;
-      text-align: center;
-      cursor: pointer;
-      z-index: 5;
-      transition: all 0.2s;
-    }
-    .room-card .media-grid .media-item-wrapper .remove-media:hover {
-      background: #b8493b;
-      transform: scale(1.1);
-    }
-    .room-card .media-grid .media-item-wrapper .media-type-badge {
-      position: absolute;
-      bottom: 4px;
-      left: 4px;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      padding: 1px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
     }
     .room-card .info { display: grid; gap: 4px; }
     .room-card .info .title { font-weight: 700; font-size: 18px; }
@@ -279,7 +239,6 @@
     .notice.success { background: #dbf4e9; color: #0d4c3a; }
     .notice.error { background: #fde5df; color: #7f2318; }
 
-    /* Modal */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -325,7 +284,6 @@
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
     .modal .btn-save:hover { background: #095741; }
 
-    /* Media Management in Modal */
     .media-manager {
       border: 2px dashed #cad8cf;
       border-radius: 8px;
@@ -405,7 +363,6 @@
     }
     .media-manager .add-media-area button:hover { background: #095741; }
 
-    /* Stats Section */
     .stats-section {
       background: #fff;
       border-radius: 10px;
@@ -450,7 +407,6 @@
     .stats-grid .stat-item .label { font-size: 12px; color: #637268; }
     .chart-container { height: 300px; margin-top: 16px; }
 
-    /* Transport Card */
     .transport-card {
       background: #fff;
       border-radius: 10px;
@@ -481,7 +437,6 @@
     .transport-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
     .transport-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
 
-    /* Media Viewer */
     .media-viewer {
       display: none;
       position: fixed;
@@ -537,11 +492,9 @@
       align-items: center;
     }
 
-    /* Section toggle */
     .section-content { display: none; }
     .section-content.active { display: block; }
 
-    /* Traffic Stats */
     .traffic-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -561,7 +514,6 @@
     .traffic-card .change.up { color: #0f7a5f; }
     .traffic-card .change.down { color: #b8493b; }
 
-    /* Service fee info */
     .fee-info {
       background: #f8faf9;
       padding: 12px 16px;
@@ -600,7 +552,6 @@
 
 <div class="container">
 
-  <!-- LOGIN -->
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
     <p style="color:#637268;font-size:14px;">Log in to manage room posts, transport listings, approve, decline, and track service fees.</p>
@@ -614,12 +565,10 @@
     </form>
   </div>
 
-  <!-- ADMIN PANEL -->
   <div id="adminPanel" class="panel">
 
     <div id="notice" class="notice"></div>
 
-    <!-- STATS BAR -->
     <div class="stats-bar" id="statsBar">
       <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
       <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
@@ -628,7 +577,6 @@
       <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
     </div>
 
-    <!-- TRAFFIC STATS -->
     <div class="traffic-stats">
       <div class="traffic-card">
         <div class="number" id="todayVisitors">0</div>
@@ -652,15 +600,12 @@
       </div>
     </div>
 
-    <!-- MAIN TABS -->
     <div class="main-tabs">
       <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
       <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
     </div>
 
-    <!-- ROOMS SECTION -->
     <div id="roomsSection" class="section-content active">
-      <!-- Stats Section -->
       <div class="stats-section">
         <div class="header">
           <h3 style="margin:0;">📊 Service Fee Revenue</h3>
@@ -676,7 +621,6 @@
             <button onclick="updateStats()" style="padding:8px 16px;background:#0f7a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Update</button>
           </div>
         </div>
-        <!-- Service Fee Info -->
         <div class="fee-info">
           💰 <strong>Service Fee Structure:</strong> 
           R1000-R1900 = R300 | 
@@ -693,7 +637,6 @@
         </div>
       </div>
 
-      <!-- Room Sub Tabs -->
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchRoomTab('pending')">⏳ Pending <span class="count" id="countPending">0</span></button>
         <button data-tab="approved" onclick="switchRoomTab('approved')">✅ Approved <span class="count" id="countApproved">0</span></button>
@@ -705,7 +648,6 @@
       <div id="roomList"></div>
     </div>
 
-    <!-- TRANSPORT SECTION -->
     <div id="transportSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
@@ -718,12 +660,12 @@
   </div>
 </div>
 
-<!-- EDIT ROOM MODAL WITH MEDIA MANAGEMENT -->
+<!-- EDIT ROOM MODAL -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
     <button class="close" onclick="closeEditRoomModal()">✕</button>
     <h3>✏️ Edit Room</h3>
-    <form id="editRoomForm" enctype="multipart/form-data">
+    <form id="editRoomForm">
       <input type="hidden" id="editRoomId">
       <input type="hidden" id="editRoomFrom">
       
@@ -750,13 +692,11 @@
       <label>Notes</label>
       <textarea id="editRoomNotes"></textarea>
       
-      <!-- Media Management -->
-      <label style="margin-top:16px;">📸 Media Management (Images & Videos)</label>
+      <label style="margin-top:16px;">📸 Current Media</label>
       <div class="media-manager">
         <div id="editMediaList" class="media-list"></div>
         <div class="add-media-area">
-          <input type="file" id="editMediaUpload" accept="image/*,video/*" multiple>
-          <button type="button" onclick="addEditMedia()">➕ Add Media</button>
+          <p style="font-size:12px;color:#637268;margin:0;width:100%;">⚠️ To add new media, you need to upload files to the server first. Use the public site's post form to upload new images.</p>
         </div>
         <div id="editMediaStatus" style="font-size:12px;color:#637268;margin-top:6px;"></div>
       </div>
@@ -821,7 +761,6 @@
   let currentMediaIndex = 0;
   let editingRoomId = null;
   let editingRoomFrom = null;
-  let tempUploadedFiles = []; // Store files to upload
 
   // ========================================
   // DOM REFS
@@ -876,7 +815,7 @@
   }
 
   // ========================================
-  // LOAD DATA
+  // LOAD DATA - KEEP ORIGINAL MEDIA URLs
   // ========================================
   async function loadData() {
     const token = localStorage.getItem('adminToken');
@@ -890,25 +829,42 @@
       if (res.status === 401) { logout(); return; }
 
       const data = await res.json();
+      
+      // CRITICAL: Preserve ALL original data including media URLs
       if (data.rooms) {
-        allRooms = data.rooms;
+        allRooms = {
+          pending: (data.rooms.pending || []).map(r => ({ ...r })),
+          approved: (data.rooms.approved || []).map(r => ({ ...r })),
+          taken: (data.rooms.taken || []).map(r => ({ ...r })),
+          declined: (data.rooms.declined || []).map(r => ({ ...r })),
+          removed: (data.rooms.removed || []).map(r => ({ ...r }))
+        };
       }
+      
       if (data.transport) {
-        allTransport = data.transport;
+        allTransport = {
+          pending: (data.transport.pending || []).map(t => ({ ...t })),
+          approved: (data.transport.approved || []).map(t => ({ ...t })),
+          declined: (data.transport.declined || []).map(t => ({ ...t })),
+          removed: (data.transport.removed || []).map(t => ({ ...t }))
+        };
       }
+      
       if (data.receipts) {
-        allReceipts = data.receipts || [];
+        allReceipts = (data.receipts || []).map(r => ({ ...r }));
       }
+      
       if (data.traffic) {
         updateTrafficStats(data.traffic);
       }
+      
       updateAllCounts();
       updateStats();
       renderRoomTab(currentRoomTab);
       renderTransportTab(currentTransportTab);
       renderChart();
     } catch (err) {
-      showNotice('Failed to load data', 'error');
+      showNotice('Failed to load data: ' + err.message, 'error');
     }
   }
 
@@ -962,7 +918,7 @@
   }
 
   // ========================================
-  // ROOM FUNCTIONS
+  // ROOM FUNCTIONS - SHOW ORIGINAL MEDIA
   // ========================================
   function switchRoomTab(tab) {
     currentRoomTab = tab;
@@ -983,7 +939,7 @@
 
     let html = '';
     rooms.forEach(room => {
-      // Get all media URLs - these should be actual URLs from the database
+      // CRITICAL: Use the original images and videos from the room
       const images = room.images || [];
       const videos = room.videos || [];
       const allMedia = [...images, ...videos];
@@ -1178,11 +1134,14 @@
   }
 
   // ========================================
-  // EDIT ROOM WITH MEDIA MANAGEMENT
+  // EDIT ROOM - SHOW ORIGINAL MEDIA ONLY
   // ========================================
   function openEditRoomModal(id, from) {
     const room = allRooms[from]?.find(r => r.id === id);
-    if (!room) return;
+    if (!room) {
+      showNotice('Room not found', 'error');
+      return;
+    }
 
     editingRoomId = id;
     editingRoomFrom = from;
@@ -1199,7 +1158,7 @@
     document.getElementById('editRoomNotes').value = room.notes || '';
     document.getElementById('editMediaStatus').textContent = '';
 
-    // Show current media
+    // Show current media - CRITICAL: Show ONLY the original media from the room
     renderEditMedia(room);
 
     document.getElementById('editRoomModal').classList.add('show');
@@ -1207,6 +1166,7 @@
 
   function renderEditMedia(room) {
     const container = document.getElementById('editMediaList');
+    // CRITICAL: Get the original images and videos from the room
     const images = room.images || [];
     const videos = room.videos || [];
     const allMedia = [...images, ...videos];
@@ -1246,7 +1206,6 @@
     
     if (index < allMedia.length) {
       const removed = allMedia[index];
-      // Remove from images or videos
       const imgIdx = images.indexOf(removed);
       if (imgIdx !== -1) {
         room.images.splice(imgIdx, 1);
@@ -1256,74 +1215,14 @@
           room.videos.splice(vidIdx, 1);
         }
       }
-      // Update the room in allRooms
       const roomIdx = allRooms[editingRoomFrom].findIndex(r => r.id === editingRoomId);
       if (roomIdx !== -1) {
         allRooms[editingRoomFrom][roomIdx] = room;
       }
       renderEditMedia(room);
-      // Re-render the room list
       renderRoomTab(currentRoomTab);
       showNotice('Media removed', 'success');
     }
-  }
-
-  function addEditMedia() {
-    const fileInput = document.getElementById('editMediaUpload');
-    const files = fileInput.files;
-    const status = document.getElementById('editMediaStatus');
-    
-    if (files.length === 0) {
-      status.textContent = '⚠️ Please select at least one file';
-      status.style.color = '#b8493b';
-      return;
-    }
-
-    const room = allRooms[editingRoomFrom]?.find(r => r.id === editingRoomId);
-    if (!room) {
-      status.textContent = '❌ Room not found';
-      status.style.color = '#b8493b';
-      return;
-    }
-
-    // Process each file
-    let addedCount = 0;
-    Array.from(files).forEach(file => {
-      // Check if it's an image or video
-      const isVideo = file.type.startsWith('video/');
-      const isImage = file.type.startsWith('image/');
-      
-      if (!isVideo && !isImage) {
-        status.textContent = `⚠️ ${file.name} is not a valid image or video`;
-        status.style.color = '#b8493b';
-        return;
-      }
-
-      // Create object URL for preview
-      const url = URL.createObjectURL(file);
-      
-      // Add to room's media
-      if (isVideo) {
-        if (!room.videos) room.videos = [];
-        room.videos.push(url);
-      } else {
-        if (!room.images) room.images = [];
-        room.images.push(url);
-      }
-      addedCount++;
-    });
-
-    // Update the room in allRooms
-    const roomIdx = allRooms[editingRoomFrom].findIndex(r => r.id === editingRoomId);
-    if (roomIdx !== -1) {
-      allRooms[editingRoomFrom][roomIdx] = room;
-    }
-    
-    renderEditMedia(room);
-    renderRoomTab(currentRoomTab);
-    status.textContent = `✅ Added ${addedCount} file(s) to preview. Click Save to apply permanently.`;
-    status.style.color = '#0f7a5f';
-    fileInput.value = '';
   }
 
   function closeEditRoomModal() {
@@ -1338,17 +1237,15 @@
     const token = localStorage.getItem('adminToken');
     if (!token) return;
 
-    // Get the updated room data
     const room = allRooms[from]?.find(r => r.id === id);
     if (!room) {
       showNotice('Room not found', 'error');
       return;
     }
 
-    // IMPORTANT: Keep the actual media URLs, not blob URLs
-    // Filter out blob URLs from the media arrays and keep only real URLs
-    const validImages = (room.images || []).filter(url => !url.startsWith('blob:'));
-    const validVideos = (room.videos || []).filter(url => !url.startsWith('blob:'));
+    // CRITICAL: Keep ONLY the original media URLs (no blob URLs)
+    const originalImages = (room.images || []).filter(url => !url.startsWith('blob:'));
+    const originalVideos = (room.videos || []).filter(url => !url.startsWith('blob:'));
 
     const updatedRoom = {
       title: document.getElementById('editRoomTitle').value,
@@ -1359,22 +1256,11 @@
       posterName: document.getElementById('editRoomPosterName').value,
       posterContact: document.getElementById('editRoomPosterContact').value,
       notes: document.getElementById('editRoomNotes').value,
-      images: validImages,
-      videos: validVideos,
-      // Keep the original media if no valid ones exist
-      _originalImages: room.images || [],
-      _originalVideos: room.videos || []
+      images: originalImages,
+      videos: originalVideos
     };
 
-    // If no valid media but we have original media, use those
-    if (validImages.length === 0 && validVideos.length === 0) {
-      // Keep the original media if they exist
-      updatedRoom.images = room.images || [];
-      updatedRoom.videos = room.videos || [];
-    }
-
     try {
-      // Delete old room
       await fetch('/api/admin/action', {
         method: 'POST',
         headers: {
@@ -1389,7 +1275,6 @@
         })
       });
 
-      // Create updated room with preserved media
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: {
@@ -1399,13 +1284,14 @@
         body: JSON.stringify(updatedRoom)
       });
 
+      const result = await res.json();
+      
       if (res.ok) {
-        showNotice('✅ Room updated successfully with all media!', 'success');
+        showNotice('✅ Room updated successfully! Original media preserved.', 'success');
         closeEditRoomModal();
-        loadData();
+        await loadData();
       } else {
-        const errorData = await res.json();
-        showNotice('Failed to update room: ' + (errorData.error || 'Unknown error'), 'error');
+        showNotice('Failed to update room: ' + (result.error || 'Unknown error'), 'error');
       }
     } catch (err) {
       showNotice('Update failed: ' + err.message, 'error');
@@ -1616,7 +1502,7 @@
   });
 
   // ========================================
-  // MEDIA VIEWER WITH NAVIGATION
+  // MEDIA VIEWER
   // ========================================
   function openMediaViewer(mediaList, index) {
     currentMediaList = mediaList;
@@ -1663,7 +1549,6 @@
     openMediaViewer([src], 0);
   }
 
-  // Keyboard navigation
   document.addEventListener('keydown', function(e) {
     if (document.getElementById('mediaViewer').classList.contains('show')) {
       if (e.key === 'ArrowLeft') prevMedia();
@@ -1676,7 +1561,6 @@
   // UPDATE COUNTS
   // ========================================
   function updateAllCounts() {
-    // Rooms
     document.getElementById('countPending').textContent = (allRooms.pending || []).length;
     document.getElementById('countApproved').textContent = (allRooms.approved || []).length;
     document.getElementById('countTaken').textContent = (allRooms.taken || []).length;
@@ -1692,7 +1576,6 @@
       (allRooms.taken || []).length + (allRooms.declined || []).length + 
       (allRooms.removed || []).length;
 
-    // Transport
     document.getElementById('countTransportPending').textContent = (allTransport.pending || []).length;
     document.getElementById('countTransportApproved').textContent = (allTransport.approved || []).length;
     document.getElementById('countTransportDeclined').textContent = (allTransport.declined || []).length;
@@ -1704,7 +1587,6 @@
       (allTransport.pending || []).length + (allTransport.approved || []).length + 
       (allTransport.declined || []).length + (allTransport.removed || []).length;
 
-    // Service fee revenue
     const totalServiceFees = allReceipts.reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
     document.getElementById('statServiceFeeRevenue').textContent = 'R' + totalServiceFees.toFixed(2);
   }
@@ -1794,7 +1676,7 @@
   // ========================================
   function showNotice(message, type) {
     notice.textContent = message;
-    notice.className = 'notice show ' + type;
+    notice.className = 'notice show ' + (type || 'success');
     setTimeout(() => {
       notice.classList.remove('show');
     }, 4000);
