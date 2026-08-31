@@ -59,6 +59,7 @@
       : `<p class="address">No rooms match the selected filters.</p>`;
   };
 
+  // Review Form Submission
   document.addEventListener("submit", async (event) => {
     const reviewForm = event.target.closest("[data-review-form]");
     if (!reviewForm) return;
@@ -85,103 +86,122 @@
     }
   }, true);
 
-  document.querySelector("#postForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    hideError();
+  // Post Room Form Submission
+  const postForm = document.querySelector("#postForm");
+  if (postForm) {
+    postForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      hideError();
 
-    let uploadedImages = [];
-    let uploadedVideo = "";
-    try {
-      uploadedImages = await uploadedRoomImages();
-      uploadedVideo = await uploadedRoomVideo();
-      await api("/api/rooms", {
-        method: "POST",
-        body: JSON.stringify({
-          title: `${document.querySelector("#postType").value} - ${document.querySelector("#postAddress").value}`.trim(),
-          location: document.querySelector("#postLocation").value,
-          address: document.querySelector("#postAddress").value.trim(),
-          type: document.querySelector("#postType").value,
-          roomType: document.querySelector("#postRoomType").value,
-          amount: money(document.querySelector("#postAmount").value),
-          deposit: document.querySelector("#postDeposit").value.trim() || "No deposit stated",
-          childFriendly: document.querySelector("#postChild").value,
-          parking: document.querySelector("#postParking").value,
-          bath: document.querySelector("#postBath").value.trim(),
-          images: uploadedImages,
-          video: uploadedVideo,
-          posterName: document.querySelector("#posterName").value.trim(),
-          posterContact: document.querySelector("#posterContact").value.trim(),
-          notes: document.querySelector("#postNotes").value.trim()
-        })
-      });
-    } catch (error) {
-      showError(error.message || "Could not submit the room. Please try again.");
-      return;
-    }
+      let uploadedImages = [];
+      let uploadedVideo = "";
+      try {
+        uploadedImages = await uploadedRoomImages();
+        uploadedVideo = await uploadedRoomVideo();
+        await api("/api/rooms", {
+          method: "POST",
+          body: JSON.stringify({
+            title: `${document.querySelector("#postType").value} - ${document.querySelector("#postAddress").value}`.trim(),
+            location: document.querySelector("#postLocation").value,
+            address: document.querySelector("#postAddress").value.trim(),
+            type: document.querySelector("#postType").value,
+            roomType: document.querySelector("#postRoomType").value,
+            amount: money(document.querySelector("#postAmount").value),
+            deposit: document.querySelector("#postDeposit").value.trim() || "No deposit stated",
+            childFriendly: document.querySelector("#postChild").value,
+            parking: document.querySelector("#postParking").value,
+            bath: document.querySelector("#postBath").value.trim(),
+            images: uploadedImages,
+            video: uploadedVideo,
+            posterName: document.querySelector("#posterName").value.trim(),
+            posterContact: document.querySelector("#posterContact").value.trim(),
+            notes: document.querySelector("#postNotes").value.trim()
+          })
+        });
+      } catch (error) {
+        showError(error.message || "Could not submit the room. Please try again.");
+        return;
+      }
 
-    event.target.reset();
-    clearPreviewURLs();
-    imagePreview.innerHTML = `<span class="hint">No pictures selected yet.</span>`;
-    videoPreview.innerHTML = `<span class="hint">No video selected yet.</span>`;
-    document.querySelector("#successMessage").classList.add("is-visible");
-    setTimeout(() => document.querySelector("#successMessage").classList.remove("is-visible"), 4500);
-  }, true);
-
-  document.querySelector("#scamForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    try {
-      await api("/api/reports", {
-        method: "POST",
-        body: JSON.stringify({
-          room: document.querySelector("#reportRoom").value.trim(),
-          reporterContact: document.querySelector("#reporterContact").value.trim(),
-          reason: document.querySelector("#reportReason").value.trim()
-        })
-      });
       event.target.reset();
-      document.querySelector("#scamSuccess").classList.add("is-visible");
-      setTimeout(() => document.querySelector("#scamSuccess").classList.remove("is-visible"), 4200);
-    } catch (error) {
-      showError(error.message || "Could not submit the scam report. Please try again.");
-    }
-  }, true);
+      clearPreviewURLs();
+      imagePreview.innerHTML = `<span class="hint">No pictures selected yet.</span>`;
+      videoPreview.innerHTML = `<span class="hint">No video selected yet.</span>`;
+      document.querySelector("#successMessage").classList.add("is-visible");
+      setTimeout(() => document.querySelector("#successMessage").classList.remove("is-visible"), 4500);
+    }, true);
+  }
 
+  // Scam Report Form Submission
+  const scamForm = document.querySelector("#scamForm");
+  if (scamForm) {
+    scamForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try {
+        await api("/api/reports", {
+          method: "POST",
+          body: JSON.stringify({
+            room: document.querySelector("#reportRoom").value.trim(),
+            reporterContact: document.querySelector("#reporterContact").value.trim(),
+            reason: document.querySelector("#reportReason").value.trim()
+          })
+        });
+        event.target.reset();
+        document.querySelector("#scamSuccess").classList.add("is-visible");
+        setTimeout(() => document.querySelector("#scamSuccess").classList.remove("is-visible"), 4200);
+      } catch (error) {
+        showError(error.message || "Could not submit the scam report. Please try again.");
+      }
+    }, true);
+  }
+
+  // Transport Form Submission
   const transportForm = document.querySelector("#transportForm");
-  if (transportForm) transportForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    const transportError = document.querySelector("#transportError");
-    transportError.textContent = "";
-    transportError.classList.remove("is-visible");
+  if (transportForm) {
+    transportForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const transportError = document.querySelector("#transportError");
+      if (transportError) {
+        transportError.textContent = "";
+        transportError.classList.remove("is-visible");
+      }
 
-    try {
-      await api("/api/transports", {
-        method: "POST",
-        body: JSON.stringify({
-          firstName: document.querySelector("#driverFirstName").value.trim(),
-          surname: document.querySelector("#driverSurname").value.trim(),
-          phone: document.querySelector("#driverPhone").value.trim(),
-          email: document.querySelector("#driverEmail").value.trim(),
-          localPrice: money(document.querySelector("#localPrice").value),
-          outsidePrice: money(document.querySelector("#outsidePrice").value),
-          carPicture: await uploadedSingleImage("#carPictureFile", "a car picture"),
-          idPicture: await uploadedSingleImage("#driverIdFile", "an ID or passport picture"),
-          notes: document.querySelector("#transportNotes").value.trim()
-        })
-      });
-    } catch (error) {
-      transportError.textContent = error.message || "Could not submit transport. Please try again.";
-      transportError.classList.add("is-visible");
-      return;
-    }
+      try {
+        await api("/api/transports", {
+          method: "POST",
+          body: JSON.stringify({
+            firstName: document.querySelector("#driverFirstName").value.trim(),
+            surname: document.querySelector("#driverSurname").value.trim(),
+            phone: document.querySelector("#driverPhone").value.trim(),
+            email: document.querySelector("#driverEmail").value.trim(),
+            localPrice: money(document.querySelector("#localPrice").value),
+            outsidePrice: money(document.querySelector("#outsidePrice").value),
+            carPicture: await uploadedSingleImage("#carPictureFile", "a car picture"),
+            idPicture: await uploadedSingleImage("#driverIdFile", "an ID or passport picture"),
+            notes: document.querySelector("#transportNotes").value.trim()
+          })
+        });
+      } catch (error) {
+        if (transportError) {
+          transportError.textContent = error.message || "Could not submit transport. Please try again.";
+          transportError.classList.add("is-visible");
+        }
+        return;
+      }
 
-    event.target.reset();
-    document.querySelector("#transportSuccess").classList.add("is-visible");
-    setTimeout(() => document.querySelector("#transportSuccess").classList.remove("is-visible"), 4500);
-  }, true);
+      event.target.reset();
+      const transportSuccess = document.querySelector("#transportSuccess");
+      if (transportSuccess) {
+        transportSuccess.classList.add("is-visible");
+        setTimeout(() => transportSuccess.classList.remove("is-visible"), 4500);
+      }
+    }, true);
+  }
 
+  // Initialize
   loadPublicData().catch((error) => {
     console.error(error);
     window.liveBackendConnected = false;
