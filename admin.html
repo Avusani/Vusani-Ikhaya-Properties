@@ -79,7 +79,7 @@
     .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
     .stat-card .label { font-size: 12px; color: #637268; }
 
-    /* Tabs - Main */
+    /* Main Tabs */
     .main-tabs {
       display: flex;
       gap: 8px;
@@ -149,7 +149,7 @@
     }
     .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
 
-    /* Room Card */
+    /* Room Card with Media */
     .room-card {
       background: #fff;
       border-radius: 10px;
@@ -157,32 +157,58 @@
       margin-bottom: 16px;
       border: 1px solid #cad8cf;
       display: grid;
-      grid-template-columns: 200px 1fr;
+      grid-template-columns: 250px 1fr;
       gap: 16px;
     }
-    .room-card .images {
+    .room-card .media-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
     }
-    .room-card .images img,
-    .room-card .images video {
+    .room-card .media-grid .media-item {
       width: 100%;
-      height: 100px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #eef3ee;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .room-card .media-grid .media-item:hover {
+      transform: scale(1.02);
+    }
+    .room-card .media-grid .media-item video {
+      width: 100%;
+      height: 120px;
       object-fit: cover;
       border-radius: 6px;
       background: #eef3ee;
       cursor: pointer;
     }
-    .room-card .images .no-image {
+    .room-card .media-grid .no-media {
       background: #edf4ee;
-      height: 100px;
+      height: 120px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #637268;
       font-size: 12px;
+      grid-column: 1 / -1;
+    }
+    .room-card .media-grid .media-badge {
+      position: relative;
+    }
+    .room-card .media-grid .media-badge .badge-count {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
     }
     .room-card .info { display: grid; gap: 4px; }
     .room-card .info .title { font-weight: 700; font-size: 18px; }
@@ -199,6 +225,7 @@
       font-weight: 600;
       transition: all 0.2s;
     }
+    .room-card .actions button:hover { opacity: 0.8; }
     .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
     .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
     .room-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
@@ -277,7 +304,7 @@
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
     .modal .btn-save:hover { background: #095741; }
 
-    /* Revenue / Stats Section */
+    /* Stats Section */
     .stats-section {
       background: #fff;
       border-radius: 10px;
@@ -358,7 +385,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.95);
       z-index: 2000;
       align-items: center;
       justify-content: center;
@@ -369,6 +396,7 @@
       max-width: 95vw;
       max-height: 90vh;
       border-radius: 8px;
+      object-fit: contain;
     }
     .media-viewer .close {
       position: fixed;
@@ -379,15 +407,75 @@
       cursor: pointer;
       background: none;
       border: none;
+      z-index: 2001;
+    }
+    .media-viewer .nav-controls {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 20px;
+      border-radius: 30px;
+      z-index: 2001;
+    }
+    .media-viewer .nav-controls button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+    .media-viewer .nav-controls .counter {
+      color: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
     }
 
     /* Section toggle */
     .section-content { display: none; }
     .section-content.active { display: block; }
 
+    /* Traffic Stats */
+    .traffic-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .traffic-card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #cad8cf;
+      text-align: center;
+    }
+    .traffic-card .number { font-size: 32px; font-weight: 900; color: #0f7a5f; }
+    .traffic-card .label { font-size: 12px; color: #637268; }
+    .traffic-card .change { font-size: 13px; font-weight: 600; }
+    .traffic-card .change.up { color: #0f7a5f; }
+    .traffic-card .change.down { color: #b8493b; }
+
+    /* Service fee info */
+    .fee-info {
+      background: #f8faf9;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #637268;
+      border: 1px solid #eef3ee;
+    }
+    .fee-info strong { color: #0f7a5f; }
+
     @media (max-width: 700px) {
       .room-card, .transport-card { grid-template-columns: 1fr; }
-      .room-card .images { grid-template-columns: 1fr 1fr; }
+      .room-card .media-grid { grid-template-columns: 1fr 1fr; }
+      .room-card .media-grid .media-item { height: 100px; }
       .modal .form-row { grid-template-columns: 1fr; }
       .stats-section .header { flex-direction: column; align-items: stretch; }
       .topbar { flex-direction: column; align-items: stretch; text-align: center; }
@@ -413,7 +501,7 @@
   <!-- LOGIN -->
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
-    <p style="color:#637268;font-size:14px;">Log in to manage room posts, transport listings, approve, decline, and track revenue.</p>
+    <p style="color:#637268;font-size:14px;">Log in to manage room posts, transport listings, approve, decline, and track service fees.</p>
     <form id="loginForm">
       <div style="margin-bottom:16px;">
         <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
@@ -433,12 +521,36 @@
     <div class="stats-bar" id="statsBar">
       <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
       <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
+      <div class="stat-card"><div class="number" id="statRoomsTaken">0</div><div class="label">📦 Rooms Taken</div></div>
       <div class="stat-card"><div class="number" id="statTransportPending">0</div><div class="label">🚗 Transport Pending</div></div>
-      <div class="stat-card"><div class="number" id="statTransportApproved">0</div><div class="label">✅ Transport Approved</div></div>
-      <div class="stat-card"><div class="number" id="statRevenue">R0</div><div class="label">💰 Total Revenue</div></div>
+      <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
     </div>
 
-    <!-- MAIN TABS: Rooms | Transport -->
+    <!-- TRAFFIC STATS -->
+    <div class="traffic-stats">
+      <div class="traffic-card">
+        <div class="number" id="todayVisitors">0</div>
+        <div class="label">👁️ Today's Visitors</div>
+        <div class="change up" id="todayChange">↑ 0%</div>
+      </div>
+      <div class="traffic-card">
+        <div class="number" id="weekVisitors">0</div>
+        <div class="label">📊 This Week</div>
+        <div class="change up" id="weekChange">↑ 0%</div>
+      </div>
+      <div class="traffic-card">
+        <div class="number" id="monthVisitors">0</div>
+        <div class="label">📅 This Month</div>
+        <div class="change up" id="monthChange">↑ 0%</div>
+      </div>
+      <div class="traffic-card">
+        <div class="number" id="totalVisitors">0</div>
+        <div class="label">🌐 Total Visitors</div>
+        <div class="change up" id="totalChange">↑ 0%</div>
+      </div>
+    </div>
+
+    <!-- MAIN TABS -->
     <div class="main-tabs">
       <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
       <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
@@ -446,10 +558,10 @@
 
     <!-- ROOMS SECTION -->
     <div id="roomsSection" class="section-content active">
-      <!-- Revenue / Stats Section -->
+      <!-- Stats Section -->
       <div class="stats-section">
         <div class="header">
-          <h3 style="margin:0;">📊 Revenue & Statistics</h3>
+          <h3 style="margin:0;">📊 Service Fee Revenue</h3>
           <div class="filters">
             <select id="monthFilter" onchange="updateStats()">
               <option value="all">All Months</option>
@@ -462,11 +574,17 @@
             <button onclick="updateStats()" style="padding:8px 16px;background:#0f7a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Update</button>
           </div>
         </div>
+        <!-- Service Fee Info -->
+        <div class="fee-info">
+          💰 <strong>Service Fee Structure:</strong> 
+          R1000-R1900 = R300 | 
+          R2000-R3000 = R350 | 
+          R3100-R3800 = R400 | 
+          R3900-R7000 = R500
+        </div>
         <div class="stats-grid">
           <div class="stat-item"><div class="value" id="monthlyCount">0</div><div class="label">📦 Rooms Taken</div></div>
-          <div class="stat-item"><div class="value" id="monthlyRevenue">R0</div><div class="label">💰 Revenue</div></div>
           <div class="stat-item"><div class="value" id="monthlyServiceFee">R0</div><div class="label">📊 Service Fees</div></div>
-          <div class="stat-item"><div class="value" id="monthlyDeposit">R0</div><div class="label">🏦 Deposits</div></div>
         </div>
         <div class="chart-container">
           <canvas id="revenueChart"></canvas>
@@ -487,14 +605,12 @@
 
     <!-- TRANSPORT SECTION -->
     <div id="transportSection" class="section-content">
-      <!-- Transport Sub Tabs -->
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
         <button data-tab="approved" onclick="switchTransportTab('approved')">✅ Approved <span class="count" id="countTransportApproved">0</span></button>
         <button data-tab="declined" onclick="switchTransportTab('declined')">❌ Declined <span class="count" id="countTransportDeclined">0</span></button>
         <button data-tab="removed" onclick="switchTransportTab('removed')">🗑️ Removed <span class="count" id="countTransportRemoved">0</span></button>
       </div>
-
       <div id="transportList"></div>
     </div>
   </div>
@@ -558,6 +674,11 @@
 <div class="media-viewer" id="mediaViewer">
   <button class="close" onclick="closeMediaViewer()">✕</button>
   <div id="mediaContent"></div>
+  <div class="nav-controls">
+    <button onclick="prevMedia()">◀</button>
+    <span class="counter" id="mediaCounter">1 / 1</span>
+    <button onclick="nextMedia()">▶</button>
+  </div>
 </div>
 
 <script>
@@ -575,6 +696,8 @@
   let allReceipts = [];
   let adminToken = null;
   let revenueChart = null;
+  let currentMediaList = [];
+  let currentMediaIndex = 0;
 
   // ========================================
   // DOM REFS
@@ -652,6 +775,9 @@
       if (data.receipts) {
         allReceipts = data.receipts || [];
       }
+      if (data.traffic) {
+        updateTrafficStats(data.traffic);
+      }
       updateAllCounts();
       updateStats();
       renderRoomTab(currentRoomTab);
@@ -659,6 +785,37 @@
       renderChart();
     } catch (err) {
       showNotice('Failed to load data', 'error');
+    }
+  }
+
+  // ========================================
+  // TRAFFIC STATS
+  // ========================================
+  function updateTrafficStats(traffic) {
+    document.getElementById('todayVisitors').textContent = traffic.today || 0;
+    document.getElementById('weekVisitors').textContent = traffic.week || 0;
+    document.getElementById('monthVisitors').textContent = traffic.month || 0;
+    document.getElementById('totalVisitors').textContent = traffic.total || 0;
+    
+    if (traffic.todayChange) {
+      const el = document.getElementById('todayChange');
+      el.textContent = (traffic.todayChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.todayChange) + '%';
+      el.className = 'change ' + (traffic.todayChange >= 0 ? 'up' : 'down');
+    }
+    if (traffic.weekChange) {
+      const el = document.getElementById('weekChange');
+      el.textContent = (traffic.weekChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.weekChange) + '%';
+      el.className = 'change ' + (traffic.weekChange >= 0 ? 'up' : 'down');
+    }
+    if (traffic.monthChange) {
+      const el = document.getElementById('monthChange');
+      el.textContent = (traffic.monthChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.monthChange) + '%';
+      el.className = 'change ' + (traffic.monthChange >= 0 ? 'up' : 'down');
+    }
+    if (traffic.totalChange) {
+      const el = document.getElementById('totalChange');
+      el.textContent = (traffic.totalChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.totalChange) + '%';
+      el.className = 'change ' + (traffic.totalChange >= 0 ? 'up' : 'down');
     }
   }
 
@@ -703,16 +860,26 @@
     let html = '';
     rooms.forEach(room => {
       const images = room.images || [];
-      let imgHtml = '';
-      if (images.length > 0) {
-        imgHtml = images.slice(0, 4).map(img =>
-          `<img src="${img}" alt="Room" onclick="viewMedia('${img}','image')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22100%22%3E%3Crect fill=%22%23edf4ee%22 width=%22200%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 fill=%22%23637268%22 font-size=%2214%22%3ENo image%3C/text%3E%3C/svg%3E'">`
-        ).join('');
-        if (room.video) {
-          imgHtml += `<video src="${room.video}" onclick="viewMedia('${room.video}','video')" style="width:100%;height:100px;object-fit:cover;border-radius:6px;background:#eef3ee;cursor:pointer;"></video>`;
+      const videos = room.videos || [];
+      const allMedia = [...images, ...videos];
+      
+      let mediaHtml = '';
+      if (allMedia.length > 0) {
+        const displayMedia = allMedia.slice(0, 4);
+        mediaHtml = displayMedia.map((media, idx) => {
+          const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
+          const type = isVideo ? 'video' : 'image';
+          if (isVideo) {
+            return `<video src="${media}" class="media-item" onclick="openMediaViewer(${JSON.stringify(allMedia)}, ${idx})" muted></video>`;
+          }
+          return `<img src="${media}" class="media-item" alt="Room" onclick="openMediaViewer(${JSON.stringify(allMedia)}, ${idx})" onerror="this.style.display='none'">`;
+        }).join('');
+        
+        if (allMedia.length > 4) {
+          mediaHtml += `<div class="media-item" style="background:#0f7a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;border-radius:6px;" onclick="openMediaViewer(${JSON.stringify(allMedia)}, 0)">+${allMedia.length - 4} more</div>`;
         }
       } else {
-        imgHtml = `<div class="no-image">📷 No media</div>`;
+        mediaHtml = `<div class="no-media">📷 No media uploaded</div>`;
       }
 
       const statusBadge = `<span class="badge ${tab}">${tab}</span>`;
@@ -720,7 +887,7 @@
 
       html += `
         <div class="room-card">
-          <div class="images">${imgHtml}</div>
+          <div class="media-grid">${mediaHtml}</div>
           <div class="info">
             <div class="title">${room.title || 'Untitled'}</div>
             <div class="landlord">${landlord}</div>
@@ -747,6 +914,22 @@
     });
 
     roomList.innerHTML = html;
+  }
+
+  // ========================================
+  // SERVICE FEE CALCULATION
+  // ========================================
+  function calculateServiceFee(rent) {
+    // Service fee based on rent amount
+    // R1000-R1900 = R300
+    // R2000-R3000 = R350
+    // R3100-R3800 = R400
+    // R3900-R7000 = R500
+    if (rent >= 1000 && rent <= 1900) return 300;
+    if (rent >= 2000 && rent <= 3000) return 350;
+    if (rent >= 3100 && rent <= 3800) return 400;
+    if (rent >= 3900 && rent <= 7000) return 500;
+    return 0; // No fee for amounts outside these ranges
   }
 
   // ========================================
@@ -784,15 +967,20 @@
   }
 
   // ========================================
-  // MARK TAKEN with Receipt
+  // MARK TAKEN with Service Fee
   // ========================================
   async function markTaken(id) {
     const room = allRooms.approved.find(r => r.id === id);
     if (!room) return;
 
     const rentAmount = parseFloat(room.amount?.replace(/[^0-9.]/g, '') || 0);
-    const depositAmount = parseFloat(room.deposit?.replace(/[^0-9.]/g, '') || 0);
     const serviceFee = calculateServiceFee(rentAmount);
+
+    if (serviceFee === 0) {
+      if (!confirm(`⚠️ Rent amount R${rentAmount} doesn't match any service fee tier.\n\nService Fee Tiers:\nR1000-R1900 = R300\nR2000-R3000 = R350\nR3100-R3800 = R400\nR3900-R7000 = R500\n\nContinue anyway with R0 service fee?`)) {
+        return;
+      }
+    }
 
     const tenantName = prompt('📋 Enter tenant name:', '') || 'Unknown tenant';
     if (tenantName === null) return;
@@ -816,7 +1004,6 @@
             tenantName: tenantName,
             tenantNumber: tenantNumber,
             rentAmount: String(rentAmount),
-            depositAmount: String(depositAmount),
             serviceFee: serviceFee,
             date: new Date().toISOString().slice(0,10),
             paymentType: 'Cash',
@@ -826,7 +1013,7 @@
       });
       const data = await res.json();
       if (data.ok) {
-        showNotice(`📦 Room marked as TAKEN! Tenant: ${tenantName}`, 'success');
+        showNotice(`📦 Room marked as TAKEN! Service Fee: R${serviceFee}`, 'success');
         loadData();
       } else {
         showNotice(data.error || 'Failed to mark as taken', 'error');
@@ -834,14 +1021,6 @@
     } catch (err) {
       showNotice('Action failed', 'error');
     }
-  }
-
-  function calculateServiceFee(rent) {
-    if (rent >= 800 && rent <= 1500) return 200;
-    if (rent >= 1600 && rent <= 2000) return 250;
-    if (rent >= 2100 && rent <= 3000) return 300;
-    if (rent >= 3100 && rent <= 5000) return 400;
-    return 0;
   }
 
   // ========================================
@@ -985,12 +1164,12 @@
 
       html += `
         <div class="transport-card">
-          <div class="images">
+          <div class="media-grid">
             ${transport.images && transport.images.length > 0 ? 
               transport.images.slice(0, 2).map(img =>
-                `<img src="${img}" alt="Transport" onclick="viewMedia('${img}','image')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22100%22%3E%3Crect fill=%22%23edf4ee%22 width=%22200%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 fill=%22%23637268%22 font-size=%2214%22%3ENo image%3C/text%3E%3C/svg%3E'">`
+                `<img src="${img}" class="media-item" alt="Transport" onclick="viewMedia('${img}','image')" onerror="this.style.display='none'">`
               ).join('') :
-              `<div class="no-image">🚗 No image</div>`
+              `<div class="no-media">🚗 No image</div>`
             }
           </div>
           <div class="info">
@@ -1162,23 +1341,61 @@
   });
 
   // ========================================
-  // MEDIA VIEWER
+  // MEDIA VIEWER WITH NAVIGATION
   // ========================================
-  function viewMedia(src, type) {
-    const viewer = document.getElementById('mediaViewer');
+  function openMediaViewer(mediaList, index) {
+    currentMediaList = mediaList;
+    currentMediaIndex = index;
+    showMedia();
+    document.getElementById('mediaViewer').classList.add('show');
+  }
+
+  function showMedia() {
+    const media = currentMediaList[currentMediaIndex];
     const content = document.getElementById('mediaContent');
-    if (type === 'video') {
-      content.innerHTML = `<video src="${src}" controls autoplay style="max-width:95vw;max-height:90vh;"></video>`;
+    const counter = document.getElementById('mediaCounter');
+    
+    counter.textContent = `${currentMediaIndex + 1} / ${currentMediaList.length}`;
+    
+    const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
+    if (isVideo) {
+      content.innerHTML = `<video src="${media}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`;
     } else {
-      content.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:90vh;">`;
+      content.innerHTML = `<img src="${media}" style="max-width:95vw;max-height:85vh;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22500%22%3E%3Crect fill=%22%23333%22 width=%22500%22 height=%22500%22/%3E%3Ctext x=%22250%22 y=%22250%22 fill=%22%23fff%22 text-anchor=%22middle%22 font-size=%2230%22%3EImage not found%3C/text%3E%3C/svg%3E';">`;
     }
-    viewer.classList.add('show');
   }
 
   function closeMediaViewer() {
     document.getElementById('mediaViewer').classList.remove('show');
     document.getElementById('mediaContent').innerHTML = '';
   }
+
+  function prevMedia() {
+    if (currentMediaIndex > 0) {
+      currentMediaIndex--;
+      showMedia();
+    }
+  }
+
+  function nextMedia() {
+    if (currentMediaIndex < currentMediaList.length - 1) {
+      currentMediaIndex++;
+      showMedia();
+    }
+  }
+
+  function viewMedia(src, type) {
+    openMediaViewer([src], 0);
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (document.getElementById('mediaViewer').classList.contains('show')) {
+      if (e.key === 'ArrowLeft') prevMedia();
+      if (e.key === 'ArrowRight') nextMedia();
+      if (e.key === 'Escape') closeMediaViewer();
+    }
+  });
 
   // ========================================
   // UPDATE COUNTS
@@ -1193,6 +1410,7 @@
     
     document.getElementById('statRoomsPending').textContent = (allRooms.pending || []).length;
     document.getElementById('statRoomsApproved').textContent = (allRooms.approved || []).length;
+    document.getElementById('statRoomsTaken').textContent = (allRooms.taken || []).length;
     
     document.getElementById('mainRoomsCount').textContent = 
       (allRooms.pending || []).length + (allRooms.approved || []).length + 
@@ -1206,11 +1424,14 @@
     document.getElementById('countTransportRemoved').textContent = (allTransport.removed || []).length;
     
     document.getElementById('statTransportPending').textContent = (allTransport.pending || []).length;
-    document.getElementById('statTransportApproved').textContent = (allTransport.approved || []).length;
     
     document.getElementById('mainTransportCount').textContent = 
       (allTransport.pending || []).length + (allTransport.approved || []).length + 
       (allTransport.declined || []).length + (allTransport.removed || []).length;
+
+    // Service fee revenue
+    const totalServiceFees = allReceipts.reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
+    document.getElementById('statServiceFeeRevenue').textContent = 'R' + totalServiceFees.toFixed(2);
   }
 
   // ========================================
@@ -1234,17 +1455,10 @@
       });
     }
     
-    const totalRevenue = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.rentAmount || 0), 0);
     const totalServiceFee = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
-    const totalDeposit = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.depositAmount || 0), 0);
     
     document.getElementById('monthlyCount').textContent = filteredReceipts.length;
-    document.getElementById('monthlyRevenue').textContent = 'R' + totalRevenue.toFixed(2);
     document.getElementById('monthlyServiceFee').textContent = 'R' + totalServiceFee.toFixed(2);
-    document.getElementById('monthlyDeposit').textContent = 'R' + totalDeposit.toFixed(2);
-    
-    const totalAll = allReceipts.reduce((sum, r) => sum + parseFloat(r.rentAmount || 0), 0);
-    document.getElementById('statRevenue').textContent = 'R' + totalAll.toFixed(2);
   }
 
   // ========================================
@@ -1257,7 +1471,7 @@
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyData = months.map((_, i) => {
       return allReceipts.filter(r => new Date(r.date).getMonth() === i)
-        .reduce((sum, r) => sum + parseFloat(r.rentAmount || 0), 0);
+        .reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
     });
     
     revenueChart = new Chart(ctx, {
@@ -1265,7 +1479,7 @@
       data: {
         labels: months,
         datasets: [{
-          label: 'Revenue (R)',
+          label: 'Service Fee Revenue (R)',
           data: monthlyData,
           backgroundColor: '#0f7a5f',
           borderRadius: 4
@@ -1312,13 +1526,12 @@
   }
 
   // ========================================
-  // POPULATE YEAR FILTER
+  // POPULATE YEAR FILTER (2025-2035)
   // ========================================
   (function populateYears() {
     const yearSelect = document.getElementById('yearFilter');
-    const currentYear = new Date().getFullYear();
     yearSelect.innerHTML = '<option value="all">All Years</option>';
-    for (let y = currentYear; y >= currentYear - 5; y--) {
+    for (let y = 2035; y >= 2025; y--) {
       yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
     }
   })();
