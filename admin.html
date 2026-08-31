@@ -157,7 +157,7 @@
       margin-bottom: 16px;
       border: 1px solid #cad8cf;
       display: grid;
-      grid-template-columns: 250px 1fr;
+      grid-template-columns: 280px 1fr;
       gap: 16px;
     }
     .room-card .media-grid {
@@ -196,18 +196,39 @@
       font-size: 12px;
       grid-column: 1 / -1;
     }
-    .room-card .media-grid .media-badge {
+    .room-card .media-grid .media-item-wrapper {
       position: relative;
     }
-    .room-card .media-grid .media-badge .badge-count {
+    .room-card .media-grid .media-item-wrapper .remove-media {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(184, 73, 59, 0.9);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 14px;
+      line-height: 22px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 5;
+      transition: all 0.2s;
+    }
+    .room-card .media-grid .media-item-wrapper .remove-media:hover {
+      background: #b8493b;
+      transform: scale(1.1);
+    }
+    .room-card .media-grid .media-item-wrapper .media-type-badge {
       position: absolute;
       bottom: 4px;
-      right: 4px;
-      background: rgba(0,0,0,0.7);
+      left: 4px;
+      background: rgba(0,0,0,0.6);
       color: #fff;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 4px;
+      font-size: 10px;
       font-weight: 600;
     }
     .room-card .info { display: grid; gap: 4px; }
@@ -273,7 +294,7 @@
     .modal {
       background: #fff;
       border-radius: 12px;
-      max-width: 600px;
+      max-width: 700px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
@@ -303,6 +324,86 @@
     .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
     .modal .btn-save:hover { background: #095741; }
+
+    /* Media Management in Modal */
+    .media-manager {
+      border: 2px dashed #cad8cf;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+    .media-manager .media-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .media-manager .media-item-edit {
+      position: relative;
+      border: 1px solid #eef3ee;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f8faf9;
+    }
+    .media-manager .media-item-edit img,
+    .media-manager .media-item-edit video {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      display: block;
+    }
+    .media-manager .media-item-edit .remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(184, 73, 59, 0.9);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .media-manager .media-item-edit .remove-btn:hover {
+      background: #b8493b;
+      transform: scale(1.1);
+    }
+    .media-manager .media-item-edit .media-type-label {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 1px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .media-manager .add-media-area {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .media-manager .add-media-area input[type="file"] {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #cad8cf;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .media-manager .add-media-area button {
+      padding: 8px 16px;
+      background: #0f7a5f;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .media-manager .add-media-area button:hover { background: #095741; }
 
     /* Stats Section */
     .stats-section {
@@ -479,6 +580,7 @@
       .modal .form-row { grid-template-columns: 1fr; }
       .stats-section .header { flex-direction: column; align-items: stretch; }
       .topbar { flex-direction: column; align-items: stretch; text-align: center; }
+      .media-manager .media-list { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
     }
   </style>
 </head>
@@ -616,7 +718,7 @@
   </div>
 </div>
 
-<!-- EDIT ROOM MODAL -->
+<!-- EDIT ROOM MODAL WITH MEDIA MANAGEMENT -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
     <button class="close" onclick="closeEditRoomModal()">✕</button>
@@ -624,22 +726,41 @@
     <form id="editRoomForm">
       <input type="hidden" id="editRoomId">
       <input type="hidden" id="editRoomFrom">
+      
       <label>Title</label>
       <input type="text" id="editRoomTitle">
+      
       <label>Location</label>
       <input type="text" id="editRoomLocation">
+      
       <label>Address</label>
       <input type="text" id="editRoomAddress">
+      
       <div class="form-row">
         <div><label>Amount (R)</label><input type="text" id="editRoomAmount"></div>
         <div><label>Deposit (R)</label><input type="text" id="editRoomDeposit"></div>
       </div>
+      
       <label>Landlord Name</label>
       <input type="text" id="editRoomPosterName">
+      
       <label>Landlord Contact</label>
       <input type="text" id="editRoomPosterContact">
+      
       <label>Notes</label>
       <textarea id="editRoomNotes"></textarea>
+      
+      <!-- Media Management -->
+      <label style="margin-top:16px;">📸 Media Management</label>
+      <div class="media-manager">
+        <div id="editMediaList" class="media-list"></div>
+        <div class="add-media-area">
+          <input type="file" id="editMediaUpload" accept="image/*,video/*" multiple>
+          <button type="button" onclick="addEditMedia()">➕ Add Media</button>
+        </div>
+        <div id="editMediaStatus" style="font-size:12px;color:#637268;margin-top:6px;"></div>
+      </div>
+      
       <button type="submit" class="btn-save">💾 Save Changes</button>
     </form>
   </div>
@@ -698,6 +819,9 @@
   let revenueChart = null;
   let currentMediaList = [];
   let currentMediaIndex = 0;
+  let editingRoomId = null;
+  let editingRoomFrom = null;
+  let tempMediaFiles = [];
 
   // ========================================
   // DOM REFS
@@ -868,7 +992,6 @@
         const displayMedia = allMedia.slice(0, 4);
         mediaHtml = displayMedia.map((media, idx) => {
           const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
-          const type = isVideo ? 'video' : 'image';
           if (isVideo) {
             return `<video src="${media}" class="media-item" onclick="openMediaViewer(${JSON.stringify(allMedia)}, ${idx})" muted></video>`;
           }
@@ -920,16 +1043,11 @@
   // SERVICE FEE CALCULATION
   // ========================================
   function calculateServiceFee(rent) {
-    // Service fee based on rent amount
-    // R1000-R1900 = R300
-    // R2000-R3000 = R350
-    // R3100-R3800 = R400
-    // R3900-R7000 = R500
     if (rent >= 1000 && rent <= 1900) return 300;
     if (rent >= 2000 && rent <= 3000) return 350;
     if (rent >= 3100 && rent <= 3800) return 400;
     if (rent >= 3900 && rent <= 7000) return 500;
-    return 0; // No fee for amounts outside these ranges
+    return 0;
   }
 
   // ========================================
@@ -1059,11 +1177,15 @@
   }
 
   // ========================================
-  // EDIT ROOM
+  // EDIT ROOM WITH MEDIA MANAGEMENT
   // ========================================
   function openEditRoomModal(id, from) {
     const room = allRooms[from]?.find(r => r.id === id);
     if (!room) return;
+
+    editingRoomId = id;
+    editingRoomFrom = from;
+    tempMediaFiles = [];
 
     document.getElementById('editRoomId').value = id;
     document.getElementById('editRoomFrom').value = from;
@@ -1075,12 +1197,136 @@
     document.getElementById('editRoomPosterName').value = room.posterName || '';
     document.getElementById('editRoomPosterContact').value = room.posterContact || '';
     document.getElementById('editRoomNotes').value = room.notes || '';
+    document.getElementById('editMediaStatus').textContent = '';
+
+    // Show current media
+    renderEditMedia(room);
 
     document.getElementById('editRoomModal').classList.add('show');
   }
 
+  function renderEditMedia(room) {
+    const container = document.getElementById('editMediaList');
+    const images = room.images || [];
+    const videos = room.videos || [];
+    const allMedia = [...images, ...videos];
+    
+    if (allMedia.length === 0) {
+      container.innerHTML = '<div style="color:#637268;font-size:13px;padding:8px;">No media uploaded yet</div>';
+      return;
+    }
+
+    let html = '';
+    allMedia.forEach((media, idx) => {
+      const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i);
+      const typeLabel = isVideo ? '🎬 Video' : '🖼️ Image';
+      
+      html += `
+        <div class="media-item-edit">
+          ${isVideo ? 
+            `<video src="${media}" muted></video>` : 
+            `<img src="${media}" onerror="this.style.display='none'">`
+          }
+          <span class="media-type-label">${typeLabel}</span>
+          <button class="remove-btn" onclick="removeEditMedia(${idx})" title="Remove this media">✕</button>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+
+  function removeEditMedia(index) {
+    const room = allRooms[editingRoomFrom]?.find(r => r.id === editingRoomId);
+    if (!room) return;
+
+    const images = room.images || [];
+    const videos = room.videos || [];
+    const allMedia = [...images, ...videos];
+    
+    if (index < allMedia.length) {
+      const removed = allMedia[index];
+      // Remove from images or videos
+      const imgIdx = images.indexOf(removed);
+      if (imgIdx !== -1) {
+        room.images.splice(imgIdx, 1);
+      } else {
+        const vidIdx = videos.indexOf(removed);
+        if (vidIdx !== -1) {
+          room.videos.splice(vidIdx, 1);
+        }
+      }
+      // Update the room in allRooms
+      const roomIdx = allRooms[editingRoomFrom].findIndex(r => r.id === editingRoomId);
+      if (roomIdx !== -1) {
+        allRooms[editingRoomFrom][roomIdx] = room;
+      }
+      renderEditMedia(room);
+      // Re-render the room list
+      renderRoomTab(currentRoomTab);
+      showNotice('Media removed from preview', 'success');
+    }
+  }
+
+  function addEditMedia() {
+    const fileInput = document.getElementById('editMediaUpload');
+    const files = fileInput.files;
+    const status = document.getElementById('editMediaStatus');
+    
+    if (files.length === 0) {
+      status.textContent = '⚠️ Please select at least one file';
+      status.style.color = '#b8493b';
+      return;
+    }
+
+    const room = allRooms[editingRoomFrom]?.find(r => r.id === editingRoomId);
+    if (!room) {
+      status.textContent = '❌ Room not found';
+      status.style.color = '#b8493b';
+      return;
+    }
+
+    // Process each file
+    Array.from(files).forEach(file => {
+      // Check if it's an image or video
+      const isVideo = file.type.startsWith('video/');
+      const isImage = file.type.startsWith('image/');
+      
+      if (!isVideo && !isImage) {
+        status.textContent = `⚠️ ${file.name} is not a valid image or video`;
+        status.style.color = '#b8493b';
+        return;
+      }
+
+      // Create object URL for preview
+      const url = URL.createObjectURL(file);
+      
+      // Add to room's media
+      if (isVideo) {
+        if (!room.videos) room.videos = [];
+        room.videos.push(url);
+      } else {
+        if (!room.images) room.images = [];
+        room.images.push(url);
+      }
+    });
+
+    // Update the room in allRooms
+    const roomIdx = allRooms[editingRoomFrom].findIndex(r => r.id === editingRoomId);
+    if (roomIdx !== -1) {
+      allRooms[editingRoomFrom][roomIdx] = room;
+    }
+    
+    renderEditMedia(room);
+    renderRoomTab(currentRoomTab);
+    status.textContent = `✅ Added ${files.length} file(s) to preview`;
+    status.style.color = '#0f7a5f';
+    fileInput.value = '';
+  }
+
   function closeEditRoomModal() {
     document.getElementById('editRoomModal').classList.remove('show');
+    document.getElementById('editMediaStatus').textContent = '';
   }
 
   document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
@@ -1090,6 +1336,13 @@
     const token = localStorage.getItem('adminToken');
     if (!token) return;
 
+    // Get the updated room data
+    const room = allRooms[from]?.find(r => r.id === id);
+    if (!room) {
+      showNotice('Room not found', 'error');
+      return;
+    }
+
     const updatedRoom = {
       title: document.getElementById('editRoomTitle').value,
       location: document.getElementById('editRoomLocation').value,
@@ -1098,10 +1351,13 @@
       deposit: document.getElementById('editRoomDeposit').value,
       posterName: document.getElementById('editRoomPosterName').value,
       posterContact: document.getElementById('editRoomPosterContact').value,
-      notes: document.getElementById('editRoomNotes').value
+      notes: document.getElementById('editRoomNotes').value,
+      images: room.images || [],
+      videos: room.videos || []
     };
 
     try {
+      // Delete old room
       await fetch('/api/admin/action', {
         method: 'POST',
         headers: {
@@ -1116,6 +1372,7 @@
         })
       });
 
+      // Create updated room
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: {
@@ -1126,7 +1383,7 @@
       });
 
       if (res.ok) {
-        showNotice('✅ Room updated successfully!', 'success');
+        showNotice('✅ Room updated successfully with all media!', 'success');
         closeEditRoomModal();
         loadData();
       } else {
@@ -1361,7 +1618,7 @@
     if (isVideo) {
       content.innerHTML = `<video src="${media}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`;
     } else {
-      content.innerHTML = `<img src="${media}" style="max-width:95vw;max-height:85vh;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22500%22%3E%3Crect fill=%22%23333%22 width=%22500%22 height=%22500%22/%3E%3Ctext x=%22250%22 y=%22250%22 fill=%22%23fff%22 text-anchor=%22middle%22 font-size=%2230%22%3EImage not found%3C/text%3E%3C/svg%3E';">`;
+      content.innerHTML = `<img src="${media}" style="max-width:95vw;max-height:85vh;" onerror="this.innerHTML='<div style=\\'color:#fff;font-size:20px;\\'>Media not found</div>'">`;
     }
   }
 
