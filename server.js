@@ -72,7 +72,6 @@ function readDB() {
     return normalizeDB(parsed);
   } catch (error) {
     console.error('❌ Failed to read database:', error.message);
-    // Try to restore from backup
     const restored = restoreFromBackup();
     if (restored) {
       return readDB();
@@ -87,16 +86,13 @@ function writeDB(db) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     
-    // Create backup before writing
     backupDB();
     
-    // Write to temp file first (atomic write - prevents corruption)
     const tempFile = DB_FILE + '.tmp';
     const data = JSON.stringify(normalizeDB(db), null, 2);
     fs.writeFileSync(tempFile, data);
     fs.renameSync(tempFile, DB_FILE);
     
-    console.log('💾 Database saved successfully');
     return true;
   } catch (error) {
     console.error('❌ Failed to write database:', error.message);
@@ -110,9 +106,7 @@ function backupDB() {
     if (fs.existsSync(DB_FILE)) {
       const backupFile = path.join(DATA_DIR, `db.backup.${Date.now()}.json`);
       fs.copyFileSync(DB_FILE, backupFile);
-      console.log(`💾 Backup created: ${path.basename(backupFile)}`);
       
-      // Keep only last 5 backups
       const backups = fs.readdirSync(DATA_DIR)
         .filter(f => f.startsWith('db.backup.'))
         .sort();
@@ -120,7 +114,6 @@ function backupDB() {
       while (backups.length > 5) {
         const oldBackup = backups.shift();
         fs.unlinkSync(path.join(DATA_DIR, oldBackup));
-        console.log(`🗑️ Removed old backup: ${oldBackup}`);
       }
     }
   } catch (error) {
@@ -134,10 +127,7 @@ function restoreFromBackup() {
       .filter(f => f.startsWith('db.backup.'))
       .sort();
     
-    if (backups.length === 0) {
-      console.log('⚠️ No backups found');
-      return false;
-    }
+    if (backups.length === 0) return false;
     
     const latestBackup = backups[backups.length - 1];
     const backupPath = path.join(DATA_DIR, latestBackup);
@@ -154,11 +144,8 @@ function restoreFromBackup() {
 }
 
 function clearAllData() {
-  console.log('⚠️ WARNING: Clearing all data!');
-  // Create backup before clearing
   backupDB();
   writeDB(defaultDB);
-  console.log('🗑️ All data cleared');
   return true;
 }
 
@@ -204,12 +191,13 @@ function moneyNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+// FIXED: Synced perfectly with frontend logic
 function serviceFeeForRent(rent) {
   const amount = moneyNumber(rent);
-  if (amount >= 800 && amount <= 1500) return 200;
-  if (amount >= 1600 && amount <= 2000) return 250;
-  if (amount >= 2100 && amount <= 3000) return 300;
-  if (amount >= 3100 && amount <= 5000) return 400;
+  if (amount >= 1000 && amount <= 1900) return 300;
+  if (amount >= 2000 && amount <= 3000) return 350;
+  if (amount >= 3100 && amount <= 3800) return 400;
+  if (amount >= 3900 && amount <= 7000) return 500;
   return 0;
 }
 
@@ -268,21 +256,16 @@ function adminToken(req) {
 
 function requireAdmin(req, res) {
   const token = adminToken(req);
-  
-  // Check if token exists and is valid
   if (!token || !sessions.has(token)) {
     res.status(401).json({ error: "Admin login required" });
     return false;
   }
-  
-  // Check if session expired
   const sessionData = sessions.get(token);
   if (sessionData && Date.now() - sessionData.created > SESSION_TIMEOUT) {
     sessions.delete(token);
     res.status(401).json({ error: "Session expired, please login again" });
     return false;
   }
-  
   return token;
 }
 
@@ -337,8 +320,6 @@ function deleteItem(db, section, from, id) {
 }
 
 // ===== PUBLIC API ROUTES =====
-
-// Get public data
 app.get('/api/public', (req, res) => {
   const db = readDB();
   res.json({
@@ -348,13 +329,11 @@ app.get('/api/public', (req, res) => {
   });
 });
 
-// Get all properties (public)
 app.get('/api/properties', (req, res) => {
   const db = readDB();
   res.json(db.rooms.approved || []);
 });
 
-// Get single property (public)
 app.get('/api/properties/:id', (req, res) => {
   const db = readDB();
   const property = db.rooms.approved.find(p => p.id === req.params.id);
@@ -365,7 +344,6 @@ app.get('/api/properties/:id', (req, res) => {
   }
 });
 
-// Room media
 app.get('/api/room-media/:id/:kind', (req, res) => {
   const db = readDB();
   const room = db.rooms.approved.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
@@ -386,14 +364,12 @@ app.get('/api/room-media/:id/video', (req, res) => {
   return sendMedia(res, room?.video);
 });
 
-// Transport media
 app.get('/api/transport-media/:id/carPicture', (req, res) => {
   const db = readDB();
   const driver = db.transports.approved.find((entry) => entry.id === decodeURIComponent(req.params.id || ""));
   return sendMedia(res, driver?.carPicture);
 });
 
-// Submit room listing
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -421,7 +397,6 @@ app.post('/api/rooms', async (req, res) => {
   res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
 });
 
-// Submit review
 app.post('/api/reviews', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -439,7 +414,6 @@ app.post('/api/reviews', async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-// Submit report
 app.post('/api/reports', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -455,7 +429,6 @@ app.post('/api/reports', async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-// Submit transport
 app.post('/api/transports', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -477,7 +450,6 @@ app.post('/api/transports', async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-// Contact form
 app.post('/api/contact', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -496,51 +468,33 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // ===== ADMIN API ROUTES =====
-
-// Admin login
 app.post('/api/admin/login', async (req, res) => {
   const body = req.body;
-  
-  // Check password
   if (body.password !== ADMIN_PASSWORD) {
     return res.status(401).json({ error: "Incorrect password" });
   }
-  
-  // Generate token
   const token = crypto.randomBytes(32).toString('hex');
-  
-  // Store session with timestamp
   sessions.set(token, {
     created: Date.now(),
     expires: Date.now() + SESSION_TIMEOUT
   });
-  
-  console.log('✅ Admin logged in successfully');
-  
-  res.json({ 
-    token: token,
-    success: true 
-  });
+  res.json({ token: token, success: true });
 });
 
-// Admin logout
 app.post('/api/admin/logout', (req, res) => {
   const token = adminToken(req);
   if (token && sessions.has(token)) {
     sessions.delete(token);
-    console.log('👋 Admin logged out');
   }
   res.json({ success: true });
 });
 
-// Check session
 app.get('/api/admin/check-session', (req, res) => {
   const token = adminToken(req);
   const valid = token && sessions.has(token);
   res.json({ valid: valid });
 });
 
-// Admin data
 app.get('/api/admin/data', (req, res) => {
   const token = requireAdmin(req, res);
   if (!token) return;
@@ -548,7 +502,6 @@ app.get('/api/admin/data', (req, res) => {
   res.json(adminDB(db, token));
 });
 
-// Admin media
 app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
   const token = requireAdmin(req, res);
   if (!token) return;
@@ -568,7 +521,6 @@ app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
   return sendMedia(res, item?.images?.[index]);
 });
 
-// Admin actions
 app.post('/api/admin/action', async (req, res) => {
   const token = requireAdmin(req, res);
   if (!token) return;
@@ -578,6 +530,35 @@ app.post('/api/admin/action', async (req, res) => {
 
   if (body.action === "move") {
     moveItem(db, body.section, body.from, body.to, body.id);
+  }
+
+  // ========================================
+  // CRITICAL FIX: EDIT ACTION 
+  // Updates text and preserves original images
+  // ========================================
+  if (body.action === "edit") {
+    const section = db[body.section];
+    if (section && Array.isArray(section[body.from])) {
+      const itemIndex = section[body.from].findIndex(entry => entry.id === body.id);
+      if (itemIndex !== -1) {
+        const currentItem = section[body.from][itemIndex];
+        const updatedData = body.data || {};
+        
+        // Update only text fields, preserve original media (base64) and ID/metadata
+        section[body.from][itemIndex] = {
+          ...currentItem,
+          title: cleanText(updatedData.title, 120),
+          location: cleanText(updatedData.location, 80),
+          address: cleanText(updatedData.address, 220),
+          amount: cleanText(updatedData.amount, 40),
+          deposit: cleanText(updatedData.deposit, 80),
+          posterName: cleanText(updatedData.posterName, 100),
+          posterContact: cleanText(updatedData.posterContact, 160),
+          notes: cleanText(updatedData.notes, 800),
+          updatedAt: new Date().toISOString()
+        };
+      }
+    }
   }
 
   if (body.action === "mark-taken") {
@@ -644,9 +625,9 @@ app.post('/api/admin/action', async (req, res) => {
     if (room) room.video = "";
   }
 
-  // Clear all data (admin only - DANGEROUS)
   if (body.action === "clear-all-data") {
     clearAllData();
+    return res.json({ ok: true });
   }
 
   writeDB(db);
@@ -666,7 +647,6 @@ app.get('/transport', (req, res) => {
   res.sendFile(path.join(ROOT, 'transport.html'));
 });
 
-// ===== FALLBACK =====
 app.get('*', (req, res) => {
   res.sendFile(path.join(ROOT, 'index.html'));
 });
@@ -674,10 +654,4 @@ app.get('*', (req, res) => {
 // ===== START SERVER =====
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
-  console.log(`📄 Frontend: http://localhost:${PORT}/`);
-  console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
-  console.log(`📡 API: http://localhost:${PORT}/api/properties`);
-  console.log(`🔒 Admin password: ${ADMIN_PASSWORD}`);
-  console.log(`💾 Database: ${DB_FILE}`);
-  console.log(`📁 Data directory: ${DATA_DIR}`);
 });
