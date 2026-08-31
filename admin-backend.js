@@ -3,6 +3,11 @@
   window.liveAdminBackendConnected = false;
 
   const TOKEN_KEY = "alexandra-admin-token";
+  const SESSION_KEY = "adminSession"; // Added missing constant
+  const ADMIN_PASSWORD = "Av98012@12"; // Your admin password
+  const APPROVED_KEY = "alexandra-room-approved";
+  const TAKEN_KEY = "alexandra-room-taken";
+
   const viewMap = {
     pending: ["rooms", "pending"],
     approved: ["rooms", "approved"],
@@ -49,6 +54,22 @@
 
   let liveDB = null;
   const storedGetList = window.getList;
+
+  // Service fee calculation based on rent amount
+  function serviceFeeForRent(rentAmount) {
+    const rent = parseFloat(String(rentAmount).replace(/[^0-9.]/g, '')) || 0;
+    if (rent >= 1000 && rent <= 1900) return 300;
+    if (rent >= 2000 && rent <= 3000) return 350;
+    if (rent >= 3100 && rent <= 3800) return 400;
+    if (rent >= 3900 && rent <= 7000) return 500;
+    return 0;
+  }
+
+  function moneyNumber(value) {
+    if (!value) return '';
+    const num = parseFloat(String(value).replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? '' : num;
+  }
 
   function cleanSection(section, fallback) {
     const source = section && typeof section === "object" ? section : {};
@@ -145,13 +166,26 @@
   }
 
   async function refreshAdmin() {
-    const db = normalizeClientDB(await api("/api/admin/data"));
-    liveDB = db;
-    window.adminLiveDB = db;
-    window.liveAdminBackendConnected = true;
-    syncLocalStorage(db);
-    renderRooms();
-    if (typeof renderMonthlyReport === "function") renderMonthlyReport();
+    try {
+      const db = normalizeClientDB(await api("/api/admin/data"));
+      liveDB = db;
+      window.adminLiveDB = db;
+      window.liveAdminBackendConnected = true;
+      syncLocalStorage(db);
+      
+      // Call render functions if they exist
+      if (typeof renderRooms === "function") renderRooms();
+      if (typeof renderTransportTab === "function") renderTransportTab(currentTransportTab || 'pending');
+      if (typeof renderMonthlyReport === "function") renderMonthlyReport();
+      if (typeof updateAllCounts === "function") updateAllCounts();
+      if (typeof updateStats === "function") updateStats();
+      if (typeof renderChart === "function") renderChart();
+      
+    } catch (error) {
+      window.liveAdminBackendConnected = false;
+      console.error('Refresh admin failed:', error);
+      throw error;
+    }
   }
 
   window.refreshAdminData = refreshAdmin;
@@ -163,195 +197,227 @@
         body: JSON.stringify(payload)
       });
       await refreshAdmin();
-      if (message) showNotice(message);
+      if (message && typeof showNotice === "function") showNotice(message);
     } catch (error) {
       window.liveAdminBackendConnected = false;
       const messageText = error.message || "Admin action failed. Refresh and try again.";
-      showNotice(messageText);
+      if (typeof showNotice === "function") showNotice(messageText);
       if (/admin login required/i.test(messageText)) {
         sessionStorage.removeItem(TOKEN_KEY);
         sessionStorage.removeItem(SESSION_KEY);
-        renderAuth();
+        if (typeof renderAuth === "function") renderAuth();
       }
     }
   }
 
-  document.querySelector("#loginForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    try {
-      await loginWithPassword(document.querySelector("#adminPassword").value);
-      document.querySelector("#loginError").classList.remove("is-visible");
-      renderAuth();
-      await refreshAdmin();
-    } catch (error) {
-      const loginError = document.querySelector("#loginError");
-      loginError.textContent = error.message || "Incorrect admin password.";
-      loginError.classList.add("is-visible");
+  // ========================================
+  // SHOW NOTICE
+  // ========================================
+  function showNotice(message) {
+    const notice = document.getElementById('notice');
+    if (notice) {
+      notice.textContent = message;
+      notice.className = 'notice show success';
+      setTimeout(() => {
+        notice.classList.remove('show');
+      }, 4000);
     }
-  }, true);
+  }
 
-  document.querySelector("#logoutButton").addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    sessionStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
-    renderAuth();
-  }, true);
+  // ========================================
+  // EVENT LISTENERS
+  // ========================================
+  
+  // Login form
+  const loginForm = document.querySelector("#loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try {
+        await loginWithPassword(document.querySelector("#adminPassword").value);
+        const loginError = document.querySelector("#loginError");
+        if (loginError) loginError.classList.remove("show");
+        if (typeof renderAuth === "function") renderAuth();
+        await refreshAdmin();
+      } catch (error) {
+        const loginError = document.querySelector("#loginError");
+        if (loginError) {
+          loginError.textContent = error.message || "Incorrect admin password.";
+          loginError.classList.add("show");
+        }
+      }
+    }, true);
+  }
 
-  document.querySelector("#refreshAdminButton").addEventListener("click", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    try {
-      await refreshAdmin();
-      const pendingCount = window.adminLiveDB?.rooms?.pending?.length || 0;
-      showNotice(`Admin posts refreshed from the live server. Pending rooms: ${pendingCount}.`);
-    } catch (error) {
-      window.liveAdminBackendConnected = false;
-      showNotice(error.message || "Could not refresh admin posts. Check the live server and try again.");
-    }
-  }, true);
+  // Logout button
+  const logoutButton = document.querySelector("#logoutButton");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
+      if (typeof renderAuth === "function") renderAuth();
+      location.reload();
+    }, true);
+  }
 
-  roomList.addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-action]");
-    if (!button) return;
+  // Refresh button
+  const refreshButton = document.querySelector("#refreshAdminButton");
+  if (refreshButton) {
+    refreshButton.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try {
+        await refreshAdmin();
+        const pendingCount = window.adminLiveDB?.rooms?.pending?.length || 0;
+        showNotice(`Admin posts refreshed from the live server. Pending rooms: ${pendingCount}.`);
+      } catch (error) {
+        window.liveAdminBackendConnected = false;
+        showNotice(error.message || "Could not refresh admin posts. Check the live server and try again.");
+      }
+    }, true);
+  }
 
-    event.preventDefault();
-    event.stopImmediatePropagation();
+  // Room list click handler
+  const roomList = document.getElementById('roomList');
+  if (roomList) {
+    roomList.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-action]");
+      if (!button) return;
 
-    const [section, from] = viewMap[state.view];
-    const id = button.dataset.id;
-    const action = button.dataset.action;
+      event.preventDefault();
+      event.stopImmediatePropagation();
 
-    if (action === "issue-receipt") {
-      const room = getList(APPROVED_KEY).find((item) => item.id === id);
-      if (room) fillReceiptForm(room);
-      return;
-    }
-    if (action === "download-receipt") {
-      const room = getList(TAKEN_KEY).find((item) => item.id === id);
-      if (room) openReceiptWindow(room);
-      return;
-    }
-    if (action === "approve") return adminAction({ action: "move", section, from, to: "approved", id }, "Post approved and now visible on the public site.");
-    if (action === "decline") return adminAction({ action: "move", section, from, to: "declined", id }, "Post declined.");
-    if (action === "remove") return adminAction({ action: "move", section, from, to: "removed", id }, "Room removed from the public site.");
-    if (action === "approve-review") return adminAction({ action: "move", section, from, to: "approved", id }, "Review approved and now visible on the public site.");
-    if (action === "decline-review") return adminAction({ action: "move", section, from, to: "declined", id }, "Review declined.");
-    if (action === "approve-report") return adminAction({ action: "move", section, from, to: "approved", id }, "Scam report approved.");
-    if (action === "decline-report") return adminAction({ action: "move", section, from, to: "declined", id }, "Scam report declined.");
-    if (action === "approve-transport") return adminAction({ action: "move", section, from, to: "approved", id }, "Transport post approved and now visible on the public site.");
-    if (action === "decline-transport") return adminAction({ action: "move", section, from, to: "declined", id }, "Transport post declined.");
-    if (action === "remove-transport") return adminAction({ action: "move", section, from, to: "removed", id }, "Transport post removed from the public site.");
-    if (action === "delete") return adminAction({ action: "delete", section, from, id }, "Post deleted.");
-    if (action === "repost") return adminAction({ action: "repost", section, from, id }, "Room copied back to Pending for review.");
-    if (action === "remove-image") return adminAction({ action: "remove-image", section, from, id, index: button.dataset.index }, "Picture removed from this room post.");
-    if (action === "remove-video") return adminAction({ action: "remove-video", section, from, id }, "Video removed from this room post.");
-    if (action === "recheck-review") {
-      state.view = "review-pending";
-      setActiveTab();
-      return adminAction({ action: "move", section, from, to: "pending", id }, "Review moved back to Pending.");
-    }
-    if (action === "recheck-report") {
-      state.view = "report-pending";
-      setActiveTab();
-      return adminAction({ action: "move", section, from, to: "pending", id }, "Report moved back to Scam Reports.");
-    }
-  }, true);
+      const section = button.dataset.section || 'rooms';
+      const from = button.dataset.from || 'pending';
+      const id = button.dataset.id;
+      const action = button.dataset.action;
 
+      // Handle different actions
+      if (action === "approve") {
+        return adminAction({ action: "move", section, from, to: "approved", id }, "✅ Post approved and now visible on the public site.");
+      }
+      if (action === "decline") {
+        return adminAction({ action: "move", section, from, to: "declined", id }, "❌ Post declined.");
+      }
+      if (action === "delete") {
+        if (!confirm('⚠️ Delete this item permanently?')) return;
+        return adminAction({ action: "delete", section, from, id }, "🗑️ Item deleted.");
+      }
+      if (action === "repost") {
+        return adminAction({ action: "move", section, from, to: "pending", id }, "🔄 Item moved back to Pending.");
+      }
+      if (action === "mark-taken" || action === "issue-receipt") {
+        // Handle marking as taken with receipt
+        const room = window.adminLiveDB?.rooms?.approved?.find(r => r.id === id);
+        if (room && typeof fillReceiptForm === "function") {
+          fillReceiptForm(room);
+        }
+        return;
+      }
+      if (action === "download-receipt") {
+        const room = window.adminLiveDB?.rooms?.taken?.find(r => r.id === id);
+        if (room && typeof openReceiptWindow === "function") {
+          openReceiptWindow(room);
+        }
+        return;
+      }
+      if (action === "edit") {
+        // Handle edit - this will be handled by the edit modal in the main admin
+        if (typeof openEditRoomModal === "function") {
+          openEditRoomModal(id, from);
+        }
+        return;
+      }
+      if (action === "approve-transport") {
+        return adminAction({ action: "move", section: "transports", from, to: "approved", id }, "✅ Transport approved.");
+      }
+      if (action === "decline-transport") {
+        return adminAction({ action: "move", section: "transports", from, to: "declined", id }, "❌ Transport declined.");
+      }
+      if (action === "remove-transport") {
+        return adminAction({ action: "move", section: "transports", from, to: "removed", id }, "🗑️ Transport removed.");
+      }
+    }, true);
+  }
+
+  // ========================================
+  // RECEIPT FORM HANDLING
+  // ========================================
   const receiptForm = document.querySelector("#receiptForm");
-  const receiptRentAmount = document.querySelector("#receiptRentAmount");
-  const receiptServiceFee = document.querySelector("#receiptServiceFee");
-  const serviceFeeHint = document.querySelector("#serviceFeeHint");
+  if (receiptForm) {
+    const receiptRentAmount = document.querySelector("#receiptRentAmount");
+    const receiptServiceFee = document.querySelector("#receiptServiceFee");
+    const serviceFeeHint = document.querySelector("#serviceFeeHint");
 
-  function updateReceiptFee() {
-    const fee = serviceFeeForRent(receiptRentAmount.value);
-    receiptServiceFee.value = fee ? `R${fee}` : "R0";
-    serviceFeeHint.textContent = fee
-      ? `Calculated service fee: R${fee}.`
-      : "No service-fee band matched this rent amount.";
-  }
-
-  function fillReceiptForm(room) {
-    document.querySelector("#receiptRoomId").value = room.id || "";
-    document.querySelector("#receiptDate").value = new Date().toISOString().slice(0, 10);
-    document.querySelector("#tenantName").value = "";
-    document.querySelector("#tenantNumber").value = "";
-    document.querySelector("#receiptPaymentType").value = "Cash";
-    document.querySelector("#receiptRoomAddress").value = room.address || "";
-    document.querySelector("#receiptRentAmount").value = moneyNumber(room.amount) || "";
-    document.querySelector("#receiptDepositAmount").value = room.deposit || "";
-    updateReceiptFee();
-    receiptForm.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function receiptFromForm() {
-    const rentAmount = document.querySelector("#receiptRentAmount").value.trim();
-    return {
-      date: document.querySelector("#receiptDate").value,
-      tenantName: document.querySelector("#tenantName").value.trim(),
-      tenantNumber: document.querySelector("#tenantNumber").value.trim(),
-      paymentType: document.querySelector("#receiptPaymentType").value.trim(),
-      roomAddress: document.querySelector("#receiptRoomAddress").value.trim(),
-      rentAmount,
-      depositAmount: document.querySelector("#receiptDepositAmount").value.trim(),
-      serviceFee: serviceFeeForRent(rentAmount)
-    };
-  }
-
-  receiptRentAmount.addEventListener("input", updateReceiptFee);
-
-  receiptForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    const id = document.querySelector("#receiptRoomId").value;
-    const receipt = receiptFromForm();
-    try {
-      await api("/api/admin/action", {
-        method: "POST",
-        body: JSON.stringify(id
-          ? { action: "mark-taken", id, receipt }
-          : { action: "manual-receipt", receipt, title: "Manual receipt" })
-      });
-      await refreshAdmin();
-      const taken = getList(TAKEN_KEY);
-      const room = taken.find((item) => item.id === id) || taken[0];
-      if (room) openReceiptWindow(room);
-      receiptForm.reset();
-      updateReceiptFee();
-      showNotice("Receipt saved under Taken and opened for download.");
-    } catch (error) {
-      window.liveAdminBackendConnected = false;
-      showNotice(error.message || "Receipt could not be saved. Refresh and try again.");
+    function updateReceiptFee() {
+      const fee = serviceFeeForRent(receiptRentAmount?.value || '');
+      if (receiptServiceFee) receiptServiceFee.value = fee ? `R${fee}` : "R0";
+      if (serviceFeeHint) {
+        serviceFeeHint.textContent = fee
+          ? `Calculated service fee: R${fee}.`
+          : "No service-fee band matched this rent amount.";
+      }
     }
-  }, true);
 
-  document.querySelector("#manualReceiptButton").addEventListener("click", (event) => {
-    event.preventDefault();
-    document.querySelector("#receiptRoomId").value = "";
-    if (!document.querySelector("#receiptDate").value) document.querySelector("#receiptDate").value = new Date().toISOString().slice(0, 10);
-    updateReceiptFee();
-    showNotice("Manual receipt mode ready. Fill the fields and click Create Receipt.");
-  }, true);
+    if (receiptRentAmount) {
+      receiptRentAmount.addEventListener("input", updateReceiptFee);
+    }
 
-  document.querySelector("#clearReceiptButton").addEventListener("click", () => {
-    receiptForm.reset();
-    document.querySelector("#receiptRoomId").value = "";
-    updateReceiptFee();
-  }, true);
+    receiptForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const id = document.querySelector("#receiptRoomId")?.value;
+      const receipt = {
+        date: document.querySelector("#receiptDate")?.value || new Date().toISOString().slice(0, 10),
+        tenantName: document.querySelector("#tenantName")?.value.trim() || 'Unknown tenant',
+        tenantNumber: document.querySelector("#tenantNumber")?.value.trim() || '',
+        paymentType: document.querySelector("#receiptPaymentType")?.value.trim() || 'Cash',
+        roomAddress: document.querySelector("#receiptRoomAddress")?.value.trim() || '',
+        rentAmount: document.querySelector("#receiptRentAmount")?.value.trim() || '0',
+        depositAmount: document.querySelector("#receiptDepositAmount")?.value.trim() || '0',
+        serviceFee: serviceFeeForRent(document.querySelector("#receiptRentAmount")?.value || '0')
+      };
+      try {
+        await api("/api/admin/action", {
+          method: "POST",
+          body: JSON.stringify(id
+            ? { action: "mark-taken", id, receipt }
+            : { action: "manual-receipt", receipt, title: "Manual receipt" })
+        });
+        await refreshAdmin();
+        const taken = window.adminLiveDB?.rooms?.taken || [];
+        const room = taken.find((item) => item.id === id) || taken[0];
+        if (room && typeof openReceiptWindow === "function") {
+          openReceiptWindow(room);
+        }
+        if (receiptForm) receiptForm.reset();
+        updateReceiptFee();
+        showNotice("✅ Receipt saved and opened for download.");
+      } catch (error) {
+        window.liveAdminBackendConnected = false;
+        showNotice(error.message || "Receipt could not be saved.");
+      }
+    }, true);
+  }
 
+  // ========================================
+  // INITIALIZATION
+  // ========================================
   if (token()) {
     sessionStorage.setItem(SESSION_KEY, "yes");
     refreshAdmin().catch(() => {
       window.liveAdminBackendConnected = false;
       sessionStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(SESSION_KEY);
-      renderAuth();
+      if (typeof renderAuth === "function") renderAuth();
     });
   } else {
     sessionStorage.removeItem(SESSION_KEY);
     window.adminLiveDB = null;
-    renderAuth();
+    if (typeof renderAuth === "function") renderAuth();
   }
 
   window.addEventListener("focus", () => {
@@ -359,4 +425,15 @@
       refreshAdmin().catch(() => {});
     }
   });
+
+  // ========================================
+  // EXPOSE FUNCTIONS TO GLOBAL SCOPE
+  // ========================================
+  window.serviceFeeForRent = serviceFeeForRent;
+  window.adminAction = adminAction;
+  window.refreshAdmin = refreshAdmin;
+  window.loginWithPassword = loginWithPassword;
+  window.showNotice = showNotice;
+  window.liveDB = () => liveDB;
+
 })();
