@@ -747,7 +747,6 @@
   // CONFIGURATION
   // ========================================
   const SESSION_KEY = "adminSession";
-  const ADMIN_PASSWORD = "Av98012@12";
 
   let currentRoomTab = 'pending';
   let currentTransportTab = 'pending';
@@ -774,7 +773,7 @@
   const notice = document.getElementById('notice');
 
   // ========================================
-  // LOGIN
+  // LOGIN (Securely verified by backend)
   // ========================================
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -815,7 +814,7 @@
   }
 
   // ========================================
-  // LOAD DATA - KEEP ORIGINAL MEDIA URLs
+  // LOAD DATA
   // ========================================
   async function loadData() {
     const token = localStorage.getItem('adminToken');
@@ -830,7 +829,6 @@
 
       const data = await res.json();
       
-      // CRITICAL: Preserve ALL original data including media URLs
       if (data.rooms) {
         allRooms = {
           pending: (data.rooms.pending || []).map(r => ({ ...r })),
@@ -918,7 +916,7 @@
   }
 
   // ========================================
-  // ROOM FUNCTIONS - SHOW ORIGINAL MEDIA
+  // ROOM FUNCTIONS
   // ========================================
   function switchRoomTab(tab) {
     currentRoomTab = tab;
@@ -926,6 +924,13 @@
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
     renderRoomTab(tab);
+  }
+
+  // Helper to fix relative image paths so they show correctly in admin and public
+  function fixMediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) return url;
+    return '/' + url;
   }
 
   function renderRoomTab(tab) {
@@ -939,7 +944,6 @@
 
     let html = '';
     rooms.forEach(room => {
-      // CRITICAL: Use the original images and videos from the room
       const images = room.images || [];
       const videos = room.videos || [];
       const allMedia = [...images, ...videos];
@@ -947,16 +951,19 @@
       let mediaHtml = '';
       if (allMedia.length > 0) {
         const displayMedia = allMedia.slice(0, 4);
+        const encodedAllMedia = encodeURIComponent(JSON.stringify(allMedia));
+        
         mediaHtml = displayMedia.map((media, idx) => {
-          const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i) || media.includes('video');
+          const safeMedia = fixMediaUrl(media);
+          const isVideo = safeMedia.match(/\.(mp4|webm|ogg|mov)$/i) || safeMedia.includes('video');
           if (isVideo) {
-            return `<video src="${media}" class="media-item" onclick="openMediaViewer(${JSON.stringify(allMedia)}, ${idx})" muted></video>`;
+            return `<video src="${safeMedia}" class="media-item" onclick="openMediaViewer('${encodedAllMedia}', ${idx})" muted></video>`;
           }
-          return `<img src="${media}" class="media-item" alt="Room" onclick="openMediaViewer(${JSON.stringify(allMedia)}, ${idx})" onerror="this.style.display='none'">`;
+          return `<img src="${safeMedia}" class="media-item" alt="Room" onclick="openMediaViewer('${encodedAllMedia}', ${idx})" onerror="this.src='https://placehold.co/150x100/cccccc/969696?text=Image+Error'">`;
         }).join('');
         
         if (allMedia.length > 4) {
-          mediaHtml += `<div class="media-item" style="background:#0f7a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;border-radius:6px;" onclick="openMediaViewer(${JSON.stringify(allMedia)}, 0)">+${allMedia.length - 4} more</div>`;
+          mediaHtml += `<div class="media-item" style="background:#0f7a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;border-radius:6px;" onclick="openMediaViewer('${encodedAllMedia}', 0)">+${allMedia.length - 4} more</div>`;
         }
       } else {
         mediaHtml = `<div class="no-media">📷 No media uploaded</div>`;
@@ -1134,7 +1141,7 @@
   }
 
   // ========================================
-  // EDIT ROOM - SHOW ORIGINAL MEDIA ONLY
+  // EDIT ROOM (Updates text safely, preserves media, NO accidental deletion)
   // ========================================
   function openEditRoomModal(id, from) {
     const room = allRooms[from]?.find(r => r.id === id);
@@ -1158,15 +1165,12 @@
     document.getElementById('editRoomNotes').value = room.notes || '';
     document.getElementById('editMediaStatus').textContent = '';
 
-    // Show current media - CRITICAL: Show ONLY the original media from the room
     renderEditMedia(room);
-
     document.getElementById('editRoomModal').classList.add('show');
   }
 
   function renderEditMedia(room) {
     const container = document.getElementById('editMediaList');
-    // CRITICAL: Get the original images and videos from the room
     const images = room.images || [];
     const videos = room.videos || [];
     const allMedia = [...images, ...videos];
@@ -1178,14 +1182,15 @@
 
     let html = '';
     allMedia.forEach((media, idx) => {
-      const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i) || media.includes('video');
+      const safeMedia = fixMediaUrl(media);
+      const isVideo = safeMedia.match(/\.(mp4|webm|ogg|mov)$/i) || safeMedia.includes('video');
       const typeLabel = isVideo ? '🎬 Video' : '🖼️ Image';
       
       html += `
         <div class="media-item-edit">
           ${isVideo ? 
-            `<video src="${media}" muted></video>` : 
-            `<img src="${media}" onerror="this.style.display='none'">`
+            `<video src="${safeMedia}" muted></video>` : 
+            `<img src="${safeMedia}" onerror="this.src='https://placehold.co/100x100/cccccc/969696?text=Error'">`
           }
           <span class="media-type-label">${typeLabel}</span>
           <button class="remove-btn" onclick="removeEditMedia(${idx})" title="Remove this media">✕</button>
@@ -1243,7 +1248,6 @@
       return;
     }
 
-    // CRITICAL: Keep ONLY the original media URLs (no blob URLs)
     const originalImages = (room.images || []).filter(url => !url.startsWith('blob:'));
     const originalVideos = (room.videos || []).filter(url => !url.startsWith('blob:'));
 
@@ -1261,32 +1265,24 @@
     };
 
     try {
-      await fetch('/api/admin/action', {
+      const res = await fetch('/api/admin/action', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({
-          action: 'delete',
+          action: 'edit',
           section: 'rooms',
           from: from,
-          id: id
+          id: id,
+          data: updatedRoom
         })
-      });
-
-      const res = await fetch('/api/rooms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(updatedRoom)
       });
 
       const result = await res.json();
       
-      if (res.ok) {
+      if (res.ok && result.ok) {
         showNotice('✅ Room updated successfully! Original media preserved.', 'success');
         closeEditRoomModal();
         await loadData();
@@ -1322,14 +1318,13 @@
     transports.forEach(transport => {
       const statusBadge = `<span class="badge ${tab}">${tab}</span>`;
       const driver = transport.driverName ? `👤 ${transport.driverName} ${transport.contact ? '📞 '+transport.contact : ''}` : '';
+      const safeImg = fixMediaUrl(transport.images && transport.images.length > 0 ? transport.images[0] : '');
 
       html += `
         <div class="transport-card">
           <div class="media-grid">
             ${transport.images && transport.images.length > 0 ? 
-              transport.images.slice(0, 2).map(img =>
-                `<img src="${img}" class="media-item" alt="Transport" onclick="viewMedia('${img}','image')" onerror="this.style.display='none'">`
-              ).join('') :
+              `<img src="${safeImg}" class="media-item" alt="Transport" onclick="viewMedia('${encodeURIComponent(safeImg)}','image')" onerror="this.src='https://placehold.co/150x100/cccccc/969696?text=Image+Error'">` :
               `<div class="no-media">🚗 No image</div>`
             }
           </div>
@@ -1427,7 +1422,7 @@
   }
 
   // ========================================
-  // EDIT TRANSPORT
+  // EDIT TRANSPORT (Updates text safely, preserves media, NO accidental deletion)
   // ========================================
   function openEditTransportModal(id, from) {
     const transport = allTransport[from]?.find(t => t.id === id);
@@ -1466,27 +1461,19 @@
     };
 
     try {
-      await fetch('/api/admin/action', {
+      const res = await fetch('/api/admin/action', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({
-          action: 'delete',
+          action: 'edit',
           section: 'transport',
           from: from,
-          id: id
+          id: id,
+          data: updatedTransport
         })
-      });
-
-      const res = await fetch('/api/transport', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(updatedTransport)
       });
 
       if (res.ok) {
@@ -1497,32 +1484,37 @@
         showNotice('Failed to update transport', 'error');
       }
     } catch (err) {
-      showNotice('Update failed', 'error');
+      showNotice('Update failed: ' + err.message, 'error');
     }
   });
 
   // ========================================
   // MEDIA VIEWER
   // ========================================
-  function openMediaViewer(mediaList, index) {
-    currentMediaList = mediaList;
-    currentMediaIndex = index;
-    showMedia();
-    document.getElementById('mediaViewer').classList.add('show');
+  function openMediaViewer(encodedList, index) {
+    try {
+      currentMediaList = JSON.parse(decodeURIComponent(encodedList));
+      currentMediaIndex = index;
+      showMedia();
+      document.getElementById('mediaViewer').classList.add('show');
+    } catch (e) {
+      console.error("Error opening media viewer:", e);
+    }
   }
 
   function showMedia() {
-    const media = currentMediaList[currentMediaIndex];
+    let media = currentMediaList[currentMediaIndex];
+    const safeMedia = fixMediaUrl(media);
     const content = document.getElementById('mediaContent');
     const counter = document.getElementById('mediaCounter');
     
     counter.textContent = `${currentMediaIndex + 1} / ${currentMediaList.length}`;
     
-    const isVideo = media.match(/\.(mp4|webm|ogg|mov)$/i) || media.includes('video');
+    const isVideo = safeMedia.match(/\.(mp4|webm|ogg|mov)$/i) || safeMedia.includes('video');
     if (isVideo) {
-      content.innerHTML = `<video src="${media}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`;
+      content.innerHTML = `<video src="${safeMedia}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`;
     } else {
-      content.innerHTML = `<img src="${media}" style="max-width:95vw;max-height:85vh;" onerror="this.innerHTML='<div style=\\'color:#fff;font-size:20px;\\'>Media not found</div>'">`;
+      content.innerHTML = `<img src="${safeMedia}" style="max-width:95vw;max-height:85vh;" onerror="this.src='https://placehold.co/600x400/cccccc/969696?text=Media+not+found'">`;
     }
   }
 
@@ -1545,8 +1537,9 @@
     }
   }
 
-  function viewMedia(src, type) {
-    openMediaViewer([src], 0);
+  function viewMedia(srcEncoded, type) {
+    const decodedSrc = decodeURIComponent(srcEncoded);
+    openMediaViewer(encodeURIComponent(JSON.stringify([decodedSrc])), 0);
   }
 
   document.addEventListener('keydown', function(e) {
