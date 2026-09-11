@@ -19,7 +19,6 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
-
     .topbar { background: var(--green); color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
     .topbar-left { display: flex; align-items: center; gap: 12px; }
     .topbar-left img { height: 52px; width: auto; background: #fff; padding: 4px; border-radius: 6px; }
@@ -27,13 +26,10 @@
     .brand small { color: rgba(255,255,255,0.7); font-size: 11px; display: block; font-weight: 500; letter-spacing: 0.5px; }
     .topbar a { color: #fff; text-decoration: none; font-weight: 600; }
     .topbar a:hover { color: var(--gold); }
-
     .container { max-width: 820px; margin: 28px auto; padding: 0 20px; }
-
     .hero-strip { background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%); color: #fff; border-radius: 14px; padding: 28px 24px; margin-bottom: 24px; text-align: center; border-bottom: 4px solid var(--gold); }
     .hero-strip h1 { margin: 0; font-size: 26px; font-weight: 900; }
     .hero-strip p { margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px; }
-
     .role-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
     .role-card { background: #fff; border: 3px solid var(--border); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; user-select: none; }
     .role-card:hover { border-color: var(--green); transform: translateY(-2px); }
@@ -41,46 +37,44 @@
     .role-card .icon { font-size: 42px; }
     .role-card .role-title { font-weight: 800; font-size: 18px; margin-top: 6px; color: var(--green); }
     .role-card .role-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-
     .form-card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); border: 1px solid var(--border); }
     .form-card h2 { margin-top: 0; color: var(--green); border-bottom: 3px solid var(--gold); padding-bottom: 10px; display: inline-block; }
-
     label { display: block; font-weight: 700; margin-top: 16px; font-size: 14px; }
     input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; margin-top: 6px; font-family: inherit; background: #fff; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(15,61,46,0.1); }
     textarea { min-height: 100px; resize: vertical; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
     .file-upload-box { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; margin-top: 6px; background: #f8faf9; cursor: pointer; }
     .file-upload-box:hover { border-color: var(--green); }
     .file-upload-box input { border: none; padding: 0; margin: 0; }
     .preview-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
     .preview-grid img, .preview-grid video { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
-
     .btn-submit { width: 100%; padding: 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 17px; font-weight: 800; cursor: pointer; margin-top: 24px; letter-spacing: 0.5px; border-bottom: 4px solid var(--gold); transition: all 0.2s; }
     .btn-submit:hover { background: var(--green-dark); }
     .btn-submit:disabled { background: var(--muted); cursor: not-allowed; border-bottom-color: transparent; }
-
     .notice { padding: 14px; border-radius: 8px; margin: 16px 0; display: none; font-weight: 600; text-align: center; }
     .notice.show { display: block; }
     .notice.success { background: #dbf4e9; color: var(--green); border-left: 4px solid var(--green); }
     .notice.error { background: #fde5df; color: #7f2318; border-left: 4px solid #b8493b; }
-
     .hidden { display: none !important; }
     .conditional-box { background: #f8faf9; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 14px; margin-top: 8px; }
-
+    .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .checkbox-grid label { display: flex; align-items: center; font-weight: 600; margin-top: 0; cursor: pointer; padding: 8px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
+    .checkbox-grid label:hover { background: #eef4ef; border-color: var(--border); }
+    .checkbox-grid input[type="checkbox"] { width: auto; margin: 0 10px 0 0; padding: 0; }
+    .checkbox-grid input[type="checkbox"]:checked + span { color: var(--green); font-weight: 800; }
+    .alexandra-suburb-box { background: #fff8e1; border-left-color: var(--gold); }
+    .alexandra-suburb-box select { background: #fff; }
     .fee-info-section { background: var(--green); color: #fff; border-radius: 14px; padding: 30px 24px; margin-top: 32px; text-align: center; border-top: 4px solid var(--gold); }
     .fee-info-section h3 { margin: 0 0 8px 0; color: var(--gold-light); font-size: 22px; letter-spacing: 0.5px; }
     .fee-info-section p { margin: 0 0 20px 0; color: rgba(255,255,255,0.75); font-size: 13px; }
     .fee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
     .fee-pill { background: rgba(255,255,255,0.08); border: 1px solid rgba(201,162,39,0.4); border-radius: 8px; padding: 14px; font-size: 13px; color: rgba(255,255,255,0.85); }
     .fee-pill strong { color: var(--gold-light); display: block; font-size: 20px; margin-top: 4px; font-weight: 900; }
-
     .footer { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 12px; margin-top: 20px; }
     .footer strong { color: var(--green); display: block; margin-bottom: 4px; }
-
     @media (max-width: 600px) {
-      .form-row, .role-picker { grid-template-columns: 1fr; }
+      .form-row, .role-picker, .checkbox-grid { grid-template-columns: 1fr; }
       .topbar-left img { height: 40px; }
       .brand { font-size: 15px; }
     }
@@ -120,27 +114,29 @@
 
   <div id="notice" class="notice"></div>
 
-  <!-- LANDLORD FORM -->
+  <!-- ============ LANDLORD FORM ============ -->
   <div class="form-card hidden" id="landlordFormCard">
     <h2>🏠 List Your Room</h2>
     <form id="landlordForm">
-      <label>📍 Location / Area *</label>
+      <label>📍 Location / Area * <span style="font-weight:500;color:var(--muted);font-size:12px;">(one location only)</span></label>
       <select id="postLocation" required>
         <option value="">Select area...</option>
       </select>
 
-      <div id="landlordAlexandraBox" class="conditional-box hidden">
+      <div id="landlordAlexandraBox" class="conditional-box hidden alexandra-suburb-box">
         <label>🏘️ Alexandra Suburb / Avenue *</label>
         <select id="landlordAlexandraSuburb">
           <option value="">Select suburb...</option>
-          <option>1st Avenue – 12th Avenue</option>
-          <option>12th Avenue – 22nd Avenue</option>
           <option>East Bank</option>
-          <option>Tsutsumane</option>
-          <option>River Park</option>
+          <option>Far East Bank</option>
           <option>Ext 7</option>
           <option>Ext 8</option>
           <option>Ext 9</option>
+          <option>Tsutsumane</option>
+          <option>River Park</option>
+          <option>River Park Phase 3</option>
+          <option>1st Avenue – 12th Avenue</option>
+          <option>13th Avenue – 22nd Avenue</option>
         </select>
       </div>
 
@@ -226,7 +222,7 @@
     </form>
   </div>
 
-  <!-- TENANT FORM -->
+  <!-- ============ TENANT FORM ============ -->
   <div class="form-card hidden" id="tenantFormCard">
     <h2>🔎 Looking for a Room?</h2>
     <form id="tenantForm">
@@ -236,22 +232,27 @@
       <label>📞 Your Contact Number *</label>
       <input type="text" id="contactNumber" placeholder="e.g., 072 123 4567" required>
 
-      <label>📍 Preferred Location(s) *</label>
-      <div class="conditional-box" id="locationCheckboxes"></div>
+      <label>📍 Preferred Locations * <span style="font-weight:500;color:var(--muted);font-size:12px;">(select ALL that apply — you can pick multiple)</span></label>
+      <div class="conditional-box">
+        <div class="checkbox-grid" id="locationCheckboxes">
+          <!-- Filled by JS -->
+        </div>
+      </div>
 
-      <div id="alexandraSuburbBox" class="conditional-box hidden">
-        <label>🏘️ Alexandra Suburb / Avenue *</label>
-        <select id="alexandraSuburb">
-          <option value="">Select suburb...</option>
-          <option>1st Avenue – 12th Avenue</option>
-          <option>12th Avenue – 22nd Avenue</option>
-          <option>East Bank</option>
-          <option>Tsutsumane</option>
-          <option>River Park</option>
-          <option>Ext 7</option>
-          <option>Ext 8</option>
-          <option>Ext 9</option>
-        </select>
+      <div id="alexandraSuburbBox" class="conditional-box hidden alexandra-suburb-box">
+        <label>🏘️ Alexandra Suburb / Avenue <span style="font-weight:500;color:var(--muted);font-size:12px;">(select all that apply)</span></label>
+        <div class="checkbox-grid" id="alexandraSuburbCheckboxes">
+          <label><input type="checkbox" class="alex-check" value="East Bank"><span>East Bank</span></label>
+          <label><input type="checkbox" class="alex-check" value="Far East Bank"><span>Far East Bank</span></label>
+          <label><input type="checkbox" class="alex-check" value="Ext 7"><span>Ext 7</span></label>
+          <label><input type="checkbox" class="alex-check" value="Ext 8"><span>Ext 8</span></label>
+          <label><input type="checkbox" class="alex-check" value="Ext 9"><span>Ext 9</span></label>
+          <label><input type="checkbox" class="alex-check" value="Tsutsumane"><span>Tsutsumane</span></label>
+          <label><input type="checkbox" class="alex-check" value="River Park"><span>River Park</span></label>
+          <label><input type="checkbox" class="alex-check" value="River Park Phase 3"><span>River Park Phase 3</span></label>
+          <label><input type="checkbox" class="alex-check" value="1st Avenue – 12th Avenue"><span>1st – 12th Avenue</span></label>
+          <label><input type="checkbox" class="alex-check" value="13th Avenue – 22nd Avenue"><span>13th – 22nd Avenue</span></label>
+        </div>
       </div>
 
       <div class="form-row">
@@ -327,7 +328,6 @@
     </form>
   </div>
 
-  <!-- SERVICE FEE VIEW -->
   <div class="fee-info-section">
     <h3>💰 Service Fee Structure</h3>
     <p>Applied when a tenant successfully secures a room through Vusani Ikhaya Properties.</p>
@@ -350,9 +350,24 @@
   const notice = document.getElementById('notice');
   let previewURLs = [];
 
+  // =========================================================
+  // TOP-LEVEL LOCATIONS (Landlord dropdown + Tenant checkboxes)
+  // =========================================================
   const LOCATIONS = [
-    'Alexandra Township','Marlboro','Lombardy','Bramley','Wynberg','Balfour',
-    'Orange Grove','Sandton','Kelvin','Kew','Highlands North','Savoy Estate','Edenvale','Other'
+    'Alexandra Township',
+    'Marlboro',
+    'Lombardy',
+    'Bramley',
+    'Wynberg',
+    'Balfour',
+    'Orange Grove',
+    'Sandton',
+    'Kelvin',
+    'Kew',
+    'Highlands North',
+    'Savoy Estate',
+    'Edenvale',
+    'Other'
   ];
 
   // Fill landlord dropdown
@@ -370,20 +385,23 @@
     });
   })();
 
-  // Fill tenant checkboxes
+  // Fill tenant top-level location checkboxes
   (function buildLocations() {
     const wrap = document.getElementById('locationCheckboxes');
     wrap.innerHTML = LOCATIONS.map(loc => `
-      <label style="display:flex;align-items:center;font-weight:600;margin-top:8px;cursor:pointer;">
-        <input type="checkbox" class="loc-check" value="${loc}" style="width:auto;margin:0 10px 0 0;">
-        ${loc}
+      <label>
+        <input type="checkbox" class="loc-check" value="${loc}">
+        <span>${loc}</span>
       </label>
     `).join('');
+
     wrap.querySelectorAll('.loc-check').forEach(cb => {
       cb.addEventListener('change', (e) => {
         const isAlexandra = e.target.value === 'Alexandra Township' && e.target.checked;
         document.getElementById('alexandraSuburbBox').classList.toggle('hidden', !isAlexandra);
-        if (!isAlexandra) document.getElementById('alexandraSuburb').value = '';
+        if (!isAlexandra) {
+          document.querySelectorAll('.alex-check').forEach(x => x.checked = false);
+        }
       });
     });
   })();
@@ -403,6 +421,7 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // Conditional toggles — LANDLORD
   document.getElementById('postChild').addEventListener('change', function () {
     const show = this.value === 'Yes';
     document.getElementById('landlordKidsBox').classList.toggle('hidden', !show);
@@ -413,6 +432,8 @@
     document.getElementById('landlordCarsBox').classList.toggle('hidden', !show);
     if (!show) document.getElementById('landlordMaxCars').value = '';
   });
+
+  // Conditional toggles — TENANT
   document.getElementById('tenantChild').addEventListener('change', function () {
     const show = this.value === 'Yes';
     document.getElementById('childrenDetailsBox').classList.toggle('hidden', !show);
@@ -427,6 +448,7 @@
     if (!show) document.getElementById('carsCount').value = '';
   });
 
+  // File → base64
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -472,7 +494,7 @@
     }
   });
 
-  // LANDLORD SUBMIT
+  // ===== LANDLORD SUBMIT =====
   document.getElementById('landlordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     notice.classList.remove('show');
@@ -541,19 +563,35 @@
     }
   });
 
-  // TENANT SUBMIT
+  // ===== TENANT SUBMIT =====
   document.getElementById('tenantForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     notice.classList.remove('show');
 
+    // Collect all checked top-level locations
     const checkedLocations = Array.from(document.querySelectorAll('.loc-check:checked')).map(cb => cb.value);
     if (checkedLocations.length === 0) { showNotice('❌ Choose at least one preferred location.', 'error'); return; }
 
-    let alexandraSuburb = '';
+    // If Alexandra Township is selected, collect ALL Alexandra suburbs checked
+    let alexandraSuburbs = [];
     if (checkedLocations.includes('Alexandra Township')) {
-      alexandraSuburb = document.getElementById('alexandraSuburb').value;
-      if (!alexandraSuburb) { showNotice('❌ Select an Alexandra suburb.', 'error'); return; }
+      alexandraSuburbs = Array.from(document.querySelectorAll('.alex-check:checked')).map(cb => cb.value);
     }
+
+    // Compose the combined locations array:
+    // ['Marlboro', 'Alexandra Township (Ext 8)', 'Alexandra Township (River Park)', ...]
+    const finalLocations = [];
+    checkedLocations.forEach(loc => {
+      if (loc === 'Alexandra Township' && alexandraSuburbs.length > 0) {
+        // Send each Alexandra suburb as its own entry prefixed with "Alexandra Township — X"
+        alexandraSuburbs.forEach(sub => {
+          finalLocations.push(`Alexandra Township — ${sub}`);
+        });
+      } else {
+        finalLocations.push(loc);
+      }
+    });
+
     const childFriendly = document.getElementById('tenantChild').value;
     let childrenCount = '', childrenAges = '';
     if (childFriendly === 'Yes') {
@@ -577,8 +615,8 @@
       const payload = {
         tenantName: document.getElementById('tenantName').value.trim(),
         contactNumber: document.getElementById('contactNumber').value.trim(),
-        preferredLocations: checkedLocations,
-        alexandraSuburb: alexandraSuburb,
+        preferredLocations: finalLocations,
+        alexandraSuburb: alexandraSuburbs.join(', '), // combined
         roomType: document.getElementById('roomType').value,
         budget: budgetRange,
         budgetRange: budgetRange,
