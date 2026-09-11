@@ -30,7 +30,7 @@ app.use(cors());
 app.use(express.json({ limit: '80mb' }));
 
 // =========================================================
-// VISITOR TRACKING MIDDLEWARE (runs before static serving)
+// VISITOR TRACKING MIDDLEWARE
 // =========================================================
 app.use((req, res, next) => {
   try {
@@ -40,7 +40,7 @@ app.use((req, res, next) => {
       !req.path.startsWith('/admin') &&
       !req.path.startsWith('/database/') &&
       !req.path.startsWith('/favicon') &&
-      !/\.[a-z0-9]+$/i.test(req.path); // skip files with extensions (.png, .css, .js)
+      !/\.[a-z0-9]+$/i.test(req.path);
     if (isPublicPage) recordVisit(req);
   } catch (e) { /* never block */ }
   next();
@@ -131,16 +131,12 @@ function clearAllData() { backupDB(); writeDB(defaultDB); return true; }
 // =========================================================
 function readTraffic() {
   try {
-    if (!fs.existsSync(TRAFFIC_FILE)) {
-      return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
-    }
+    if (!fs.existsSync(TRAFFIC_FILE)) return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
     const raw = fs.readFileSync(TRAFFIC_FILE, "utf8").replace(/^\uFEFF/, "");
     const parsed = raw.trim() ? JSON.parse(raw) : { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
     if (!parsed.days) parsed.days = {};
     return parsed;
-  } catch (e) {
-    return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
-  }
+  } catch (e) { return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }; }
 }
 
 function writeTraffic(t) {
@@ -164,7 +160,7 @@ function getClientIP(req) {
 function isBot(req) {
   const ua = String(req.headers['user-agent'] || '').toLowerCase();
   if (!ua) return true;
-  const bots = ['bot', 'crawl', 'spider', 'slurp', 'facebookexternalhit', 'whatsapp', 'telegrambot', 'preview', 'curl', 'wget', 'python-requests', 'python-urllib', 'java/', 'monitoring', 'uptime', 'pingdom', 'ahrefs', 'semrush', 'mj12', 'dotbot', 'petal', 'yandex', 'baidu', 'googlebot', 'bingbot', 'duckduckbot', 'headlesschrome', 'phantomjs', 'lighthouse'];
+  const bots = ['bot','crawl','spider','slurp','facebookexternalhit','whatsapp','telegrambot','preview','curl','wget','python-requests','python-urllib','java/','monitoring','uptime','pingdom','ahrefs','semrush','mj12','dotbot','petal','yandex','baidu','googlebot','bingbot','duckduckbot','headlesschrome','phantomjs','lighthouse'];
   return bots.some(b => ua.includes(b));
 }
 
@@ -189,13 +185,10 @@ function recordVisit(req) {
       t.days[today].visitors[vid] += 1;
     }
     t.totalPageviews = (t.totalPageviews || 0) + 1;
-
-    // Keep last 365 days
     const keys = Object.keys(t.days).sort();
     while (keys.length > 365) delete t.days[keys.shift()];
-
     writeTraffic(t);
-  } catch (e) { /* silently fail */ }
+  } catch (e) {}
 }
 
 function trafficSummary() {
@@ -203,7 +196,6 @@ function trafficSummary() {
   const today = todayKey();
   const todayData = t.days[today] || { pageviews: 0, visitors: {} };
 
-  // This week — last 7 days including today
   const weekVisitors = {};
   let weekPageviews = 0;
   for (let i = 0; i < 7; i++) {
@@ -216,7 +208,6 @@ function trafficSummary() {
     }
   }
 
-  // This month
   const monthVisitors = {};
   let monthPageviews = 0;
   const now = new Date();
@@ -229,7 +220,6 @@ function trafficSummary() {
     }
   });
 
-  // Previous 7 days for % change
   const prevWeekVisitors = {};
   for (let i = 7; i < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() - i);
@@ -244,7 +234,6 @@ function trafficSummary() {
   const prevWeekCount = Object.keys(prevWeekVisitors).length;
   const weekChange = prevWeekCount ? Math.round(((weekCount - prevWeekCount) / prevWeekCount) * 100) : 0;
 
-  // Last 7 days chart data
   const last7Days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
@@ -258,15 +247,10 @@ function trafficSummary() {
   }
 
   return {
-    today: todayCount,
-    todayPageviews: todayData.pageviews || 0,
-    week: weekCount,
-    weekPageviews: weekPageviews,
-    weekChange: weekChange,
-    month: monthCount,
-    monthPageviews: monthPageviews,
-    total: t.totalUniqueVisitors || 0,
-    totalPageviews: t.totalPageviews || 0,
+    today: todayCount, todayPageviews: todayData.pageviews || 0,
+    week: weekCount, weekPageviews: weekPageviews, weekChange: weekChange,
+    month: monthCount, monthPageviews: monthPageviews,
+    total: t.totalUniqueVisitors || 0, totalPageviews: t.totalPageviews || 0,
     last7Days: last7Days
   };
 }
@@ -332,22 +316,9 @@ function cleanReceipt(details) {
 // =========================================================
 // LOCATION GROUPING
 // =========================================================
-const ALEXANDRA_EAST_GROUP = [
-  'east bank', 'far east bank',
-  'ext 7', 'ext7', 'ext 8', 'ext8', 'ext 9', 'ext9',
-  'tsutsumane', 'river park', 'river park phase 3'
-];
-
-const ALEXANDRA_AVENUES_GROUP = [
-  '1st avenue – 12th avenue', '1st avenue - 12th avenue',
-  '12th avenue – 22nd avenue', '12th avenue - 22nd avenue',
-  '13th avenue – 22nd avenue', '13th avenue - 22nd avenue',
-  '1st avenue – 22nd avenue', '1st avenue - 22nd avenue'
-];
-
-const NORTHERN_SUBURBS_GROUP = [
-  'lombardy', 'bramley', 'kew', 'balfour', 'orange grove'
-];
+const ALEXANDRA_EAST_GROUP = ['east bank','far east bank','ext 7','ext7','ext 8','ext8','ext 9','ext9','tsutsumane','river park','river park phase 3'];
+const ALEXANDRA_AVENUES_GROUP = ['1st avenue – 12th avenue','1st avenue - 12th avenue','12th avenue – 22nd avenue','12th avenue - 22nd avenue','13th avenue – 22nd avenue','13th avenue - 22nd avenue','1st avenue – 22nd avenue','1st avenue - 22nd avenue'];
+const NORTHERN_SUBURBS_GROUP = ['lombardy','bramley','kew','balfour','orange grove'];
 
 function locationGroup(location, suburb) {
   const l = String(location || '').toLowerCase().trim();
@@ -503,7 +474,7 @@ app.get('/api/transport-media/:id/carPicture', (req, res) => {
   return sendMedia(res, d?.carPicture);
 });
 
-// ===== POST ROOM =====
+// POST ROOM
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const b = req.body;
@@ -521,6 +492,8 @@ app.post('/api/rooms', async (req, res) => {
     maxKids: cleanText(b.maxKids, 10),
     parking: cleanText(b.parking, 10),
     maxCars: cleanText(b.maxCars, 10),
+    tiles: cleanText(b.tiles, 10),
+    ceiling: cleanText(b.ceiling, 10),
     bath: cleanText(b.bath, 120),
     images: cleanImages(b.images),
     video: cleanVideo(b.video),
@@ -535,7 +508,7 @@ app.post('/api/rooms', async (req, res) => {
   res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
 });
 
-// ===== POST TENANT =====
+// POST TENANT
 app.post('/api/tenant-requests', async (req, res) => {
   const db = readDB();
   const b = req.body;
@@ -678,9 +651,6 @@ app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
   return sendMedia(res, item?.images?.[i]);
 });
 
-// =========================================================
-// ADMIN ACTION (fixed — every action returns a proper ok/error)
-// =========================================================
 app.post('/api/admin/action', async (req, res) => {
   const token = requireAdmin(req, res); if (!token) return;
   const db = readDB(); const body = req.body;
@@ -713,6 +683,8 @@ app.post('/api/admin/action', async (req, res) => {
           roomType: cleanText(u.roomType || cur.roomType, 40),
           budgetRange: cleanText(u.budgetRange || cur.budgetRange, 40),
           budget: cleanText(u.budget || cur.budget, 40),
+          tiles: cleanText(u.tiles || cur.tiles, 10),
+          ceiling: cleanText(u.ceiling || cur.ceiling, 10),
           updatedAt: new Date().toISOString()
         };
       }
@@ -865,6 +837,11 @@ app.get('/api/admin/matches', (req, res) => {
           landlordContact: l.posterContact,
           landlordName: l.posterName,
           landlordOnline: l.online !== false,
+          landlordRoomType: l.roomType || l.type || 'room',
+          landlordTiles: l.tiles || 'No',
+          landlordCeiling: l.ceiling || 'No',
+          landlordChildFriendly: l.childFriendly || 'No',
+          landlordParking: l.parking || 'No',
           tenantId: t.id,
           tenantName: t.tenantName,
           tenantContact: t.contactNumber,
