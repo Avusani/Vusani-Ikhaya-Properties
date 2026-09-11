@@ -157,13 +157,8 @@ function sendMedia(res, src) {
   res.end(Buffer.from(match[2], "base64"));
 }
 
-function encodePart(value) {
-  return encodeURIComponent(String(value || ""));
-}
-
-function cleanText(value, max = 600) {
-  return String(value || "").trim().slice(0, max);
-}
+function encodePart(value) { return encodeURIComponent(String(value || "")); }
+function cleanText(value, max = 600) { return String(value || "").trim().slice(0, max); }
 
 function cleanImages(images) {
   return Array.isArray(images)
@@ -215,19 +210,50 @@ function cleanReceipt(details) {
   };
 }
 
-// ===== ALEXANDRA MIX HELPERS =====
-const ALEXANDRA_MIX_GROUP = [
-  '1st Avenue – 12th Avenue',
-  '1st Avenue - 12th Avenue',
-  '12th Avenue – 22nd Avenue',
-  '12th Avenue - 22nd Avenue',
-  'Tsutsumane'
+// =========================================================
+// LOCATION GROUPING — SMART MATCHING
+// =========================================================
+const ALEXANDRA_EAST_GROUP = [
+  'east bank', 'far east bank',
+  'ext 7', 'ext7', 'ext 8', 'ext8', 'ext 9', 'ext9',
+  'tsutsumane', 'river park', 'river park phase 3'
 ];
+
+const ALEXANDRA_AVENUES_GROUP = [
+  '1st avenue – 12th avenue', '1st avenue - 12th avenue',
+  '12th avenue – 22nd avenue', '12th avenue - 22nd avenue',
+  '13th avenue – 22nd avenue', '13th avenue - 22nd avenue',
+  '1st avenue – 22nd avenue', '1st avenue - 22nd avenue'
+];
+
+const NORTHERN_SUBURBS_GROUP = [
+  'lombardy', 'bramley', 'kew', 'balfour', 'orange grove'
+];
+
+function locationGroup(location, suburb) {
+  const l = String(location || '').toLowerCase().trim();
+  const s = String(suburb || '').toLowerCase().trim();
+  const combined = s || l;
+
+  if (ALEXANDRA_EAST_GROUP.some(x => combined.includes(x))) return 'Alexandra East';
+  if (ALEXANDRA_AVENUES_GROUP.some(x => combined.includes(x))) return 'Alexandra Avenues';
+  if (NORTHERN_SUBURBS_GROUP.some(x => combined.includes(x))) return 'Northern Suburbs';
+  if (l.includes('alexandra')) return 'Alexandra Township';
+  if (l.includes('marlboro')) return 'Marlboro';
+  if (l.includes('wynberg')) return 'Wynberg';
+  if (l.includes('sandton')) return 'Sandton';
+  if (l.includes('kelvin')) return 'Kelvin';
+  if (l.includes('highlands north')) return 'Highlands North';
+  if (l.includes('savoy estate')) return 'Savoy Estate';
+  if (l.includes('edenvale')) return 'Edenvale';
+  return l || 'Unknown';
+}
 
 function normalizeAlexandraSuburb(value) {
   const v = cleanText(value, 80);
   if (!v) return '';
-  if (ALEXANDRA_MIX_GROUP.includes(v)) return 'Alexandra Mix';
+  if (ALEXANDRA_AVENUES_GROUP.includes(v.toLowerCase())) return 'Alexandra Avenues';
+  if (ALEXANDRA_EAST_GROUP.some(x => v.toLowerCase().includes(x))) return 'Alexandra East';
   return v;
 }
 
@@ -375,7 +401,7 @@ app.get('/api/transport-media/:id/carPicture', (req, res) => {
   return sendMedia(res, driver?.carPicture);
 });
 
-// ===== POST ROOM (LANDLORD) =====
+// ===== POST ROOM =====
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -407,7 +433,7 @@ app.post('/api/rooms', async (req, res) => {
   res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
 });
 
-// ===== POST TENANT REQUEST =====
+// ===== POST TENANT =====
 app.post('/api/tenant-requests', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -670,7 +696,9 @@ app.post('/api/admin/action', async (req, res) => {
   res.json({ ok: true });
 });
 
-// ===== MATCHING ENGINE =====
+// =========================================================
+// MATCHING ENGINE
+// =========================================================
 function budgetInRange(amount, range) {
   const num = moneyNumber(amount);
   if (!num) return false;
@@ -682,22 +710,20 @@ function budgetInRange(amount, range) {
   return true;
 }
 
-function locationMatch(landlordLoc, landlordSub, tenantLocs, tenantSub) {
-  if (!Array.isArray(tenantLocs) || tenantLocs.length === 0) return true;
-  const ln = String(landlordLoc || '').toLowerCase().trim();
-  const matched = tenantLocs.some(l => String(l || '').toLowerCase().trim() === ln);
-  if (!matched) return false;
-  // Alexandra suburb match (only if both are Alexandra)
-  if (ln === 'alexandra township') {
-    const ls = String(landlordSub || '').trim();
-    const ts = String(tenantSub || '').trim();
-    if (!ls && !ts) return true;
-    if (!ls || !ts) return true;
-    if (ls === ts) return true;
-    if (ls === 'Alexandra Mix' || ts === 'Alexandra Mix') return true;
-    return false;
+function locationMatch(landlordLoc, landlordSub, tenantLocations, tenantSub) {
+  if (!Array.isArray(tenantLocations) || tenantLocations.length === 0) return true;
+
+  const landlordGroup = locationGroup(landlordLoc, landlordSub);
+
+  for (const tLoc of tenantLocations) {
+    const tenantGroup = locationGroup(tLoc, tenantSub);
+    if (tenantGroup === landlordGroup) return true;
+    if (landlordGroup === 'Alexandra Township' &&
+        (tenantGroup === 'Alexandra East' || tenantGroup === 'Alexandra Avenues')) return true;
+    if (tenantGroup === 'Alexandra Township' &&
+        (landlordGroup === 'Alexandra East' || landlordGroup === 'Alexandra Avenues')) return true;
   }
-  return true;
+  return false;
 }
 
 function roomTypeMatch(landlordType, tenantType) {
@@ -711,7 +737,8 @@ function roomTypeMatch(landlordType, tenantType) {
 function matchOne(landlord, tenant) {
   if (!roomTypeMatch(landlord.roomType, tenant.roomType)) return false;
   if (tenant.budgetRange && !budgetInRange(landlord.amount, tenant.budgetRange)) return false;
-  if (!locationMatch(landlord.location, landlord.alexandraSuburb, tenant.preferredLocations, tenant.alexandraSuburb)) return false;
+  if (!locationMatch(landlord.location, landlord.alexandraSuburb,
+                     tenant.preferredLocations, tenant.alexandraSuburb)) return false;
   const lk = String(landlord.childFriendly || 'No').toLowerCase();
   const tk = String(tenant.childFriendly || 'No').toLowerCase();
   if (lk !== tk) return false;
@@ -721,47 +748,59 @@ function matchOne(landlord, tenant) {
   return true;
 }
 
+// ===== MATCHES API =====
 app.get('/api/admin/matches', (req, res) => {
   const token = requireAdmin(req, res);
   if (!token) return;
   const db = readDB();
-  const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
+
+  // ONLY online landlords
+  const landlords = [...db.rooms.approved, ...db.rooms.taken]
+    .filter(r => r.online !== false);
+
+  // ALL approved tenants (regardless of source)
   const tenants = db.tenantRequests.approved;
 
   const matches = [];
+  const tenantMatches = {};
+
   landlords.forEach(l => {
     tenants.forEach(t => {
       if (matchOne(l, t)) {
-        matches.push({
+        const m = {
           landlordId: l.id,
           landlordTitle: l.title,
           landlordLocation: l.location,
           landlordSuburb: l.alexandraSuburb || '',
+          landlordLocationGroup: locationGroup(l.location, l.alexandraSuburb),
           landlordRent: l.amount,
           landlordContact: l.posterContact,
           landlordName: l.posterName,
+          landlordOnline: l.online !== false,
           tenantId: t.id,
           tenantName: t.tenantName,
           tenantContact: t.contactNumber,
           tenantLocations: t.preferredLocations || [],
+          tenantLocationGroups: (t.preferredLocations || []).map(loc => locationGroup(loc, t.alexandraSuburb)),
           tenantBudget: t.budget,
           tenantBudgetRange: t.budgetRange || '',
           tenantRoomType: t.roomType,
           childFriendly: l.childFriendly,
           parking: l.parking
-        });
+        };
+        matches.push(m);
+        if (!tenantMatches[m.tenantId]) tenantMatches[m.tenantId] = [];
+        tenantMatches[m.tenantId].push(m);
       }
     });
   });
 
-  // Also expose reverse view: tenant → landlords
-  const tenantMatches = {};
-  matches.forEach(m => {
-    if (!tenantMatches[m.tenantId]) tenantMatches[m.tenantId] = [];
-    tenantMatches[m.tenantId].push(m);
+  res.json({
+    matches,
+    tenantMatches,
+    totalLandlordsOnline: landlords.length,
+    totalTenantsApproved: tenants.length
   });
-
-  res.json({ matches, tenantMatches });
 });
 
 // ===== FRONTEND ROUTES =====
