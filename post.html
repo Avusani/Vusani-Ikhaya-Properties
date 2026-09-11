@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post a Room or Request | VUSANI IKHAYA PROPERTIES</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    :root {
+      --green: #0f3d2e;
+      --green-dark: #082418;
+      --green-light: #1a5a45;
+      --gold: #c9a227;
+      --gold-light: #e6c34a;
+      --bg: #edf4ee;
+      --text: #17201b;
+      --muted: #637268;
+      --border: #cad8cf;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+
+    .topbar { background: var(--green); color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-left img { height: 52px; width: auto; background: #fff; padding: 4px; border-radius: 6px; }
+    .brand { font-weight: 900; font-size: 18px; line-height: 1.1; }
+    .brand small { color: rgba(255,255,255,0.7); font-size: 11px; display: block; font-weight: 500; letter-spacing: 0.5px; }
+    .topbar a { color: #fff; text-decoration: none; font-weight: 600; }
+    .topbar a:hover { color: var(--gold); }
+
+    .container { max-width: 820px; margin: 28px auto; padding: 0 20px; }
+
+    .hero-strip { background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%); color: #fff; border-radius: 14px; padding: 28px 24px; margin-bottom: 24px; text-align: center; border-bottom: 4px solid var(--gold); }
+    .hero-strip h1 { margin: 0; font-size: 26px; font-weight: 900; }
+    .hero-strip p { margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px; }
+
+    .role-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .role-card { background: #fff; border: 3px solid var(--border); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; user-select: none; }
+    .role-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .role-card.active { border-color: var(--green); background: #f0faf6; box-shadow: 0 6px 20px rgba(15,61,46,0.15); }
+    .role-card .icon { font-size: 42px; }
+    .role-card .role-title { font-weight: 800; font-size: 18px; margin-top: 6px; color: var(--green); }
+    .role-card .role-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    .form-card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+    .form-card h2 { margin-top: 0; color: var(--green); border-bottom: 3px solid var(--gold); padding-bottom: 10px; display: inline-block; }
+
+    label { display: block; font-weight: 700; margin-top: 16px; font-size: 14px; }
+    input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; margin-top: 6px; font-family: inherit; background: #fff; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(15,61,46,0.1); }
+    textarea { min-height: 100px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .file-upload-box { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; margin-top: 6px; background: #f8faf9; cursor: pointer; }
+    .file-upload-box:hover { border-color: var(--green); }
+    .file-upload-box input { border: none; padding: 0; margin: 0; }
+    .preview-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .preview-grid img, .preview-grid video { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+
+    .btn-submit { width: 100%; padding: 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 17px; font-weight: 800; cursor: pointer; margin-top: 24px; letter-spacing: 0.5px; border-bottom: 4px solid var(--gold); transition: all 0.2s; }
+    .btn-submit:hover { background: var(--green-dark); }
+    .btn-submit:disabled { background: var(--muted); cursor: not-allowed; border-bottom-color: transparent; }
+
+    .notice { padding: 14px; border-radius: 8px; margin: 16px 0; display: none; font-weight: 600; text-align: center; }
+    .notice.show { display: block; }
+    .notice.success { background: #dbf4e9; color: var(--green); border-left: 4px solid var(--green); }
+    .notice.error { background: #fde5df; color: #7f2318; border-left: 4px solid #b8493b; }
+
+    .hidden { display: none !important; }
+    .conditional-box { background: #f8faf9; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 14px; margin-top: 8px; }
+
+    .fee-info-section { background: var(--green); color: #fff; border-radius: 14px; padding: 30px 24px; margin-top: 32px; text-align: center; border-top: 4px solid var(--gold); }
+    .fee-info-section h3 { margin: 0 0 8px 0; color: var(--gold-light); font-size: 22px; letter-spacing: 0.5px; }
+    .fee-info-section p { margin: 0 0 20px 0; color: rgba(255,255,255,0.75); font-size: 13px; }
+    .fee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .fee-pill { background: rgba(255,255,255,0.08); border: 1px solid rgba(201,162,39,0.4); border-radius: 8px; padding: 14px; font-size: 13px; color: rgba(255,255,255,0.85); }
+    .fee-pill strong { color: var(--gold-light); display: block; font-size: 20px; margin-top: 4px; font-weight: 900; }
+
+    .footer { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 12px; margin-top: 20px; }
+    .footer strong { color: var(--green); display: block; margin-bottom: 4px; }
+
+    @media (max-width: 600px) {
+      .form-row, .role-picker { grid-template-columns: 1fr; }
+      .topbar-left img { height: 40px; }
+      .brand { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <img src="/logo.png" alt="Vusani Ikhaya Properties" onerror="this.style.display='none'">
+    <div class="brand">
+      VUSANI IKHAYA PROPERTIES
+      <small>TRUSTED ROOMS. REAL PEOPLE. REAL VALUE.</small>
+    </div>
+  </div>
+  <div><a href="/">🏠 Home</a></div>
+</div>
+
+<div class="container">
+  <div class="hero-strip">
+    <h1>Post a Room or Find a Room</h1>
+    <p>Choose below whether you're a Landlord looking to list a room, or a Tenant looking for one.</p>
+  </div>
+
+  <div class="role-picker">
+    <div class="role-card" id="roleLandlord" onclick="selectRole('landlord')">
+      <div class="icon">🏠</div>
+      <div class="role-title">I'm a Landlord</div>
+      <div class="role-sub">I have a room to rent out</div>
+    </div>
+    <div class="role-card" id="roleTenant" onclick="selectRole('tenant')">
+      <div class="icon">🔎</div>
+      <div class="role-title">I'm a Tenant</div>
+      <div class="role-sub">I'm looking for a room</div>
+    </div>
+  </div>
+
+  <div id="notice" class="notice"></div>
+
+  <!-- LANDLORD FORM -->
+  <div class="form-card hidden" id="landlordFormCard">
+    <h2>🏠 List Your Room</h2>
+    <form id="landlordForm">
+      <label>📍 Location / Area *</label>
+      <select id="postLocation" required>
+        <option value="">Select area...</option>
+      </select>
+
+      <div id="landlordAlexandraBox" class="conditional-box hidden">
+        <label>🏘️ Alexandra Suburb / Avenue *</label>
+        <select id="landlordAlexandraSuburb">
+          <option value="">Select suburb...</option>
+          <option>1st Avenue – 12th Avenue</option>
+          <option>12th Avenue – 22nd Avenue</option>
+          <option>East Bank</option>
+          <option>Tsutsumane</option>
+          <option>River Park</option>
+          <option>Ext 7</option>
+          <option>Ext 8</option>
+          <option>Ext 9</option>
+        </select>
+      </div>
+
+      <label>🏠 Full Address *</label>
+      <input type="text" id="postAddress" placeholder="e.g., 123 Main Street" required>
+
+      <div class="form-row">
+        <div>
+          <label>Room Type *</label>
+          <select id="postRoomType" required>
+            <option value="">Select type...</option>
+            <option>1+ Bedroom House</option>
+            <option>2+ Bedroom House</option>
+            <option>3+ Bedroom House</option>
+            <option>4+ Bedroom House</option>
+            <option>5+ Bedroom House</option>
+            <option>6+ Bedroom House</option>
+            <option>7+ Bedroom House</option>
+            <option>8+ Bedroom House</option>
+            <option>9+ Bedroom House</option>
+            <option>10+ Bedroom House</option>
+            <option>Single Room</option>
+            <option>Bachelor</option>
+            <option>Cottage</option>
+            <option>Double Room</option>
+            <option>Backroom</option>
+            <option>Flatlet</option>
+            <option>Shared Room</option>
+          </select>
+        </div>
+        <div>
+          <label>Rent Amount (R) *</label>
+          <input type="text" id="postAmount" placeholder="e.g., 1500" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div><label>Deposit (R)</label><input type="text" id="postDeposit" placeholder="e.g., 1500 or No deposit"></div>
+        <div><label>Bathroom</label><input type="text" id="postBath" placeholder="e.g., Private / Shared"></div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Child Friendly?</label>
+          <select id="postChild"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div>
+          <label>Parking?</label>
+          <select id="postParking"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+      </div>
+
+      <div id="landlordKidsBox" class="conditional-box hidden">
+        <label>👶 Maximum number of children allowed *</label>
+        <input type="number" id="landlordMaxKids" min="1" placeholder="e.g., 2">
+      </div>
+      <div id="landlordCarsBox" class="conditional-box hidden">
+        <label>🚗 Maximum number of cars allowed *</label>
+        <input type="number" id="landlordMaxCars" min="1" placeholder="e.g., 2">
+      </div>
+
+      <label>📸 Room Pictures <span style="color:var(--muted);font-weight:500;font-size:12px;">(Optional — Max 5)</span></label>
+      <div class="file-upload-box">
+        <input type="file" id="postImages" accept="image/*" multiple>
+        <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">Click to upload images (optional)</p>
+      </div>
+      <div class="preview-grid" id="imagePreview"></div>
+
+      <label>🎬 Room Video <span style="color:var(--muted);font-weight:500;font-size:12px;">(Optional)</span></label>
+      <div class="file-upload-box"><input type="file" id="postVideo" accept="video/*"></div>
+      <div class="preview-grid" id="videoPreview"></div>
+
+      <label>👤 Your Name *</label>
+      <input type="text" id="posterName" placeholder="Your full name" required>
+
+      <label>📞 Your Contact Number *</label>
+      <input type="text" id="posterContact" placeholder="e.g., 072 123 4567" required>
+
+      <label>📝 Additional Notes</label>
+      <textarea id="postNotes" placeholder="Any extra details about the room, rules, etc."></textarea>
+
+      <button type="submit" class="btn-submit" id="landlordSubmitBtn">🚀 Submit Room for Approval</button>
+    </form>
+  </div>
+
+  <!-- TENANT FORM -->
+  <div class="form-card hidden" id="tenantFormCard">
+    <h2>🔎 Looking for a Room?</h2>
+    <form id="tenantForm">
+      <label>👤 Your Name *</label>
+      <input type="text" id="tenantName" placeholder="Your full name" required>
+
+      <label>📞 Your Contact Number *</label>
+      <input type="text" id="contactNumber" placeholder="e.g., 072 123 4567" required>
+
+      <label>📍 Preferred Location(s) *</label>
+      <div class="conditional-box" id="locationCheckboxes"></div>
+
+      <div id="alexandraSuburbBox" class="conditional-box hidden">
+        <label>🏘️ Alexandra Suburb / Avenue *</label>
+        <select id="alexandraSuburb">
+          <option value="">Select suburb...</option>
+          <option>1st Avenue – 12th Avenue</option>
+          <option>12th Avenue – 22nd Avenue</option>
+          <option>East Bank</option>
+          <option>Tsutsumane</option>
+          <option>River Park</option>
+          <option>Ext 7</option>
+          <option>Ext 8</option>
+          <option>Ext 9</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>🛏️ Room Type Needed *</label>
+          <select id="roomType" required>
+            <option value="">Select type...</option>
+            <option>Any</option>
+            <option>1+ Bedroom House</option>
+            <option>2+ Bedroom House</option>
+            <option>3+ Bedroom House</option>
+            <option>4+ Bedroom House</option>
+            <option>5+ Bedroom House</option>
+            <option>6+ Bedroom House</option>
+            <option>7+ Bedroom House</option>
+            <option>8+ Bedroom House</option>
+            <option>9+ Bedroom House</option>
+            <option>10+ Bedroom House</option>
+            <option>Single Room</option>
+            <option>Bachelor</option>
+            <option>Cottage</option>
+            <option>Double Room</option>
+            <option>Backroom</option>
+            <option>Flatlet</option>
+            <option>Shared Room</option>
+          </select>
+        </div>
+        <div>
+          <label>💰 Budget Range *</label>
+          <select id="budgetRange" required>
+            <option value="">Select range...</option>
+            <option>R800-R1500</option>
+            <option>R1600-R2500</option>
+            <option>R2600-R3500</option>
+            <option>R3600-R4500</option>
+            <option>R4600-R8000</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div><label>📅 Move-in Date</label><input type="date" id="moveInDate"></div>
+        <div>
+          <label>🏠 Child Friendly Needed? *</label>
+          <select id="tenantChild" required><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+      </div>
+
+      <div id="childrenDetailsBox" class="conditional-box hidden">
+        <label>👶 How many children? *</label>
+        <input type="number" id="childrenCount" min="1" placeholder="e.g., 2">
+        <label>🎂 Ages of children *</label>
+        <input type="text" id="childrenAges" placeholder="e.g., 3, 7, 12">
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>🚗 Parking Needed? *</label>
+          <select id="tenantParking" required><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div></div>
+      </div>
+
+      <div id="parkingDetailsBox" class="conditional-box hidden">
+        <label>🚙 How many cars? *</label>
+        <input type="number" id="carsCount" min="1" placeholder="e.g., 1">
+      </div>
+
+      <label>📝 Additional Notes</label>
+      <textarea id="notes" placeholder="e.g., I need a quiet place close to transport."></textarea>
+
+      <button type="submit" class="btn-submit" id="tenantSubmitBtn">🚀 Submit My Request</button>
+    </form>
+  </div>
+
+  <!-- SERVICE FEE VIEW -->
+  <div class="fee-info-section">
+    <h3>💰 Service Fee Structure</h3>
+    <p>Applied when a tenant successfully secures a room through Vusani Ikhaya Properties.</p>
+    <div class="fee-grid">
+      <div class="fee-pill">R1000 – R1900<strong>R300</strong></div>
+      <div class="fee-pill">R2000 – R3000<strong>R350</strong></div>
+      <div class="fee-pill">R3100 – R3800<strong>R400</strong></div>
+      <div class="fee-pill">R3900 – R7000<strong>R500</strong></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>VUSANI IKHAYA PROPERTIES</strong>
+    Johannesburg, South Africa | www.vusaniikhayaproperties.co.za<br>
+    avukilerrooms@gmail.com | 061 364 2449 | 068 535 3186
+  </div>
+</div>
+
+<script>
+  const notice = document.getElementById('notice');
+  let previewURLs = [];
+
+  const LOCATIONS = [
+    'Alexandra Township','Marlboro','Lombardy','Bramley','Wynberg','Balfour',
+    'Orange Grove','Sandton','Kelvin','Kew','Highlands North','Savoy Estate','Edenvale','Other'
+  ];
+
+  // Fill landlord dropdown
+  (function fillLandlordLocations() {
+    const sel = document.getElementById('postLocation');
+    LOCATIONS.forEach(loc => {
+      const opt = document.createElement('option');
+      opt.value = loc; opt.textContent = loc;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function () {
+      const isAlexandra = this.value === 'Alexandra Township';
+      document.getElementById('landlordAlexandraBox').classList.toggle('hidden', !isAlexandra);
+      if (!isAlexandra) document.getElementById('landlordAlexandraSuburb').value = '';
+    });
+  })();
+
+  // Fill tenant checkboxes
+  (function buildLocations() {
+    const wrap = document.getElementById('locationCheckboxes');
+    wrap.innerHTML = LOCATIONS.map(loc => `
+      <label style="display:flex;align-items:center;font-weight:600;margin-top:8px;cursor:pointer;">
+        <input type="checkbox" class="loc-check" value="${loc}" style="width:auto;margin:0 10px 0 0;">
+        ${loc}
+      </label>
+    `).join('');
+    wrap.querySelectorAll('.loc-check').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const isAlexandra = e.target.value === 'Alexandra Township' && e.target.checked;
+        document.getElementById('alexandraSuburbBox').classList.toggle('hidden', !isAlexandra);
+        if (!isAlexandra) document.getElementById('alexandraSuburb').value = '';
+      });
+    });
+  })();
+
+  function showNotice(msg, type) {
+    notice.textContent = msg;
+    notice.className = 'notice show ' + (type || 'success');
+    setTimeout(() => notice.classList.remove('show'), 5000);
+  }
+
+  function selectRole(role) {
+    document.getElementById('roleLandlord').classList.toggle('active', role === 'landlord');
+    document.getElementById('roleTenant').classList.toggle('active', role === 'tenant');
+    document.getElementById('landlordFormCard').classList.toggle('hidden', role !== 'landlord');
+    document.getElementById('tenantFormCard').classList.toggle('hidden', role !== 'tenant');
+    notice.classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('postChild').addEventListener('change', function () {
+    const show = this.value === 'Yes';
+    document.getElementById('landlordKidsBox').classList.toggle('hidden', !show);
+    if (!show) document.getElementById('landlordMaxKids').value = '';
+  });
+  document.getElementById('postParking').addEventListener('change', function () {
+    const show = this.value === 'Yes';
+    document.getElementById('landlordCarsBox').classList.toggle('hidden', !show);
+    if (!show) document.getElementById('landlordMaxCars').value = '';
+  });
+  document.getElementById('tenantChild').addEventListener('change', function () {
+    const show = this.value === 'Yes';
+    document.getElementById('childrenDetailsBox').classList.toggle('hidden', !show);
+    if (!show) {
+      document.getElementById('childrenCount').value = '';
+      document.getElementById('childrenAges').value = '';
+    }
+  });
+  document.getElementById('tenantParking').addEventListener('change', function () {
+    const show = this.value === 'Yes';
+    document.getElementById('parkingDetailsBox').classList.toggle('hidden', !show);
+    if (!show) document.getElementById('carsCount').value = '';
+  });
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+  }
+  async function getImagesAsBase64() {
+    const files = document.getElementById('postImages').files;
+    const out = [];
+    for (let i = 0; i < Math.min(files.length, 5); i++) out.push(await fileToBase64(files[i]));
+    return out;
+  }
+  async function getVideoAsBase64() {
+    const file = document.getElementById('postVideo').files[0];
+    return file ? await fileToBase64(file) : '';
+  }
+
+  document.getElementById('postImages').addEventListener('change', function () {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    previewURLs.forEach(u => URL.revokeObjectURL(u));
+    previewURLs = [];
+    Array.from(this.files).slice(0, 5).forEach(file => {
+      const url = URL.createObjectURL(file);
+      previewURLs.push(url);
+      const img = document.createElement('img');
+      img.src = url;
+      preview.appendChild(img);
+    });
+  });
+  document.getElementById('postVideo').addEventListener('change', function () {
+    const preview = document.getElementById('videoPreview');
+    preview.innerHTML = '';
+    const file = this.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      previewURLs.push(url);
+      const v = document.createElement('video');
+      v.src = url; v.muted = true;
+      preview.appendChild(v);
+    }
+  });
+
+  // LANDLORD SUBMIT
+  document.getElementById('landlordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    notice.classList.remove('show');
+
+    const location = document.getElementById('postLocation').value;
+    let alexandraSuburb = '';
+    if (location === 'Alexandra Township') {
+      alexandraSuburb = document.getElementById('landlordAlexandraSuburb').value;
+      if (!alexandraSuburb) { showNotice('❌ Please select an Alexandra suburb.', 'error'); return; }
+    }
+    const childFriendly = document.getElementById('postChild').value;
+    let maxKids = '';
+    if (childFriendly === 'Yes') {
+      maxKids = document.getElementById('landlordMaxKids').value.trim();
+      if (!maxKids) { showNotice('❌ Enter max children allowed.', 'error'); return; }
+    }
+    const parking = document.getElementById('postParking').value;
+    let maxCars = '';
+    if (parking === 'Yes') {
+      maxCars = document.getElementById('landlordMaxCars').value.trim();
+      if (!maxCars) { showNotice('❌ Enter max cars allowed.', 'error'); return; }
+    }
+
+    const btn = document.getElementById('landlordSubmitBtn');
+    btn.disabled = true; btn.textContent = '⏳ Uploading...';
+
+    try {
+      const images = await getImagesAsBase64();
+      const video = await getVideoAsBase64();
+      const payload = {
+        title: document.getElementById('postRoomType').value + ' - ' + document.getElementById('postAddress').value,
+        location: location,
+        alexandraSuburb: alexandraSuburb,
+        address: document.getElementById('postAddress').value.trim(),
+        type: document.getElementById('postRoomType').value,
+        roomType: document.getElementById('postRoomType').value,
+        amount: document.getElementById('postAmount').value.trim(),
+        deposit: document.getElementById('postDeposit').value.trim() || 'No deposit stated',
+        childFriendly: childFriendly,
+        maxKids: maxKids,
+        parking: parking,
+        maxCars: maxCars,
+        bath: document.getElementById('postBath').value.trim(),
+        images, video,
+        posterName: document.getElementById('posterName').value.trim(),
+        posterContact: document.getElementById('posterContact').value.trim(),
+        notes: document.getElementById('postNotes').value.trim()
+      };
+      const res = await fetch('/api/rooms', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed');
+      showNotice('✅ Room submitted! Admin will review it shortly.', 'success');
+      e.target.reset();
+      document.getElementById('imagePreview').innerHTML = '';
+      document.getElementById('videoPreview').innerHTML = '';
+      document.getElementById('landlordAlexandraBox').classList.add('hidden');
+      document.getElementById('landlordKidsBox').classList.add('hidden');
+      document.getElementById('landlordCarsBox').classList.add('hidden');
+    } catch (err) {
+      showNotice('❌ Error: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '🚀 Submit Room for Approval';
+    }
+  });
+
+  // TENANT SUBMIT
+  document.getElementById('tenantForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    notice.classList.remove('show');
+
+    const checkedLocations = Array.from(document.querySelectorAll('.loc-check:checked')).map(cb => cb.value);
+    if (checkedLocations.length === 0) { showNotice('❌ Choose at least one preferred location.', 'error'); return; }
+
+    let alexandraSuburb = '';
+    if (checkedLocations.includes('Alexandra Township')) {
+      alexandraSuburb = document.getElementById('alexandraSuburb').value;
+      if (!alexandraSuburb) { showNotice('❌ Select an Alexandra suburb.', 'error'); return; }
+    }
+    const childFriendly = document.getElementById('tenantChild').value;
+    let childrenCount = '', childrenAges = '';
+    if (childFriendly === 'Yes') {
+      childrenCount = document.getElementById('childrenCount').value.trim();
+      childrenAges = document.getElementById('childrenAges').value.trim();
+      if (!childrenCount || !childrenAges) { showNotice('❌ Enter children count and ages.', 'error'); return; }
+    }
+    const parking = document.getElementById('tenantParking').value;
+    let carsCount = '';
+    if (parking === 'Yes') {
+      carsCount = document.getElementById('carsCount').value.trim();
+      if (!carsCount) { showNotice('❌ Enter how many cars.', 'error'); return; }
+    }
+    const budgetRange = document.getElementById('budgetRange').value;
+    if (!budgetRange) { showNotice('❌ Please select a budget range.', 'error'); return; }
+
+    const btn = document.getElementById('tenantSubmitBtn');
+    btn.disabled = true; btn.textContent = '⏳ Submitting...';
+
+    try {
+      const payload = {
+        tenantName: document.getElementById('tenantName').value.trim(),
+        contactNumber: document.getElementById('contactNumber').value.trim(),
+        preferredLocations: checkedLocations,
+        alexandraSuburb: alexandraSuburb,
+        roomType: document.getElementById('roomType').value,
+        budget: budgetRange,
+        budgetRange: budgetRange,
+        moveInDate: document.getElementById('moveInDate').value,
+        childFriendly: childFriendly,
+        childrenCount: childrenCount,
+        childrenAges: childrenAges,
+        parking: parking,
+        carsCount: carsCount,
+        notes: document.getElementById('notes').value.trim()
+      };
+      const res = await fetch('/api/tenant-requests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed');
+      showNotice('✅ Request submitted! We will contact you when a match is found.', 'success');
+      e.target.reset();
+      document.getElementById('alexandraSuburbBox').classList.add('hidden');
+      document.getElementById('childrenDetailsBox').classList.add('hidden');
+      document.getElementById('parkingDetailsBox').classList.add('hidden');
+    } catch (err) {
+      showNotice('❌ Error: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '🚀 Submit My Request';
+    }
+  });
+</script>
+</body>
+</html>
