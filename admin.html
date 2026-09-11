@@ -13,46 +13,38 @@
     .brand { font-weight: 900; font-size: 20px; }
     .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
     .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
-
     .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
     .login-box h2 { margin-top: 0; }
     .login-box input { width: 100%; padding: 12px; border: 1px solid #cad8cf; border-radius: 8px; font-size: 16px; }
     .login-box button { width: 100%; padding: 12px; background: #0f7a5f; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .login-box button:hover { background: #095741; }
     .error { color: #b8493b; background: #fde5df; padding: 10px; border-radius: 6px; display: none; margin-top: 10px; }
     .error.show { display: block; }
     .panel { display: none; }
     .panel.show { display: block; }
-
     .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .stat-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
     .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
     .stat-card .label { font-size: 12px; color: #637268; }
-
     .main-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
-    .main-tabs button { padding: 10px 20px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; }
+    .main-tabs button { padding: 10px 20px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; }
     .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
     .main-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
     .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
-
     .sub-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
-    .sub-tabs button { padding: 8px 16px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+    .sub-tabs button { padding: 8px 16px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
     .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
     .sub-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
     .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
-
     .room-card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #cad8cf; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
     .room-card .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .room-card .media-grid .media-item { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; background: #eef3ee; cursor: pointer; transition: transform 0.2s; }
-    .room-card .media-grid .media-item:hover { transform: scale(1.02); }
+    .room-card .media-grid .media-item { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; background: #eef3ee; cursor: pointer; }
     .room-card .media-grid .no-media { background: #edf4ee; height: 120px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #637268; font-size: 12px; grid-column: 1 / -1; }
     .room-card .info { display: grid; gap: 4px; }
     .room-card .info .title { font-weight: 700; font-size: 18px; }
     .room-card .info .detail { font-size: 14px; color: #637268; }
     .room-card .info .landlord { font-size: 13px; color: #0f7a5f; font-weight: 600; }
     .room-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .room-card .actions button { padding: 5px 12px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-    .room-card .actions button:hover { opacity: 0.8; }
+    .room-card .actions button { padding: 5px 12px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; }
     .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
     .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
     .room-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
@@ -60,74 +52,44 @@
     .room-card .actions .taken { background: #1e40af; color: #fff; border-color: #1e40af; }
     .room-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
     .room-card .actions .wa { background: #25D366; color: #fff; border-color: #25D366; text-decoration: none; display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-
     .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
     .badge.pending { background: #fef3c7; color: #92400e; }
     .badge.approved { background: #d1fae5; color: #065f46; }
     .badge.taken { background: #dbeafe; color: #1e40af; }
     .badge.declined { background: #fee2e2; color: #991b1b; }
     .badge.removed { background: #f3f4f6; color: #4b5563; }
-
     .empty { color: #637268; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #cad8cf; }
-
     .notice { padding: 12px; border-radius: 8px; margin: 10px 0; display: none; font-weight: 600; }
     .notice.show { display: block; }
     .notice.success { background: #dbf4e9; color: #0d4c3a; }
     .notice.error { background: #fde5df; color: #7f2318; }
-
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
     .modal .close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #637268; background: none; border: none; }
-    .modal h3 { margin-top: 0; }
     .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
-    .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
-    .modal textarea { min-height: 80px; resize: vertical; }
-    .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal input, .modal textarea { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
-
     .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .media-viewer.show { display: flex; }
-    .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
-    .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; z-index: 2001; }
-
+    .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
+    .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; }
     .section-content { display: none; }
     .section-content.active { display: block; }
-
-    .traffic-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .traffic-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
-    .traffic-card .number { font-size: 32px; font-weight: 900; color: #0f7a5f; }
-    .traffic-card .label { font-size: 12px; color: #637268; }
-    .traffic-card .change { font-size: 13px; font-weight: 600; }
-    .traffic-card .change.up { color: #0f7a5f; }
-    .traffic-card .change.down { color: #b8493b; }
-
     .stats-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #cad8cf; }
     .stats-section .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    .stats-section .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .stats-section .filters select, .stats-section .filters input { padding: 8px 12px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .stats-grid .stat-item { background: #f8faf9; padding: 12px; border-radius: 8px; text-align: center; }
-    .stats-grid .stat-item .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
-    .stats-grid .stat-item .label { font-size: 12px; color: #637268; }
-    .chart-container { height: 300px; margin-top: 16px; }
+    .stats-section .filters select { padding: 8px 12px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
     .fee-info { background: #f8faf9; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #637268; border: 1px solid #eef3ee; }
     .fee-info strong { color: #0f7a5f; }
-
-    @media (max-width: 700px) {
-      .room-card { grid-template-columns: 1fr; }
-      .modal .form-row { grid-template-columns: 1fr; }
-      .stats-section .header { flex-direction: column; align-items: stretch; }
-    }
+    .chart-container { height: 300px; margin-top: 16px; }
+    .refresh-btn { background: #c9a227; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+    .refresh-btn:hover { background: #a88516; }
+    @media (max-width: 700px) { .room-card { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-
 <div class="topbar">
-  <div class="brand">
-    VUSANI IKHAYA PROPERTIES
-    <small>Trusted rooms. Real people. Real value.</small>
-  </div>
+  <div class="brand">VUSANI IKHAYA PROPERTIES<small>Trusted rooms. Real people. Real value.</small></div>
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
     <a href="/" target="_blank">🌐 View Public Site</a>
     <span id="adminUser" style="color:rgba(255,255,255,0.6);font-size:13px;"></span>
@@ -136,10 +98,9 @@
 </div>
 
 <div class="container">
-
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
-    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches, transport listings and service fees.</p>
+    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches and transport.</p>
     <form id="loginForm">
       <div style="margin-bottom:16px;">
         <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
@@ -151,23 +112,15 @@
   </div>
 
   <div id="adminPanel" class="panel">
-
     <div id="notice" class="notice"></div>
 
-    <div class="stats-bar" id="statsBar">
+    <div class="stats-bar">
       <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
       <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
       <div class="stat-card"><div class="number" id="statRoomsTaken">0</div><div class="label">📦 Rooms Taken</div></div>
       <div class="stat-card"><div class="number" id="statTenantsPending">0</div><div class="label">👥 Tenants Pending</div></div>
       <div class="stat-card"><div class="number" id="statMatches">0</div><div class="label">🔗 Matches</div></div>
       <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
-    </div>
-
-    <div class="traffic-stats">
-      <div class="traffic-card"><div class="number" id="todayVisitors">0</div><div class="label">👁️ Today's Visitors</div><div class="change up" id="todayChange">↑ 0%</div></div>
-      <div class="traffic-card"><div class="number" id="weekVisitors">0</div><div class="label">📊 This Week</div><div class="change up" id="weekChange">↑ 0%</div></div>
-      <div class="traffic-card"><div class="number" id="monthVisitors">0</div><div class="label">📅 This Month</div><div class="change up" id="monthChange">↑ 0%</div></div>
-      <div class="traffic-card"><div class="number" id="totalVisitors">0</div><div class="label">🌐 Total Visitors</div><div class="change up" id="totalChange">↑ 0%</div></div>
     </div>
 
     <div class="main-tabs">
@@ -177,7 +130,6 @@
       <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
     </div>
 
-    <!-- ROOMS -->
     <div id="roomsSection" class="section-content active">
       <div class="stats-section">
         <div class="header">
@@ -194,10 +146,6 @@
           </div>
         </div>
         <div class="fee-info">💰 <strong>Service Fee:</strong> R1000-R1900 = R300 | R2000-R3000 = R350 | R3100-R3800 = R400 | R3900-R7000 = R500</div>
-        <div class="stats-grid">
-          <div class="stat-item"><div class="value" id="monthlyCount">0</div><div class="label">📦 Rooms Taken</div></div>
-          <div class="stat-item"><div class="value" id="monthlyServiceFee">R0</div><div class="label">📊 Service Fees</div></div>
-        </div>
         <div class="chart-container"><canvas id="revenueChart"></canvas></div>
       </div>
 
@@ -211,7 +159,6 @@
       <div id="roomList"></div>
     </div>
 
-    <!-- TENANTS -->
     <div id="tenantsSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending <span class="count" id="countTenantPending">0</span></button>
@@ -222,16 +169,17 @@
       <div id="tenantList"></div>
     </div>
 
-    <!-- MATCHES -->
     <div id="matchesSection" class="section-content">
-      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
-        <h3 style="margin:0 0 10px 0;">🔗 Landlord ↔ Tenant Matches</h3>
-        <p style="color:#637268;font-size:13px;margin:0;">Only <strong>Online</strong> landlords are matched. Matching uses Room Type, Budget Range, Location (with Alexandra Mix), Kids (Yes/No) and Parking (Yes/No).</p>
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0 0 6px 0;">🔗 Landlord ↔ Tenant Matches</h3>
+          <p style="color:#637268;font-size:13px;margin:0;">Smart matching by <strong>Room Type, Budget Range, Location Groups, Kids and Parking</strong>. All approved tenants matched automatically.</p>
+        </div>
+        <button class="refresh-btn" onclick="refreshMatches()">🔄 Refresh Matches</button>
       </div>
       <div id="matchesList"></div>
     </div>
 
-    <!-- TRANSPORT -->
     <div id="transportSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
@@ -244,21 +192,17 @@
   </div>
 </div>
 
-<!-- EDIT ROOM MODAL -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
     <button class="close" onclick="closeEditRoomModal()">✕</button>
     <h3>✏️ Edit Room</h3>
     <form id="editRoomForm">
-      <input type="hidden" id="editRoomId">
-      <input type="hidden" id="editRoomFrom">
+      <input type="hidden" id="editRoomId"><input type="hidden" id="editRoomFrom">
       <label>Title</label><input type="text" id="editRoomTitle">
       <label>Location</label><input type="text" id="editRoomLocation">
       <label>Address</label><input type="text" id="editRoomAddress">
-      <div class="form-row">
-        <div><label>Amount (R)</label><input type="text" id="editRoomAmount"></div>
-        <div><label>Deposit (R)</label><input type="text" id="editRoomDeposit"></div>
-      </div>
+      <label>Amount (R)</label><input type="text" id="editRoomAmount">
+      <label>Deposit (R)</label><input type="text" id="editRoomDeposit">
       <label>Landlord Name</label><input type="text" id="editRoomPosterName">
       <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
       <label>Notes</label><textarea id="editRoomNotes"></textarea>
@@ -267,14 +211,12 @@
   </div>
 </div>
 
-<!-- EDIT TENANT MODAL -->
 <div class="modal-overlay" id="editTenantModal">
   <div class="modal">
     <button class="close" onclick="closeEditTenantModal()">✕</button>
     <h3>✏️ Edit Tenant</h3>
     <form id="editTenantForm">
-      <input type="hidden" id="editTenantId">
-      <input type="hidden" id="editTenantFrom">
+      <input type="hidden" id="editTenantId"><input type="hidden" id="editTenantFrom">
       <label>Name</label><input type="text" id="editTenantName">
       <label>Contact</label><input type="text" id="editTenantContact">
       <label>Room Type</label><input type="text" id="editTenantRoomType">
@@ -285,7 +227,6 @@
   </div>
 </div>
 
-<!-- MEDIA VIEWER -->
 <div class="media-viewer" id="mediaViewer">
   <button class="close" onclick="closeMediaViewer()">✕</button>
   <div id="mediaContent"></div>
@@ -293,7 +234,6 @@
 
 <script>
   const SESSION_KEY = "adminSession";
-
   let currentRoomTab = 'pending';
   let currentTransportTab = 'pending';
   let currentTenantTab = 'pending';
@@ -319,13 +259,11 @@
 
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const password = document.getElementById('adminPassword').value;
     loginError.classList.remove('show');
     try {
       const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: document.getElementById('adminPassword').value })
       });
       const data = await res.json();
       if (data.token) {
@@ -338,7 +276,7 @@
         loginError.classList.add('show');
       }
     } catch (err) {
-      loginError.textContent = 'Server error. Please try again.';
+      loginError.textContent = 'Server error';
       loginError.classList.add('show');
     }
   });
@@ -353,38 +291,29 @@
     const token = localStorage.getItem('adminToken');
     if (!token) { logout(); return; }
     try {
-      const res = await fetch('/api/admin/data', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
+      const res = await fetch('/api/admin/data', { headers: { 'Authorization': 'Bearer ' + token } });
       if (res.status === 401) { logout(); return; }
       const data = await res.json();
 
       if (data.rooms) {
         allRooms = {
-          pending: (data.rooms.pending || []).map(r => ({ ...r })),
-          approved: (data.rooms.approved || []).map(r => ({ ...r })),
-          taken: (data.rooms.taken || []).map(r => ({ ...r })),
-          declined: (data.rooms.declined || []).map(r => ({ ...r })),
-          removed: (data.rooms.removed || []).map(r => ({ ...r }))
+          pending: data.rooms.pending || [], approved: data.rooms.approved || [],
+          taken: data.rooms.taken || [], declined: data.rooms.declined || [], removed: data.rooms.removed || []
         };
       }
       if (data.transports) {
         allTransport = {
-          pending: (data.transports.pending || []).map(t => ({ ...t })),
-          approved: (data.transports.approved || []).map(t => ({ ...t })),
-          declined: (data.transports.declined || []).map(t => ({ ...t })),
-          removed: (data.transports.removed || []).map(t => ({ ...t }))
+          pending: data.transports.pending || [], approved: data.transports.approved || [],
+          declined: data.transports.declined || [], removed: data.transports.removed || []
         };
       }
       if (data.tenantRequests) {
         allTenants = {
-          pending: (data.tenantRequests.pending || []).map(t => ({ ...t })),
-          approved: (data.tenantRequests.approved || []).map(t => ({ ...t })),
-          declined: (data.tenantRequests.declined || []).map(t => ({ ...t })),
-          removed: (data.tenantRequests.removed || []).map(t => ({ ...t }))
+          pending: data.tenantRequests.pending || [], approved: data.tenantRequests.approved || [],
+          declined: data.tenantRequests.declined || [], removed: data.tenantRequests.removed || []
         };
       }
-      if (data.receipts) allReceipts = (data.receipts || []).map(r => ({ ...r }));
+      if (data.receipts) allReceipts = data.receipts || [];
 
       updateAllCounts();
       updateStats();
@@ -392,7 +321,7 @@
       renderTenantTab(currentTenantTab);
       renderTransportTab(currentTransportTab);
       renderChart();
-      loadMatches();
+      await loadMatches();
     } catch (err) {
       showNotice('Failed to load data: ' + err.message, 'error');
     }
@@ -412,9 +341,13 @@
     else if (section === 'transport') renderTransportTab(currentTransportTab);
   }
 
-  // ========================================
-  // ROOMS
-  // ========================================
+  function fixMediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) return url;
+    return '/' + url;
+  }
+
+  // ===== ROOMS =====
   function switchRoomTab(tab) {
     currentRoomTab = tab;
     document.querySelectorAll('#roomsSection .sub-tabs button').forEach(btn => {
@@ -423,19 +356,10 @@
     renderRoomTab(tab);
   }
 
-  function fixMediaUrl(url) {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) return url;
-    return '/' + url;
-  }
-
   function renderRoomTab(tab) {
     const rooms = allRooms[tab] || [];
     currentRoomTab = tab;
-    if (rooms.length === 0) {
-      roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`;
-      return;
-    }
+    if (rooms.length === 0) { roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`; return; }
     roomList.innerHTML = rooms.map(room => {
       const images = room.images || [];
       const allMedia = [...images, ...(room.video ? [room.video] : [])];
@@ -447,11 +371,9 @@
           const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
           return isVideo
             ? `<video src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})" muted></video>`
-            : `<img src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})" onerror="this.src='https://placehold.co/150x100/cccccc/969696?text=Error'">`;
+            : `<img src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})">`;
         }).join('');
-      } else {
-        mediaHtml = `<div class="no-media">📷 No media</div>`;
-      }
+      } else mediaHtml = `<div class="no-media">📷 No media</div>`;
       const landlord = room.posterName ? `👤 ${room.posterName} ${room.posterContact ? '📞 '+room.posterContact : ''}` : '';
       const waNum = (room.posterContact || '').replace(/[^0-9]/g, '');
       const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}` : '';
@@ -466,7 +388,6 @@
             <div class="detail">📍 ${room.location || 'No location'}${room.alexandraSuburb ? ' ('+room.alexandraSuburb+')' : ''} | 💰 ${room.amount || 'Ask'} | 🏠 ${room.roomType || room.type || 'Any'}</div>
             <div class="detail"><span class="badge ${tab}">${tab}</span> ${room.address || ''}</div>
             <div class="detail">👶 ${room.childFriendly || 'No'}${room.maxKids ? ' (max '+room.maxKids+')' : ''} | 🚗 ${room.parking || 'No'}${room.maxCars ? ' (max '+room.maxCars+')' : ''}</div>
-            <div class="detail" style="font-size:12px;color:#637268;">📅 ${room.createdAt ? new Date(room.createdAt).toLocaleDateString() : ''} | ${tab === 'approved' ? onlineBadge : ''}</div>
             <div class="actions">
               ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
               ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
@@ -489,6 +410,28 @@
     }).join('');
   }
 
+  async function moveRoom(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  async function toggleOnline(id, from) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'toggle-online', section: 'rooms', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🔄 Online status updated', 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
   function calculateServiceFee(rent) {
     if (rent >= 1000 && rent <= 1900) return 300;
     if (rent >= 2000 && rent <= 3000) return 350;
@@ -497,59 +440,19 @@
     return 0;
   }
 
-  async function moveRoom(id, from, to) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) return;
-    const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id })
-    });
-    const data = await res.json();
-    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); loadData(); }
-    else showNotice(data.error || 'Action failed', 'error');
-  }
-
-  async function toggleOnline(id, from) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) return;
-    const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ action: 'toggle-online', section: 'rooms', from, id })
-    });
-    const data = await res.json();
-    if (data.ok) { showNotice('🔄 Online status updated', 'success'); loadData(); }
-    else showNotice(data.error || 'Toggle failed', 'error');
-  }
-
   async function markTaken(id) {
     const room = allRooms.approved.find(r => r.id === id);
     if (!room) return;
     const rentAmount = parseFloat(room.amount?.replace(/[^0-9.]/g, '') || 0);
     const serviceFee = calculateServiceFee(rentAmount);
-    if (serviceFee === 0) {
-      if (!confirm(`⚠️ Rent R${rentAmount} doesn't match any service fee tier.\n\nContinue with R0?`)) return;
-    }
     const tenantName = prompt('📋 Tenant name:', '') || 'Unknown tenant';
     const tenantNumber = prompt('📞 Tenant phone:', '') || '';
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
     const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
-        action: 'mark-taken',
-        section: 'rooms',
-        id: id,
-        receipt: {
-          tenantName, tenantNumber,
-          rentAmount: String(rentAmount),
-          serviceFee,
-          date: new Date().toISOString().slice(0,10),
-          paymentType: 'Cash',
-          roomAddress: room.address
-        }
+        action: 'mark-taken', section: 'rooms', id,
+        receipt: { tenantName, tenantNumber, rentAmount: String(rentAmount), serviceFee, date: new Date().toISOString().slice(0,10), paymentType: 'Cash', roomAddress: room.address }
       })
     });
     const data = await res.json();
@@ -560,15 +463,13 @@
   async function deleteRoom(id, from) {
     if (!confirm('⚠️ Delete this room permanently?')) return;
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
     const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'delete', section: 'rooms', from, id })
     });
     const data = await res.json();
     if (data.ok) { showNotice('🗑️ Room deleted', 'success'); loadData(); }
-    else showNotice(data.error || 'Delete failed', 'error');
+    else showNotice(data.error || 'Failed', 'error');
   }
 
   function openEditRoomModal(id, from) {
@@ -587,39 +488,35 @@
     document.getElementById('editRoomModal').classList.add('show');
   }
 
-  function closeEditRoomModal() {
-    document.getElementById('editRoomModal').classList.remove('show');
-  }
+  function closeEditRoomModal() { document.getElementById('editRoomModal').classList.remove('show'); }
 
   document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const id = document.getElementById('editRoomId').value;
-    const from = document.getElementById('editRoomFrom').value;
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
-    const updatedRoom = {
-      title: document.getElementById('editRoomTitle').value,
-      location: document.getElementById('editRoomLocation').value,
-      address: document.getElementById('editRoomAddress').value,
-      amount: document.getElementById('editRoomAmount').value,
-      deposit: document.getElementById('editRoomDeposit').value,
-      posterName: document.getElementById('editRoomPosterName').value,
-      posterContact: document.getElementById('editRoomPosterContact').value,
-      notes: document.getElementById('editRoomNotes').value
-    };
     const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ action: 'edit', section: 'rooms', from, id, data: updatedRoom })
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'edit', section: 'rooms',
+        from: document.getElementById('editRoomFrom').value,
+        id: document.getElementById('editRoomId').value,
+        data: {
+          title: document.getElementById('editRoomTitle').value,
+          location: document.getElementById('editRoomLocation').value,
+          address: document.getElementById('editRoomAddress').value,
+          amount: document.getElementById('editRoomAmount').value,
+          deposit: document.getElementById('editRoomDeposit').value,
+          posterName: document.getElementById('editRoomPosterName').value,
+          posterContact: document.getElementById('editRoomPosterContact').value,
+          notes: document.getElementById('editRoomNotes').value
+        }
+      })
     });
     const result = await res.json();
     if (result.ok) { showNotice('✅ Room updated', 'success'); closeEditRoomModal(); loadData(); }
-    else showNotice('Failed: ' + (result.error || 'Unknown'), 'error');
+    else showNotice('Failed', 'error');
   });
 
-  // ========================================
-  // TENANTS
-  // ========================================
+  // ===== TENANTS =====
   function switchTenantTab(tab) {
     currentTenantTab = tab;
     document.querySelectorAll('#tenantsSection .sub-tabs button').forEach(btn => {
@@ -631,20 +528,12 @@
   function renderTenantTab(tab) {
     const tenants = allTenants[tab] || [];
     currentTenantTab = tab;
-    if (tenants.length === 0) {
-      tenantList.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`;
-      return;
-    }
+    if (tenants.length === 0) { tenantList.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`; return; }
     tenantList.innerHTML = tenants.map(t => {
-      const locations = Array.isArray(t.preferredLocations) && t.preferredLocations.length
-        ? t.preferredLocations.join(', ') : '—';
+      const locations = Array.isArray(t.preferredLocations) && t.preferredLocations.length ? t.preferredLocations.join(', ') : '—';
       const alex = t.alexandraSuburb ? `<div class="detail">🏘️ Suburb: <strong>${t.alexandraSuburb}</strong></div>` : '';
-      const kids = t.childFriendly === 'Yes'
-        ? `👶 Kids: ${t.childrenCount || '?'} (ages ${t.childrenAges || '?'})`
-        : '👶 No kids';
-      const cars = t.parking === 'Yes'
-        ? `🚗 Cars: ${t.carsCount || '?'}`
-        : '🚗 No parking';
+      const kids = t.childFriendly === 'Yes' ? `👶 Kids: ${t.childrenCount || '?'} (ages ${t.childrenAges || '?'})` : '👶 No kids';
+      const cars = t.parking === 'Yes' ? `🚗 Cars: ${t.carsCount || '?'}` : '🚗 No parking';
       const waNum = (t.contactNumber || '').replace(/[^0-9]/g, '');
       const waMsg = encodeURIComponent(`Hi ${t.tenantName}, we have a room match for you at ${locations}.`);
       const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${waMsg}` : '';
@@ -659,7 +548,6 @@
             <div class="detail">📅 Move-in: ${t.moveInDate || 'Flexible'}</div>
             <div class="detail">${kids} | ${cars}</div>
             ${t.notes ? `<div class="detail">📝 ${t.notes}</div>` : ''}
-            <div class="detail" style="font-size:12px;color:#637268;">📅 ${t.createdAt ? new Date(t.createdAt).toLocaleDateString() : ''}</div>
             <div class="actions">
               ${tab === 'pending' ? `<button class="approve" onclick="moveTenant('${t.id}','pending','approved')">✅ Approve</button>` : ''}
               ${tab === 'pending' ? `<button class="decline" onclick="moveTenant('${t.id}','pending','declined')">❌ Decline</button>` : ''}
@@ -679,29 +567,25 @@
 
   async function moveTenant(id, from, to) {
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
     const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'move', section: 'tenantRequests', from, to, id })
     });
     const data = await res.json();
     if (data.ok) { showNotice(`✅ Tenant moved to ${to}`, 'success'); loadData(); }
-    else showNotice(data.error || 'Action failed', 'error');
+    else showNotice(data.error || 'Failed', 'error');
   }
 
   async function deleteTenant(id, from) {
-    if (!confirm('⚠️ Delete this tenant permanently?')) return;
+    if (!confirm('Delete this tenant?')) return;
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
     const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'delete', section: 'tenantRequests', from, id })
     });
     const data = await res.json();
     if (data.ok) { showNotice('🗑️ Tenant deleted', 'success'); loadData(); }
-    else showNotice(data.error || 'Delete failed', 'error');
+    else showNotice(data.error || 'Failed', 'error');
   }
 
   function openEditTenantModal(id, from) {
@@ -717,76 +601,83 @@
     document.getElementById('editTenantModal').classList.add('show');
   }
 
-  function closeEditTenantModal() {
-    document.getElementById('editTenantModal').classList.remove('show');
-  }
+  function closeEditTenantModal() { document.getElementById('editTenantModal').classList.remove('show'); }
 
   document.getElementById('editTenantForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const id = document.getElementById('editTenantId').value;
-    const from = document.getElementById('editTenantFrom').value;
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
-
-    // Since our /api/admin/action "edit" only edits rooms, we use a light custom payload
-    // We'll reuse the same action but on tenantRequests section
-    const updatedTenant = {
-      tenantName: document.getElementById('editTenantName').value,
-      contactNumber: document.getElementById('editTenantContact').value,
-      roomType: document.getElementById('editTenantRoomType').value,
-      budgetRange: document.getElementById('editTenantBudget').value,
-      budget: document.getElementById('editTenantBudget').value,
-      notes: document.getElementById('editTenantNotes').value
-    };
-
     const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
-        action: 'edit',
-        section: 'tenantRequests',
-        from,
-        id,
-        data: updatedTenant
+        action: 'edit', section: 'tenantRequests',
+        from: document.getElementById('editTenantFrom').value,
+        id: document.getElementById('editTenantId').value,
+        data: {
+          tenantName: document.getElementById('editTenantName').value,
+          contactNumber: document.getElementById('editTenantContact').value,
+          roomType: document.getElementById('editTenantRoomType').value,
+          budgetRange: document.getElementById('editTenantBudget').value,
+          budget: document.getElementById('editTenantBudget').value,
+          notes: document.getElementById('editTenantNotes').value
+        }
       })
     });
     const result = await res.json();
     if (result.ok) { showNotice('✅ Tenant updated', 'success'); closeEditTenantModal(); loadData(); }
-    else showNotice('Failed: ' + (result.error || 'Unknown'), 'error');
+    else showNotice('Failed', 'error');
   });
 
-  // ========================================
-  // MATCHES
-  // ========================================
+  // ===== MATCHES =====
   async function loadMatches() {
     const token = localStorage.getItem('adminToken');
     if (!token) return;
     try {
-      const res = await fetch('/api/admin/matches', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
+      const res = await fetch('/api/admin/matches', { headers: { 'Authorization': 'Bearer ' + token } });
       const data = await res.json();
       allMatches = data.matches || [];
-      renderMatches();
+      renderMatches(data.totalLandlordsOnline, data.totalTenantsApproved);
       updateAllCounts();
     } catch (err) {
       matchesList.innerHTML = '<div class="empty">⚠️ Could not load matches.</div>';
     }
   }
 
-  function renderMatches() {
+  async function refreshMatches() {
+    showNotice('🔄 Refreshing matches...', 'success');
+    await loadMatches();
+    showNotice(`✅ Matches refreshed. Total: ${allMatches.length}`, 'success');
+  }
+
+  function renderMatches(onlineCount, tenantCount) {
+    const onlineLandlords = onlineCount !== undefined
+      ? onlineCount
+      : [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+    const approvedTenants = tenantCount !== undefined ? tenantCount : (allTenants.approved || []).length;
+
     if (allMatches.length === 0) {
-      matchesList.innerHTML = '<div class="empty">🔗 No matches yet. Approve rooms and tenants to see matches here.</div>';
+      matchesList.innerHTML = `
+        <div class="empty">
+          🔗 No matches found yet.<br><br>
+          <small>🟢 Online Landlords: <strong>${onlineLandlords}</strong> · ✅ Approved Tenants: <strong>${approvedTenants}</strong></small><br><br>
+          Approve rooms and tenants to see matches here.
+        </div>`;
       return;
     }
-    // Group by landlord
+
+    const summary = `
+      <div style="background:#0f7a5f;color:#fff;padding:14px 18px;border-radius:10px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;">
+        <div>🟢 Online Landlords: <strong>${onlineLandlords}</strong></div>
+        <div>✅ Approved Tenants: <strong>${approvedTenants}</strong></div>
+        <div>🔗 Total Matches: <strong>${allMatches.length}</strong></div>
+      </div>`;
+
     const grouped = {};
     allMatches.forEach(m => {
       if (!grouped[m.landlordId]) grouped[m.landlordId] = { landlord: m, tenants: [] };
       grouped[m.landlordId].tenants.push(m);
     });
 
-    matchesList.innerHTML = Object.values(grouped).map(g => {
+    matchesList.innerHTML = summary + Object.values(grouped).map(g => {
       const l = g.landlord;
       const tenantsHtml = g.tenants.map(t => {
         const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
@@ -808,7 +699,7 @@
           <div class="info">
             <div class="title">🏠 ${l.landlordTitle}</div>
             <div class="landlord">👤 ${l.landlordName || ''} 📞 ${l.landlordContact || ''}</div>
-            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} | 💰 R${l.landlordRent}</div>
+            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} — Group: <strong>${l.landlordLocationGroup || 'N/A'}</strong> | 💰 R${l.landlordRent}</div>
             <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'}</div>
             <div style="margin-top:10px;">
               <div style="font-weight:700;color:#0f7a5f;margin-bottom:6px;">🎯 Matched Tenants (${g.tenants.length})</div>
@@ -820,9 +711,7 @@
     }).join('');
   }
 
-  // ========================================
-  // TRANSPORT
-  // ========================================
+  // ===== TRANSPORT =====
   function switchTransportTab(tab) {
     currentTransportTab = tab;
     document.querySelectorAll('#transportSection .sub-tabs button').forEach(btn => {
@@ -833,18 +722,13 @@
 
   function renderTransportTab(tab) {
     const transports = allTransport[tab] || [];
-    currentTransportTab = tab;
-    if (transports.length === 0) {
-      transportList.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`;
-      return;
-    }
+    if (transports.length === 0) { transportList.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`; return; }
     transportList.innerHTML = transports.map(t => `
       <div class="room-card" style="grid-template-columns:1fr;">
         <div class="info">
           <div class="title">🚗 ${t.firstName || ''} ${t.surname || ''}</div>
           <div class="landlord">📞 ${t.phone || ''} | 📧 ${t.email || ''}</div>
           <div class="detail">Local: R${t.localPrice || '?'} | Outside: R${t.outsidePrice || '?'}</div>
-          <div class="detail">${t.notes || ''}</div>
           <div class="actions">
             ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${t.id}','pending','approved')">✅ Approve</button>` : ''}
             ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${t.id}','pending','declined')">❌ Decline</button>` : ''}
@@ -857,43 +741,32 @@
 
   async function moveTransport(id, from, to) {
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
-    const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'move', section: 'transports', from, to, id })
     });
-    const data = await res.json();
-    if (data.ok) { showNotice('✅ Moved', 'success'); loadData(); }
-    else showNotice(data.error || 'Failed', 'error');
+    showNotice('✅ Moved', 'success'); loadData();
   }
 
   async function deleteTransport(id, from) {
-    if (!confirm('Delete this transport?')) return;
+    if (!confirm('Delete?')) return;
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
-    const res = await fetch('/api/admin/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'delete', section: 'transports', from, id })
     });
-    const data = await res.json();
-    if (data.ok) { showNotice('🗑️ Deleted', 'success'); loadData(); }
-    else showNotice(data.error || 'Failed', 'error');
+    showNotice('🗑️ Deleted', 'success'); loadData();
   }
 
-  // ========================================
-  // MEDIA VIEWER
-  // ========================================
+  // ===== MEDIA =====
   function openMediaViewer(encoded, idx) {
     try {
       currentMediaList = JSON.parse(decodeURIComponent(encoded));
       currentMediaIndex = idx;
       showMedia();
       document.getElementById('mediaViewer').classList.add('show');
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   }
-
   function showMedia() {
     const m = currentMediaList[currentMediaIndex];
     const safe = fixMediaUrl(m);
@@ -902,26 +775,12 @@
       ? `<video src="${safe}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`
       : `<img src="${safe}" style="max-width:95vw;max-height:85vh;">`;
   }
-
   function closeMediaViewer() {
     document.getElementById('mediaViewer').classList.remove('show');
     document.getElementById('mediaContent').innerHTML = '';
   }
 
-  document.addEventListener('keydown', e => {
-    if (!document.getElementById('mediaViewer').classList.contains('show')) return;
-    if (e.key === 'Escape') closeMediaViewer();
-    if (e.key === 'ArrowRight' && currentMediaIndex < currentMediaList.length - 1) {
-      currentMediaIndex++; showMedia();
-    }
-    if (e.key === 'ArrowLeft' && currentMediaIndex > 0) {
-      currentMediaIndex--; showMedia();
-    }
-  });
-
-  // ========================================
-  // COUNTS & STATS
-  // ========================================
+  // ===== COUNTS & STATS =====
   function updateAllCounts() {
     document.getElementById('countPending').textContent = (allRooms.pending || []).length;
     document.getElementById('countApproved').textContent = (allRooms.approved || []).length;
@@ -932,16 +791,14 @@
     document.getElementById('statRoomsApproved').textContent = (allRooms.approved || []).length;
     document.getElementById('statRoomsTaken').textContent = (allRooms.taken || []).length;
     document.getElementById('mainRoomsCount').textContent =
-      (allRooms.pending || []).length + (allRooms.approved || []).length +
-      (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length;
+      (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length;
 
     document.getElementById('countTenantPending').textContent = (allTenants.pending || []).length;
     document.getElementById('countTenantApproved').textContent = (allTenants.approved || []).length;
     document.getElementById('countTenantDeclined').textContent = (allTenants.declined || []).length;
     document.getElementById('countTenantRemoved').textContent = (allTenants.removed || []).length;
     document.getElementById('mainTenantCount').textContent =
-      (allTenants.pending || []).length + (allTenants.approved || []).length +
-      (allTenants.declined || []).length + (allTenants.removed || []).length;
+      (allTenants.pending || []).length + (allTenants.approved || []).length + (allTenants.declined || []).length + (allTenants.removed || []).length;
     document.getElementById('statTenantsPending').textContent = (allTenants.pending || []).length;
 
     document.getElementById('countTransportPending').textContent = (allTransport.pending || []).length;
@@ -949,8 +806,7 @@
     document.getElementById('countTransportDeclined').textContent = (allTransport.declined || []).length;
     document.getElementById('countTransportRemoved').textContent = (allTransport.removed || []).length;
     document.getElementById('mainTransportCount').textContent =
-      (allTransport.pending || []).length + (allTransport.approved || []).length +
-      (allTransport.declined || []).length + (allTransport.removed || []).length;
+      (allTransport.pending || []).length + (allTransport.approved || []).length + (allTransport.declined || []).length + (allTransport.removed || []).length;
 
     const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
     document.getElementById('statServiceFeeRevenue').textContent = 'R' + totalFees.toFixed(2);
@@ -977,15 +833,8 @@
     const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
     revenueChart = new Chart(ctx, {
       type: 'bar',
-      data: {
-        labels: months,
-        datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } }
-      }
+      data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } }
     });
   }
 
