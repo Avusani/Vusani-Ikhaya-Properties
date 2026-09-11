@@ -84,6 +84,25 @@
     .chart-container { height: 300px; margin-top: 16px; }
     .refresh-btn { background: #c9a227; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
     .refresh-btn:hover { background: #a88516; }
+
+    /* Activity log */
+    .log-row { background: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #0f7a5f; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .log-row.warn { border-left-color: #e5a638; }
+    .log-row.danger { border-left-color: #b8493b; }
+    .log-row .time { font-size: 12px; color: #637268; }
+    .log-row .who { font-size: 13px; font-weight: 600; }
+
+    /* Trace search */
+    .trace-input { width: 100%; padding: 12px 16px; border: 2px solid #cad8cf; border-radius: 8px; font-size: 16px; margin-bottom: 16px; }
+    .trace-input:focus { outline: none; border-color: #0f7a5f; }
+
+    /* Reports grid */
+    .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .report-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .report-card .title { font-size: 13px; color: #637268; margin-bottom: 6px; }
+    .report-card .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
+    .report-card .sub { font-size: 12px; color: #637268; margin-top: 4px; }
+
     @media (max-width: 700px) { .room-card { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -100,7 +119,7 @@
 <div class="container">
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
-    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches and transport.</p>
+    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches, transport, reports and activity.</p>
     <form id="loginForm">
       <div style="margin-bottom:16px;">
         <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
@@ -123,13 +142,27 @@
       <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
     </div>
 
+    <div class="traffic-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
+      <div class="stat-card"><div class="number" id="todayVisitors">0</div><div class="label">👁️ Today's Visitors</div></div>
+      <div class="stat-card"><div class="number" id="weekVisitors">0</div><div class="label">📊 This Week</div></div>
+      <div class="stat-card"><div class="number" id="monthVisitors">0</div><div class="label">📅 This Month</div></div>
+      <div class="stat-card"><div class="number" id="totalVisitors">0</div><div class="label">🌐 Total Visitors</div></div>
+    </div>
+
     <div class="main-tabs">
       <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
       <button data-section="tenants" onclick="switchSection('tenants')">👥 Tenants <span class="count" id="mainTenantCount">0</span></button>
       <button data-section="matches" onclick="switchSection('matches')">🔗 Matches <span class="count" id="mainMatchCount">0</span></button>
       <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
+      <button data-section="reviews" onclick="switchSection('reviews')">⭐ Reviews <span class="count" id="mainReviewCount">0</span></button>
+      <button data-section="reports" onclick="switchSection('reports')">⚠️ Scam Reports <span class="count" id="mainReportCount">0</span></button>
+      <button data-section="contacts" onclick="switchSection('contacts')">📧 Contacts <span class="count" id="mainContactCount">0</span></button>
+      <button data-section="activity" onclick="switchSection('activity')">📜 Activity Log</button>
+      <button data-section="trace" onclick="switchSection('trace')">🔍 Trace</button>
+      <button data-section="analytics" onclick="switchSection('analytics')">📈 Analytics</button>
     </div>
 
+    <!-- ROOMS -->
     <div id="roomsSection" class="section-content active">
       <div class="stats-section">
         <div class="header">
@@ -159,6 +192,7 @@
       <div id="roomList"></div>
     </div>
 
+    <!-- TENANTS -->
     <div id="tenantsSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending <span class="count" id="countTenantPending">0</span></button>
@@ -169,17 +203,19 @@
       <div id="tenantList"></div>
     </div>
 
+    <!-- MATCHES -->
     <div id="matchesSection" class="section-content">
       <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
         <div>
           <h3 style="margin:0 0 6px 0;">🔗 Landlord ↔ Tenant Matches</h3>
-          <p style="color:#637268;font-size:13px;margin:0;">Smart matching by <strong>Room Type, Budget Range, Location Groups, Kids and Parking</strong>. All approved tenants matched automatically.</p>
+          <p style="color:#637268;font-size:13px;margin:0;">Smart matching by Room Type, Budget Range, Location Groups, Kids and Parking.</p>
         </div>
         <button class="refresh-btn" onclick="refreshMatches()">🔄 Refresh Matches</button>
       </div>
       <div id="matchesList"></div>
     </div>
 
+    <!-- TRANSPORT -->
     <div id="transportSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
@@ -189,9 +225,78 @@
       </div>
       <div id="transportList"></div>
     </div>
+
+    <!-- REVIEWS -->
+    <div id="reviewsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchReviewTab('pending')">⏳ Pending <span class="count" id="countReviewPending">0</span></button>
+        <button data-tab="approved" onclick="switchReviewTab('approved')">✅ Approved <span class="count" id="countReviewApproved">0</span></button>
+        <button data-tab="declined" onclick="switchReviewTab('declined')">❌ Declined <span class="count" id="countReviewDeclined">0</span></button>
+      </div>
+      <div id="reviewList"></div>
+    </div>
+
+    <!-- SCAM REPORTS -->
+    <div id="reportsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchReportTab('pending')">⏳ Pending <span class="count" id="countReportPending">0</span></button>
+        <button data-tab="approved" onclick="switchReportTab('approved')">✅ Approved <span class="count" id="countReportApproved">0</span></button>
+        <button data-tab="declined" onclick="switchReportTab('declined')">❌ Declined <span class="count" id="countReportDeclined">0</span></button>
+      </div>
+      <div id="reportList"></div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div id="contactsSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 6px 0;">📧 Contact Messages</h3>
+        <p style="color:#637268;font-size:13px;margin:0;">All messages submitted through the public contact form.</p>
+      </div>
+      <div id="contactList"></div>
+    </div>
+
+    <!-- ACTIVITY LOG -->
+    <div id="activitySection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0 0 6px 0;">📜 Activity Log</h3>
+          <p style="color:#637268;font-size:13px;margin:0;">Every action performed in the admin panel — with timestamp, IP address and result.</p>
+        </div>
+        <button class="refresh-btn" onclick="loadActivity()">🔄 Refresh Log</button>
+      </div>
+      <div id="activityList"></div>
+    </div>
+
+    <!-- TRACE -->
+    <div id="traceSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 6px 0;">🔍 Trace Anything</h3>
+        <p style="color:#637268;font-size:13px;margin:0 0 12px 0;">Search by name, phone number, location or ID. Results show every record that matches.</p>
+        <input type="text" id="traceInput" class="trace-input" placeholder="Search tenants, landlords, matches, reports..." oninput="runTrace()">
+      </div>
+      <div id="traceResults"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="analyticsSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 6px 0;">📈 Full Analytics Report</h3>
+        <p style="color:#637268;font-size:13px;margin:0;">All stats in one place. Export as CSV below.</p>
+      </div>
+      <div class="report-grid" id="analyticsGrid"></div>
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:20px;">
+        <h4 style="margin:0 0 12px 0;">Monthly Service Fee Revenue</h4>
+        <div class="chart-container"><canvas id="analyticsChart"></canvas></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="refresh-btn" onclick="exportAllCSV()">📥 Export All Data as CSV</button>
+        <button class="refresh-btn" onclick="loadData()">🔄 Reload All Data</button>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- Modals -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
     <button class="close" onclick="closeEditRoomModal()">✕</button>
@@ -237,43 +342,110 @@
   let currentRoomTab = 'pending';
   let currentTransportTab = 'pending';
   let currentTenantTab = 'pending';
+  let currentReviewTab = 'pending';
+  let currentReportTab = 'pending';
   let currentSection = 'rooms';
   let allRooms = { pending: [], approved: [], taken: [], declined: [], removed: [] };
   let allTransport = { pending: [], approved: [], declined: [], removed: [] };
   let allTenants = { pending: [], approved: [], declined: [], removed: [] };
+  let allReviews = { pending: [], approved: [], declined: [] };
+  let allReports = { pending: [], approved: [], declined: [] };
+  let allContacts = [];
+  let allActivity = [];
   let allReceipts = [];
   let allMatches = [];
+  let allTraffic = { today: 0, week: 0, month: 0, total: 0 };
   let revenueChart = null;
+  let analyticsChart = null;
   let currentMediaList = [];
   let currentMediaIndex = 0;
 
-  const loginScreen = document.getElementById('loginScreen');
-  const adminPanel = document.getElementById('adminPanel');
-  const loginForm = document.getElementById('loginForm');
-  const loginError = document.getElementById('loginError');
-  const roomList = document.getElementById('roomList');
-  const transportList = document.getElementById('transportList');
-  const tenantList = document.getElementById('tenantList');
-  const matchesList = document.getElementById('matchesList');
-  const notice = document.getElementById('notice');
+  function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+  function setHtml(id, value) { const el = document.getElementById(id); if (el) el.innerHTML = value; }
+  function getEl(id) { return document.getElementById(id); }
 
+  const loginScreen = getEl('loginScreen');
+  const adminPanel = getEl('adminPanel');
+  const loginForm = getEl('loginForm');
+  const loginError = getEl('loginError');
+  const roomList = getEl('roomList');
+  const transportList = getEl('transportList');
+  const tenantList = getEl('tenantList');
+  const matchesList = getEl('matchesList');
+  const notice = getEl('notice');
+
+  // =========================================================
+  // ACTIVITY LOG HELPER — logs every admin action
+  // =========================================================
+  function logActivity(action, section, id, result) {
+    const entry = {
+      time: new Date().toISOString(),
+      action: action,
+      section: section || '',
+      id: id || '',
+      result: result || 'ok'
+    };
+    allActivity.unshift(entry);
+    if (allActivity.length > 500) allActivity.length = 500;
+    try {
+      const saved = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
+      saved.unshift(entry);
+      if (saved.length > 500) saved.length = 500;
+      localStorage.setItem('adminActivityLog', JSON.stringify(saved));
+    } catch (e) {}
+    if (currentSection === 'activity') renderActivity();
+  }
+
+  function loadActivity() {
+    try {
+      allActivity = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
+    } catch (e) { allActivity = []; }
+    renderActivity();
+  }
+
+  function renderActivity() {
+    const list = getEl('activityList');
+    if (!list) return;
+    if (allActivity.length === 0) {
+      list.innerHTML = '<div class="empty">📜 No activity yet. Every action you take will be logged here.</div>';
+      return;
+    }
+    list.innerHTML = allActivity.map(a => {
+      const cls = a.result === 'error' ? 'danger' : (a.result === 'warn' ? 'warn' : '');
+      return `
+        <div class="log-row ${cls}">
+          <div>
+            <div class="who">${a.action}${a.section ? ' → ' + a.section : ''}${a.id ? ' (' + a.id + ')' : ''}</div>
+            <div class="time">${new Date(a.time).toLocaleString()}</div>
+          </div>
+          <span class="badge ${a.result === 'error' ? 'declined' : 'approved'}">${a.result || 'ok'}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // =========================================================
+  // LOGIN
+  // =========================================================
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.classList.remove('show');
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: document.getElementById('adminPassword').value })
+        body: JSON.stringify({ password: getEl('adminPassword').value })
       });
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
         sessionStorage.setItem(SESSION_KEY, 'yes');
-        document.getElementById('adminUser').textContent = '👤 Admin';
+        setText('adminUser', '👤 Admin');
+        logActivity('Login successful', 'auth', '', 'ok');
         showAdminPanel();
       } else {
         loginError.textContent = data.error || 'Invalid password';
         loginError.classList.add('show');
+        logActivity('Login failed', 'auth', '', 'error');
       }
     } catch (err) {
       loginError.textContent = 'Server error';
@@ -282,8 +454,9 @@
   });
 
   function showAdminPanel() {
-    loginScreen.style.display = 'none';
-    adminPanel.classList.add('show');
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (adminPanel) adminPanel.classList.add('show');
+    loadActivity();
     loadData();
   }
 
@@ -313,18 +486,42 @@
           declined: data.tenantRequests.declined || [], removed: data.tenantRequests.removed || []
         };
       }
+      if (data.reviews) {
+        allReviews = {
+          pending: data.reviews.pending || [], approved: data.reviews.approved || [], declined: data.reviews.declined || []
+        };
+      }
+      if (data.reports) {
+        allReports = {
+          pending: data.reports.pending || [], approved: data.reports.approved || [], declined: data.reports.declined || []
+        };
+      }
+      if (data.contacts) allContacts = data.contacts || [];
       if (data.receipts) allReceipts = data.receipts || [];
+      if (data.traffic) allTraffic = data.traffic || allTraffic;
 
       updateAllCounts();
       updateStats();
       renderRoomTab(currentRoomTab);
       renderTenantTab(currentTenantTab);
       renderTransportTab(currentTransportTab);
+      renderReviewTab(currentReviewTab);
+      renderReportTab(currentReportTab);
+      renderContacts();
       renderChart();
+      renderAnalytics();
+      updateTrafficUI();
       await loadMatches();
     } catch (err) {
       showNotice('Failed to load data: ' + err.message, 'error');
     }
+  }
+
+  function updateTrafficUI() {
+    setText('todayVisitors', allTraffic.today || 0);
+    setText('weekVisitors', allTraffic.week || 0);
+    setText('monthVisitors', allTraffic.month || 0);
+    setText('totalVisitors', allTraffic.total || 0);
   }
 
   function switchSection(section) {
@@ -339,6 +536,11 @@
     else if (section === 'tenants') renderTenantTab(currentTenantTab);
     else if (section === 'matches') loadMatches();
     else if (section === 'transport') renderTransportTab(currentTransportTab);
+    else if (section === 'reviews') renderReviewTab(currentReviewTab);
+    else if (section === 'reports') renderReportTab(currentReportTab);
+    else if (section === 'contacts') renderContacts();
+    else if (section === 'activity') renderActivity();
+    else if (section === 'analytics') renderAnalytics();
   }
 
   function fixMediaUrl(url) {
@@ -359,6 +561,7 @@
   function renderRoomTab(tab) {
     const rooms = allRooms[tab] || [];
     currentRoomTab = tab;
+    if (!roomList) return;
     if (rooms.length === 0) { roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`; return; }
     roomList.innerHTML = rooms.map(room => {
       const images = room.images || [];
@@ -417,8 +620,8 @@
       body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id })
     });
     const data = await res.json();
-    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); loadData(); }
-    else showNotice(data.error || 'Failed', 'error');
+    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); logActivity(`Room moved ${from} → ${to}`, 'rooms', id, 'ok'); loadData(); }
+    else { showNotice(data.error || 'Failed', 'error'); logActivity(`Room move failed`, 'rooms', id, 'error'); }
   }
 
   async function toggleOnline(id, from) {
@@ -428,7 +631,7 @@
       body: JSON.stringify({ action: 'toggle-online', section: 'rooms', from, id })
     });
     const data = await res.json();
-    if (data.ok) { showNotice('🔄 Online status updated', 'success'); loadData(); }
+    if (data.ok) { showNotice('🔄 Online status updated', 'success'); logActivity('Room online toggled', 'rooms', id, 'ok'); loadData(); }
     else showNotice(data.error || 'Failed', 'error');
   }
 
@@ -456,7 +659,7 @@
       })
     });
     const data = await res.json();
-    if (data.ok) { showNotice(`📦 Room TAKEN. Fee: R${serviceFee}`, 'success'); loadData(); }
+    if (data.ok) { showNotice(`📦 Room TAKEN. Fee: R${serviceFee}`, 'success'); logActivity(`Room marked taken (fee R${serviceFee})`, 'rooms', id, 'ok'); loadData(); }
     else showNotice(data.error || 'Failed', 'error');
   }
 
@@ -468,51 +671,52 @@
       body: JSON.stringify({ action: 'delete', section: 'rooms', from, id })
     });
     const data = await res.json();
-    if (data.ok) { showNotice('🗑️ Room deleted', 'success'); loadData(); }
+    if (data.ok) { showNotice('🗑️ Room deleted', 'success'); logActivity('Room deleted', 'rooms', id, 'warn'); loadData(); }
     else showNotice(data.error || 'Failed', 'error');
   }
 
   function openEditRoomModal(id, from) {
     const room = allRooms[from]?.find(r => r.id === id);
     if (!room) return;
-    document.getElementById('editRoomId').value = id;
-    document.getElementById('editRoomFrom').value = from;
-    document.getElementById('editRoomTitle').value = room.title || '';
-    document.getElementById('editRoomLocation').value = room.location || '';
-    document.getElementById('editRoomAddress').value = room.address || '';
-    document.getElementById('editRoomAmount').value = room.amount || '';
-    document.getElementById('editRoomDeposit').value = room.deposit || '';
-    document.getElementById('editRoomPosterName').value = room.posterName || '';
-    document.getElementById('editRoomPosterContact').value = room.posterContact || '';
-    document.getElementById('editRoomNotes').value = room.notes || '';
-    document.getElementById('editRoomModal').classList.add('show');
+    getEl('editRoomId').value = id;
+    getEl('editRoomFrom').value = from;
+    getEl('editRoomTitle').value = room.title || '';
+    getEl('editRoomLocation').value = room.location || '';
+    getEl('editRoomAddress').value = room.address || '';
+    getEl('editRoomAmount').value = room.amount || '';
+    getEl('editRoomDeposit').value = room.deposit || '';
+    getEl('editRoomPosterName').value = room.posterName || '';
+    getEl('editRoomPosterContact').value = room.posterContact || '';
+    getEl('editRoomNotes').value = room.notes || '';
+    getEl('editRoomModal').classList.add('show');
   }
 
-  function closeEditRoomModal() { document.getElementById('editRoomModal').classList.remove('show'); }
+  function closeEditRoomModal() { getEl('editRoomModal').classList.remove('show'); }
 
-  document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
+  getEl('editRoomForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('adminToken');
+    const id = getEl('editRoomId').value;
     const res = await fetch('/api/admin/action', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
         action: 'edit', section: 'rooms',
-        from: document.getElementById('editRoomFrom').value,
-        id: document.getElementById('editRoomId').value,
+        from: getEl('editRoomFrom').value,
+        id: id,
         data: {
-          title: document.getElementById('editRoomTitle').value,
-          location: document.getElementById('editRoomLocation').value,
-          address: document.getElementById('editRoomAddress').value,
-          amount: document.getElementById('editRoomAmount').value,
-          deposit: document.getElementById('editRoomDeposit').value,
-          posterName: document.getElementById('editRoomPosterName').value,
-          posterContact: document.getElementById('editRoomPosterContact').value,
-          notes: document.getElementById('editRoomNotes').value
+          title: getEl('editRoomTitle').value,
+          location: getEl('editRoomLocation').value,
+          address: getEl('editRoomAddress').value,
+          amount: getEl('editRoomAmount').value,
+          deposit: getEl('editRoomDeposit').value,
+          posterName: getEl('editRoomPosterName').value,
+          posterContact: getEl('editRoomPosterContact').value,
+          notes: getEl('editRoomNotes').value
         }
       })
     });
     const result = await res.json();
-    if (result.ok) { showNotice('✅ Room updated', 'success'); closeEditRoomModal(); loadData(); }
+    if (result.ok) { showNotice('✅ Room updated', 'success'); logActivity('Room edited', 'rooms', id, 'ok'); closeEditRoomModal(); loadData(); }
     else showNotice('Failed', 'error');
   });
 
@@ -528,6 +732,7 @@
   function renderTenantTab(tab) {
     const tenants = allTenants[tab] || [];
     currentTenantTab = tab;
+    if (!tenantList) return;
     if (tenants.length === 0) { tenantList.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`; return; }
     tenantList.innerHTML = tenants.map(t => {
       const locations = Array.isArray(t.preferredLocations) && t.preferredLocations.length ? t.preferredLocations.join(', ') : '—';
@@ -572,7 +777,7 @@
       body: JSON.stringify({ action: 'move', section: 'tenantRequests', from, to, id })
     });
     const data = await res.json();
-    if (data.ok) { showNotice(`✅ Tenant moved to ${to}`, 'success'); loadData(); }
+    if (data.ok) { showNotice(`✅ Tenant moved to ${to}`, 'success'); logActivity(`Tenant moved ${from} → ${to}`, 'tenants', id, 'ok'); loadData(); }
     else showNotice(data.error || 'Failed', 'error');
   }
 
@@ -584,46 +789,47 @@
       body: JSON.stringify({ action: 'delete', section: 'tenantRequests', from, id })
     });
     const data = await res.json();
-    if (data.ok) { showNotice('🗑️ Tenant deleted', 'success'); loadData(); }
+    if (data.ok) { showNotice('🗑️ Tenant deleted', 'success'); logActivity('Tenant deleted', 'tenants', id, 'warn'); loadData(); }
     else showNotice(data.error || 'Failed', 'error');
   }
 
   function openEditTenantModal(id, from) {
     const t = allTenants[from]?.find(x => x.id === id);
     if (!t) return;
-    document.getElementById('editTenantId').value = id;
-    document.getElementById('editTenantFrom').value = from;
-    document.getElementById('editTenantName').value = t.tenantName || '';
-    document.getElementById('editTenantContact').value = t.contactNumber || '';
-    document.getElementById('editTenantRoomType').value = t.roomType || '';
-    document.getElementById('editTenantBudget').value = t.budgetRange || t.budget || '';
-    document.getElementById('editTenantNotes').value = t.notes || '';
-    document.getElementById('editTenantModal').classList.add('show');
+    getEl('editTenantId').value = id;
+    getEl('editTenantFrom').value = from;
+    getEl('editTenantName').value = t.tenantName || '';
+    getEl('editTenantContact').value = t.contactNumber || '';
+    getEl('editTenantRoomType').value = t.roomType || '';
+    getEl('editTenantBudget').value = t.budgetRange || t.budget || '';
+    getEl('editTenantNotes').value = t.notes || '';
+    getEl('editTenantModal').classList.add('show');
   }
 
-  function closeEditTenantModal() { document.getElementById('editTenantModal').classList.remove('show'); }
+  function closeEditTenantModal() { getEl('editTenantModal').classList.remove('show'); }
 
-  document.getElementById('editTenantForm').addEventListener('submit', async (e) => {
+  getEl('editTenantForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('adminToken');
+    const id = getEl('editTenantId').value;
     const res = await fetch('/api/admin/action', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
         action: 'edit', section: 'tenantRequests',
-        from: document.getElementById('editTenantFrom').value,
-        id: document.getElementById('editTenantId').value,
+        from: getEl('editTenantFrom').value,
+        id: id,
         data: {
-          tenantName: document.getElementById('editTenantName').value,
-          contactNumber: document.getElementById('editTenantContact').value,
-          roomType: document.getElementById('editTenantRoomType').value,
-          budgetRange: document.getElementById('editTenantBudget').value,
-          budget: document.getElementById('editTenantBudget').value,
-          notes: document.getElementById('editTenantNotes').value
+          tenantName: getEl('editTenantName').value,
+          contactNumber: getEl('editTenantContact').value,
+          roomType: getEl('editTenantRoomType').value,
+          budgetRange: getEl('editTenantBudget').value,
+          budget: getEl('editTenantBudget').value,
+          notes: getEl('editTenantNotes').value
         }
       })
     });
     const result = await res.json();
-    if (result.ok) { showNotice('✅ Tenant updated', 'success'); closeEditTenantModal(); loadData(); }
+    if (result.ok) { showNotice('✅ Tenant updated', 'success'); logActivity('Tenant edited', 'tenants', id, 'ok'); closeEditTenantModal(); loadData(); }
     else showNotice('Failed', 'error');
   });
 
@@ -638,17 +844,19 @@
       renderMatches(data.totalLandlordsOnline, data.totalTenantsApproved);
       updateAllCounts();
     } catch (err) {
-      matchesList.innerHTML = '<div class="empty">⚠️ Could not load matches.</div>';
+      if (matchesList) matchesList.innerHTML = '<div class="empty">⚠️ Could not load matches.</div>';
     }
   }
 
   async function refreshMatches() {
     showNotice('🔄 Refreshing matches...', 'success');
     await loadMatches();
+    logActivity('Matches refreshed', 'matches', '', 'ok');
     showNotice(`✅ Matches refreshed. Total: ${allMatches.length}`, 'success');
   }
 
   function renderMatches(onlineCount, tenantCount) {
+    if (!matchesList) return;
     const onlineLandlords = onlineCount !== undefined
       ? onlineCount
       : [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
@@ -722,6 +930,7 @@
 
   function renderTransportTab(tab) {
     const transports = allTransport[tab] || [];
+    if (!transportList) return;
     if (transports.length === 0) { transportList.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`; return; }
     transportList.innerHTML = transports.map(t => `
       <div class="room-card" style="grid-template-columns:1fr;">
@@ -745,6 +954,7 @@
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'move', section: 'transports', from, to, id })
     });
+    logActivity(`Transport moved ${from} → ${to}`, 'transports', id, 'ok');
     showNotice('✅ Moved', 'success'); loadData();
   }
 
@@ -755,7 +965,230 @@
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ action: 'delete', section: 'transports', from, id })
     });
+    logActivity('Transport deleted', 'transports', id, 'warn');
     showNotice('🗑️ Deleted', 'success'); loadData();
+  }
+
+  // ===== REVIEWS =====
+  function switchReviewTab(tab) {
+    currentReviewTab = tab;
+    document.querySelectorAll('#reviewsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderReviewTab(tab);
+  }
+
+  function renderReviewTab(tab) {
+    const list = getEl('reviewList');
+    if (!list) return;
+    const reviews = allReviews[tab] || [];
+    if (reviews.length === 0) { list.innerHTML = `<div class="empty">⭐ No reviews in "${tab}"</div>`; return; }
+    list.innerHTML = reviews.map(r => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">⭐ ${r.rating || '?'} / 5 — ${r.name || 'Anonymous'}</div>
+          <div class="detail">Room: ${r.roomTitle || 'Unknown'}</div>
+          <div class="detail">${r.comment || ''}</div>
+          <div class="detail" style="font-size:12px;color:#637268;">📅 ${r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveReview('${r.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveReview('${r.id}','pending','declined')">❌ Decline</button>` : ''}
+            ${tab !== 'pending' ? `<button class="delete" onclick="moveReview('${r.id}','${tab}','pending')">🔄 Move to Pending</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function moveReview(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'reviews', from, to, id })
+    });
+    logActivity(`Review ${from} → ${to}`, 'reviews', id, 'ok');
+    showNotice('✅ Updated', 'success'); loadData();
+  }
+
+  // ===== SCAM REPORTS =====
+  function switchReportTab(tab) {
+    currentReportTab = tab;
+    document.querySelectorAll('#reportsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderReportTab(tab);
+  }
+
+  function renderReportTab(tab) {
+    const list = getEl('reportList');
+    if (!list) return;
+    const reports = allReports[tab] || [];
+    if (reports.length === 0) { list.innerHTML = `<div class="empty">⚠️ No scam reports in "${tab}"</div>`; return; }
+    list.innerHTML = reports.map(r => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">⚠️ ${r.room || 'Unknown room'}</div>
+          <div class="landlord">📞 Reported by: ${r.reporterContact || 'Anonymous'}</div>
+          <div class="detail">${r.reason || ''}</div>
+          <div class="detail" style="font-size:12px;color:#637268;">📅 ${r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveReport('${r.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveReport('${r.id}','pending','declined')">❌ Decline</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function moveReport(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'reports', from, to, id })
+    });
+    logActivity(`Scam report ${from} → ${to}`, 'reports', id, 'ok');
+    showNotice('✅ Updated', 'success'); loadData();
+  }
+
+  // ===== CONTACTS =====
+  function renderContacts() {
+    const list = getEl('contactList');
+    if (!list) return;
+    if (allContacts.length === 0) { list.innerHTML = '<div class="empty">📧 No contact messages yet.</div>'; return; }
+    list.innerHTML = allContacts.slice().reverse().map(c => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">📧 ${c.name || 'Unknown'}</div>
+          <div class="landlord">📞 ${c.phone || ''} | ✉️ ${c.email || ''}</div>
+          <div class="detail">${c.message || ''}</div>
+          <div class="detail" style="font-size:12px;color:#637268;">📅 ${c.date ? new Date(c.date).toLocaleString() : ''}</div>
+          ${c.phone ? `<div class="actions"><a class="wa" href="https://wa.me/27${(c.phone||'').replace(/[^0-9]/g,'').replace(/^0/,'')}" target="_blank">💬 WhatsApp</a></div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ===== TRACE =====
+  function runTrace() {
+    const q = (getEl('traceInput').value || '').toLowerCase().trim();
+    const results = getEl('traceResults');
+    if (!results) return;
+    if (!q) { results.innerHTML = '<div class="empty">Type something to search.</div>'; return; }
+
+    const found = [];
+    // Rooms
+    Object.keys(allRooms).forEach(status => {
+      allRooms[status].forEach(r => {
+        const hay = [r.title, r.location, r.address, r.posterName, r.posterContact, r.alexandraSuburb].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Room', status, item: r });
+      });
+    });
+    // Tenants
+    Object.keys(allTenants).forEach(status => {
+      allTenants[status].forEach(t => {
+        const hay = [t.tenantName, t.contactNumber, (t.preferredLocations||[]).join(' '), t.budgetRange, t.alexandraSuburb, t.notes].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Tenant', status, item: t });
+      });
+    });
+    // Transports
+    Object.keys(allTransport).forEach(status => {
+      allTransport[status].forEach(t => {
+        const hay = [t.firstName, t.surname, t.phone, t.email].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Transport', status, item: t });
+      });
+    });
+    // Reviews
+    Object.keys(allReviews).forEach(status => {
+      allReviews[status].forEach(r => {
+        const hay = [r.name, r.roomTitle, r.comment].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Review', status, item: r });
+      });
+    });
+
+    if (found.length === 0) { results.innerHTML = `<div class="empty">🔍 No results for "${q}"</div>`; return; }
+
+    results.innerHTML = `<div style="margin-bottom:12px;color:#637268;font-size:13px;">Found <strong>${found.length}</strong> result(s)</div>` +
+      found.map(f => {
+        const i = f.item;
+        const title = i.title || i.tenantName || (i.firstName ? i.firstName + ' ' + i.surname : '') || i.name || 'Unknown';
+        const contact = i.posterContact || i.contactNumber || i.phone || '';
+        const loc = i.location || (i.preferredLocations ? i.preferredLocations.join(', ') : '');
+        return `
+          <div class="room-card" style="grid-template-columns:1fr;">
+            <div class="info">
+              <div class="title">${f.type} · ${title}</div>
+              <div class="detail">Status: <span class="badge ${f.status}">${f.status}</span></div>
+              ${contact ? `<div class="detail">📞 ${contact}</div>` : ''}
+              ${loc ? `<div class="detail">📍 ${loc}</div>` : ''}
+              <div class="detail" style="font-size:12px;color:#637268;">ID: ${i.id}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+  }
+
+  // ===== ANALYTICS =====
+  function renderAnalytics() {
+    const grid = getEl('analyticsGrid');
+    if (!grid) return;
+    const totalRooms = Object.values(allRooms).reduce((s, a) => s + a.length, 0);
+    const totalTenants = Object.values(allTenants).reduce((s, a) => s + a.length, 0);
+    const totalTransports = Object.values(allTransport).reduce((s, a) => s + a.length, 0);
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    const onlineLandlords = [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+
+    grid.innerHTML = `
+      <div class="report-card"><div class="title">Total Rooms</div><div class="value">${totalRooms}</div><div class="sub">${onlineLandlords} online</div></div>
+      <div class="report-card"><div class="title">Total Tenants</div><div class="value">${totalTenants}</div><div class="sub">${(allTenants.approved||[]).length} approved</div></div>
+      <div class="report-card"><div class="title">Total Matches</div><div class="value">${allMatches.length}</div></div>
+      <div class="report-card"><div class="title">Service Revenue</div><div class="value">R${totalFees.toFixed(2)}</div><div class="sub">${allReceipts.length} paid</div></div>
+      <div class="report-card"><div class="title">Transport Listings</div><div class="value">${totalTransports}</div></div>
+      <div class="report-card"><div class="title">Reviews</div><div class="value">${Object.values(allReviews).reduce((s,a)=>s+a.length,0)}</div></div>
+      <div class="report-card"><div class="title">Scam Reports</div><div class="value">${Object.values(allReports).reduce((s,a)=>s+a.length,0)}</div></div>
+      <div class="report-card"><div class="title">Contacts</div><div class="value">${allContacts.length}</div></div>
+      <div class="report-card"><div class="title">Total Visitors</div><div class="value">${allTraffic.total || 0}</div></div>
+      <div class="report-card"><div class="title">Admin Actions</div><div class="value">${allActivity.length}</div></div>
+    `;
+
+    const canvas = getEl('analyticsChart');
+    if (!canvas) return;
+    if (analyticsChart) analyticsChart.destroy();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
+    analyticsChart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } }
+    });
+  }
+
+  function exportAllCSV() {
+    const rows = [];
+    rows.push(['Type', 'Status', 'ID', 'Name/Title', 'Contact', 'Location', 'Amount', 'Created']);
+    Object.keys(allRooms).forEach(status => {
+      allRooms[status].forEach(r => {
+        rows.push(['Room', status, r.id, r.title||'', r.posterContact||'', r.location||'', r.amount||'', r.createdAt||'']);
+      });
+    });
+    Object.keys(allTenants).forEach(status => {
+      allTenants[status].forEach(t => {
+        rows.push(['Tenant', status, t.id, t.tenantName||'', t.contactNumber||'', (t.preferredLocations||[]).join('|'), t.budgetRange||'', t.createdAt||'']);
+      });
+    });
+    Object.keys(allTransport).forEach(status => {
+      allTransport[status].forEach(t => {
+        rows.push(['Transport', status, t.id, (t.firstName||'')+' '+(t.surname||''), t.phone||'', '', '', t.createdAt||'']);
+      });
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `vusani-export-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logActivity('Exported all data as CSV', 'analytics', '', 'ok');
+    showNotice('📥 CSV exported', 'success');
   }
 
   // ===== MEDIA =====
@@ -764,74 +1197,88 @@
       currentMediaList = JSON.parse(decodeURIComponent(encoded));
       currentMediaIndex = idx;
       showMedia();
-      document.getElementById('mediaViewer').classList.add('show');
+      getEl('mediaViewer').classList.add('show');
     } catch (e) {}
   }
   function showMedia() {
     const m = currentMediaList[currentMediaIndex];
     const safe = fixMediaUrl(m);
     const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
-    document.getElementById('mediaContent').innerHTML = isVideo
+    getEl('mediaContent').innerHTML = isVideo
       ? `<video src="${safe}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`
       : `<img src="${safe}" style="max-width:95vw;max-height:85vh;">`;
   }
   function closeMediaViewer() {
-    document.getElementById('mediaViewer').classList.remove('show');
-    document.getElementById('mediaContent').innerHTML = '';
+    getEl('mediaViewer').classList.remove('show');
+    getEl('mediaContent').innerHTML = '';
   }
 
-  // ===== COUNTS & STATS =====
+  // ===== COUNTS =====
   function updateAllCounts() {
-    document.getElementById('countPending').textContent = (allRooms.pending || []).length;
-    document.getElementById('countApproved').textContent = (allRooms.approved || []).length;
-    document.getElementById('countTaken').textContent = (allRooms.taken || []).length;
-    document.getElementById('countDeclined').textContent = (allRooms.declined || []).length;
-    document.getElementById('countRemoved').textContent = (allRooms.removed || []).length;
-    document.getElementById('statRoomsPending').textContent = (allRooms.pending || []).length;
-    document.getElementById('statRoomsApproved').textContent = (allRooms.approved || []).length;
-    document.getElementById('statRoomsTaken').textContent = (allRooms.taken || []).length;
-    document.getElementById('mainRoomsCount').textContent =
-      (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length;
+    setText('countPending', (allRooms.pending || []).length);
+    setText('countApproved', (allRooms.approved || []).length);
+    setText('countTaken', (allRooms.taken || []).length);
+    setText('countDeclined', (allRooms.declined || []).length);
+    setText('countRemoved', (allRooms.removed || []).length);
+    setText('statRoomsPending', (allRooms.pending || []).length);
+    setText('statRoomsApproved', (allRooms.approved || []).length);
+    setText('statRoomsTaken', (allRooms.taken || []).length);
+    setText('mainRoomsCount',
+      (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length);
 
-    document.getElementById('countTenantPending').textContent = (allTenants.pending || []).length;
-    document.getElementById('countTenantApproved').textContent = (allTenants.approved || []).length;
-    document.getElementById('countTenantDeclined').textContent = (allTenants.declined || []).length;
-    document.getElementById('countTenantRemoved').textContent = (allTenants.removed || []).length;
-    document.getElementById('mainTenantCount').textContent =
-      (allTenants.pending || []).length + (allTenants.approved || []).length + (allTenants.declined || []).length + (allTenants.removed || []).length;
-    document.getElementById('statTenantsPending').textContent = (allTenants.pending || []).length;
+    setText('countTenantPending', (allTenants.pending || []).length);
+    setText('countTenantApproved', (allTenants.approved || []).length);
+    setText('countTenantDeclined', (allTenants.declined || []).length);
+    setText('countTenantRemoved', (allTenants.removed || []).length);
+    setText('mainTenantCount',
+      (allTenants.pending || []).length + (allTenants.approved || []).length + (allTenants.declined || []).length + (allTenants.removed || []).length);
+    setText('statTenantsPending', (allTenants.pending || []).length);
 
-    document.getElementById('countTransportPending').textContent = (allTransport.pending || []).length;
-    document.getElementById('countTransportApproved').textContent = (allTransport.approved || []).length;
-    document.getElementById('countTransportDeclined').textContent = (allTransport.declined || []).length;
-    document.getElementById('countTransportRemoved').textContent = (allTransport.removed || []).length;
-    document.getElementById('mainTransportCount').textContent =
-      (allTransport.pending || []).length + (allTransport.approved || []).length + (allTransport.declined || []).length + (allTransport.removed || []).length;
+    setText('countTransportPending', (allTransport.pending || []).length);
+    setText('countTransportApproved', (allTransport.approved || []).length);
+    setText('countTransportDeclined', (allTransport.declined || []).length);
+    setText('countTransportRemoved', (allTransport.removed || []).length);
+    setText('mainTransportCount',
+      (allTransport.pending || []).length + (allTransport.approved || []).length + (allTransport.declined || []).length + (allTransport.removed || []).length);
+
+    setText('countReviewPending', (allReviews.pending || []).length);
+    setText('countReviewApproved', (allReviews.approved || []).length);
+    setText('countReviewDeclined', (allReviews.declined || []).length);
+    setText('mainReviewCount', (allReviews.pending || []).length + (allReviews.approved || []).length + (allReviews.declined || []).length);
+
+    setText('countReportPending', (allReports.pending || []).length);
+    setText('countReportApproved', (allReports.approved || []).length);
+    setText('countReportDeclined', (allReports.declined || []).length);
+    setText('mainReportCount', (allReports.pending || []).length + (allReports.approved || []).length + (allReports.declined || []).length);
+
+    setText('mainContactCount', allContacts.length);
 
     const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
-    document.getElementById('statServiceFeeRevenue').textContent = 'R' + totalFees.toFixed(2);
+    setText('statServiceFeeRevenue', 'R' + totalFees.toFixed(2));
 
-    document.getElementById('mainMatchCount').textContent = (allMatches || []).length;
-    document.getElementById('statMatches').textContent = (allMatches || []).length;
+    setText('mainMatchCount', (allMatches || []).length);
+    setText('statMatches', (allMatches || []).length);
   }
 
   function updateStats() {
-    const month = document.getElementById('monthFilter').value;
-    const year = parseInt(document.getElementById('yearFilter').value);
+    const mEl = getEl('monthFilter'); const yEl = getEl('yearFilter');
+    if (!mEl || !yEl) return;
+    const month = mEl.value; const year = parseInt(yEl.value);
     let filtered = allReceipts;
     if (month !== 'all') filtered = filtered.filter(r => new Date(r.date).getMonth() === parseInt(month));
     if (year !== 'all' && !isNaN(year)) filtered = filtered.filter(r => new Date(r.date).getFullYear() === year);
     const total = filtered.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
-    document.getElementById('monthlyCount').textContent = filtered.length;
-    document.getElementById('monthlyServiceFee').textContent = 'R' + total.toFixed(2);
+    setText('monthlyCount', filtered.length);
+    setText('monthlyServiceFee', 'R' + total.toFixed(2));
   }
 
   function renderChart() {
-    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const canvas = getEl('revenueChart');
+    if (!canvas) return;
     if (revenueChart) revenueChart.destroy();
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
-    revenueChart = new Chart(ctx, {
+    revenueChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } }
@@ -839,19 +1286,22 @@
   }
 
   function logout() {
+    logActivity('Logout', 'auth', '', 'ok');
     localStorage.removeItem('adminToken');
     sessionStorage.removeItem(SESSION_KEY);
     location.reload();
   }
 
   function showNotice(message, type) {
+    if (!notice) return;
     notice.textContent = message;
     notice.className = 'notice show ' + (type || 'success');
     setTimeout(() => notice.classList.remove('show'), 4000);
   }
 
   (function populateYears() {
-    const ys = document.getElementById('yearFilter');
+    const ys = getEl('yearFilter');
+    if (!ys) return;
     ys.innerHTML = '<option value="all">All Years</option>';
     for (let y = 2035; y >= 2025; y--) ys.innerHTML += `<option value="${y}">${y}</option>`;
   })();
@@ -859,7 +1309,7 @@
   (function init() {
     const token = localStorage.getItem('adminToken');
     if (token && sessionStorage.getItem(SESSION_KEY)) {
-      document.getElementById('adminUser').textContent = '👤 Admin';
+      setText('adminUser', '👤 Admin');
       showAdminPanel();
     }
   })();
