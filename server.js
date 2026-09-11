@@ -1,882 +1,1338 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | VUSANI IKHAYA PROPERTIES</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #edf4ee; color: #17201b; }
+    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .topbar a { color: #fff; text-decoration: none; }
+    .brand { font-weight: 900; font-size: 20px; }
+    .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+    .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+    .login-box h2 { margin-top: 0; }
+    .login-box input { width: 100%; padding: 12px; border: 1px solid #cad8cf; border-radius: 8px; font-size: 16px; }
+    .login-box button { width: 100%; padding: 12px; background: #0f7a5f; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .error { color: #b8493b; background: #fde5df; padding: 10px; border-radius: 6px; display: none; margin-top: 10px; }
+    .error.show { display: block; }
+    .panel { display: none; }
+    .panel.show { display: block; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
+    .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
+    .stat-card .label { font-size: 12px; color: #637268; }
+    .main-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .main-tabs button { padding: 10px 20px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; }
+    .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .main-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
+    .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
+    .sub-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .sub-tabs button { padding: 8px 16px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
+    .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .sub-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
+    .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
+    .room-card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #cad8cf; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .room-card .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .room-card .media-grid .media-item { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; background: #eef3ee; cursor: pointer; }
+    .room-card .media-grid .no-media { background: #edf4ee; height: 120px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #637268; font-size: 12px; grid-column: 1 / -1; }
+    .room-card .info { display: grid; gap: 4px; }
+    .room-card .info .title { font-weight: 700; font-size: 18px; }
+    .room-card .info .detail { font-size: 14px; color: #637268; }
+    .room-card .info .landlord { font-size: 13px; color: #0f7a5f; font-weight: 600; }
+    .room-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .room-card .actions button { padding: 5px 12px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
+    .room-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
+    .room-card .actions .repost { background: #e5a638; color: #fff; border-color: #e5a638; }
+    .room-card .actions .taken { background: #1e40af; color: #fff; border-color: #1e40af; }
+    .room-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
+    .room-card .actions .wa { background: #25D366; color: #fff; border-color: #25D366; text-decoration: none; display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge.pending { background: #fef3c7; color: #92400e; }
+    .badge.approved { background: #d1fae5; color: #065f46; }
+    .badge.taken { background: #dbeafe; color: #1e40af; }
+    .badge.declined { background: #fee2e2; color: #991b1b; }
+    .badge.removed { background: #f3f4f6; color: #4b5563; }
+    .empty { color: #637268; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #cad8cf; }
+    .notice { padding: 12px; border-radius: 8px; margin: 10px 0; display: none; font-weight: 600; }
+    .notice.show { display: block; }
+    .notice.success { background: #dbf4e9; color: #0d4c3a; }
+    .notice.error { background: #fde5df; color: #7f2318; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
+    .modal .close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #637268; background: none; border: none; }
+    .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
+    .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
+    .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
+    .modal .hr { margin:18px 0;border:none;border-top:2px solid #eef3ee; }
+    .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+    .media-viewer.show { display: flex; }
+    .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
+    .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; }
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+    .stats-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #cad8cf; }
+    .stats-section .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    .stats-section .filters select { padding: 8px 12px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
+    .fee-info { background: #f8faf9; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #637268; border: 1px solid #eef3ee; }
+    .fee-info strong { color: #0f7a5f; }
+    .chart-container { height: 300px; margin-top: 16px; }
+    .refresh-btn { background: #c9a227; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+    .refresh-btn:hover { background: #a88516; }
+    .log-row { background: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #0f7a5f; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .log-row.warn { border-left-color: #e5a638; }
+    .log-row.danger { border-left-color: #b8493b; }
+    .log-row .time { font-size: 12px; color: #637268; }
+    .log-row .who { font-size: 13px; font-weight: 600; }
+    .trace-input { width: 100%; padding: 12px 16px; border: 2px solid #cad8cf; border-radius: 8px; font-size: 16px; margin-bottom: 16px; }
+    .trace-input:focus { outline: none; border-color: #0f7a5f; }
+    .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .report-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .report-card .title { font-size: 13px; color: #637268; margin-bottom: 6px; }
+    .report-card .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
+    .report-card .sub { font-size: 12px; color: #637268; margin-top: 4px; }
+    @media (max-width: 700px) { .room-card { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">VUSANI IKHAYA PROPERTIES<small>Trusted rooms. Real people. Real value.</small></div>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <a href="/" target="_blank">🌐 View Public Site</a>
+    <span id="adminUser" style="color:rgba(255,255,255,0.6);font-size:13px;"></span>
+    <button onclick="logout()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);padding:4px 12px;border-radius:4px;cursor:pointer;">Logout</button>
+  </div>
+</div>
 
-const app = express();
-const PORT = process.env.PORT || 8080;
+<div class="container">
+  <div id="loginScreen" class="login-box">
+    <h2>🔐 Admin Login</h2>
+    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches, transport, reports and activity.</p>
+    <form id="loginForm">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+      </div>
+      <div id="loginError" class="error"></div>
+      <button type="submit">Log In</button>
+    </form>
+  </div>
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
-const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
-const ROOT = __dirname;
-const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "database");
-const DB_FILE = path.join(DATA_DIR, "db.json");
-const TRAFFIC_FILE = path.join(DATA_DIR, "traffic.json");
-const sessions = new Map();
-const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+  <div id="adminPanel" class="panel">
+    <div id="notice" class="notice"></div>
 
-const defaultDB = {
-  rooms: { pending: [], approved: [], taken: [], declined: [], removed: [] },
-  reviews: { pending: [], approved: [], declined: [] },
-  reports: { pending: [], approved: [], declined: [] },
-  transports: { pending: [], approved: [], declined: [], removed: [] },
-  tenantRequests: { pending: [], approved: [], declined: [], removed: [] },
-  receipts: [],
-  contacts: []
-};
+    <div class="stats-bar">
+      <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
+      <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
+      <div class="stat-card"><div class="number" id="statRoomsTaken">0</div><div class="label">📦 Rooms Taken</div></div>
+      <div class="stat-card"><div class="number" id="statTenantsPending">0</div><div class="label">👥 Tenants Pending</div></div>
+      <div class="stat-card"><div class="number" id="statMatches">0</div><div class="label">🔗 Matches</div></div>
+      <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
+    </div>
 
-app.use(cors());
-app.use(express.json({ limit: '80mb' }));
+    <div class="traffic-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
+      <div class="stat-card"><div class="number" id="todayVisitors">0</div><div class="label">👁️ Today's Visitors</div></div>
+      <div class="stat-card"><div class="number" id="weekVisitors">0</div><div class="label">📊 This Week</div></div>
+      <div class="stat-card"><div class="number" id="monthVisitors">0</div><div class="label">📅 This Month</div></div>
+      <div class="stat-card"><div class="number" id="totalVisitors">0</div><div class="label">🌐 Total Visitors</div></div>
+    </div>
 
-// =========================================================
-// VISITOR TRACKING MIDDLEWARE
-// =========================================================
-app.use((req, res, next) => {
-  try {
-    const isPublicPage =
-      req.method === 'GET' &&
-      !req.path.startsWith('/api/') &&
-      !req.path.startsWith('/admin') &&
-      !req.path.startsWith('/database/') &&
-      !req.path.startsWith('/favicon') &&
-      !/\.[a-z0-9]+$/i.test(req.path);
-    if (isPublicPage) recordVisit(req);
-  } catch (e) { /* never block */ }
-  next();
-});
+    <div class="main-tabs">
+      <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
+      <button data-section="tenants" onclick="switchSection('tenants')">👥 Tenants <span class="count" id="mainTenantCount">0</span></button>
+      <button data-section="matches" onclick="switchSection('matches')">🔗 Matches <span class="count" id="mainMatchCount">0</span></button>
+      <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
+      <button data-section="reviews" onclick="switchSection('reviews')">⭐ Reviews <span class="count" id="mainReviewCount">0</span></button>
+      <button data-section="reports" onclick="switchSection('reports')">⚠️ Scam Reports <span class="count" id="mainReportCount">0</span></button>
+      <button data-section="contacts" onclick="switchSection('contacts')">📧 Contacts <span class="count" id="mainContactCount">0</span></button>
+      <button data-section="activity" onclick="switchSection('activity')">📜 Activity Log</button>
+      <button data-section="trace" onclick="switchSection('trace')">🔍 Trace</button>
+      <button data-section="analytics" onclick="switchSection('analytics')">📈 Analytics</button>
+    </div>
 
-app.use(express.static(ROOT));
+    <div id="roomsSection" class="section-content active">
+      <div class="stats-section">
+        <div class="header">
+          <h3 style="margin:0;">📊 Service Fee Revenue</h3>
+          <div class="filters">
+            <select id="monthFilter" onchange="updateStats()">
+              <option value="all">All Months</option>
+              <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+              <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+              <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+              <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+            </select>
+            <select id="yearFilter" onchange="updateStats()"></select>
+          </div>
+        </div>
+        <div class="fee-info">💰 <strong>Service Fee:</strong> R1000-R1900 = R300 | R2000-R3000 = R350 | R3100-R3800 = R400 | R3900-R7000 = R500</div>
+        <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+      </div>
 
-// =========================================================
-// DATABASE HELPERS
-// =========================================================
-function normalizeSection(section, defaults) {
-  const source = section && typeof section === "object" && !Array.isArray(section) ? section : {};
-  return Object.fromEntries(
-    Object.keys(defaults).map((status) => [status, Array.isArray(source[status]) ? source[status] : []])
-  );
-}
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchRoomTab('pending')">⏳ Pending <span class="count" id="countPending">0</span></button>
+        <button data-tab="approved" onclick="switchRoomTab('approved')">✅ Approved <span class="count" id="countApproved">0</span></button>
+        <button data-tab="taken" onclick="switchRoomTab('taken')">📦 Taken <span class="count" id="countTaken">0</span></button>
+        <button data-tab="declined" onclick="switchRoomTab('declined')">❌ Declined <span class="count" id="countDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchRoomTab('removed')">🗑️ Removed <span class="count" id="countRemoved">0</span></button>
+      </div>
+      <div id="roomList"></div>
+    </div>
 
-function normalizeDB(db) {
-  db = db || {};
-  db.rooms = normalizeSection(db.rooms, defaultDB.rooms);
-  db.reviews = normalizeSection(db.reviews, defaultDB.reviews);
-  db.reports = normalizeSection(db.reports, defaultDB.reports);
-  db.transports = normalizeSection(db.transports, defaultDB.transports);
-  db.tenantRequests = normalizeSection(db.tenantRequests, defaultDB.tenantRequests);
-  db.receipts = Array.isArray(db.receipts) ? db.receipts : [];
-  db.contacts = Array.isArray(db.contacts) ? db.contacts : [];
-  return db;
-}
+    <div id="tenantsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending <span class="count" id="countTenantPending">0</span></button>
+        <button data-tab="approved" onclick="switchTenantTab('approved')">✅ Approved <span class="count" id="countTenantApproved">0</span></button>
+        <button data-tab="declined" onclick="switchTenantTab('declined')">❌ Declined <span class="count" id="countTenantDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchTenantTab('removed')">🗑️ Removed <span class="count" id="countTenantRemoved">0</span></button>
+      </div>
+      <div id="tenantList"></div>
+    </div>
 
-function ensureDB() {
-  if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR, { recursive: true }); console.log('📁 Database directory created'); }
-  if (!fs.existsSync(DB_FILE)) { writeDB(defaultDB); console.log('📁 New database created'); }
-  if (!fs.existsSync(TRAFFIC_FILE)) { writeTraffic({ days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }); console.log('📁 New traffic file created'); }
-}
+    <div id="matchesSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0 0 6px 0;">🔗 Landlord ↔ Tenant Matches</h3>
+          <p style="color:#637268;font-size:13px;margin:0;">Smart matching by Room Type, Budget Range, Location Groups, Kids and Parking.</p>
+        </div>
+        <button class="refresh-btn" onclick="refreshMatches()">🔄 Refresh Matches</button>
+      </div>
+      <div id="matchesList"></div>
+    </div>
 
-function readDB() {
-  ensureDB();
-  try {
-    const raw = fs.readFileSync(DB_FILE, "utf8").replace(/^\uFEFF/, "");
-    const parsed = raw.trim() ? JSON.parse(raw) : defaultDB;
-    return normalizeDB(parsed);
-  } catch (error) {
-    console.error('❌ Failed to read database:', error.message);
-    const restored = restoreFromBackup();
-    if (restored) return readDB();
-    return defaultDB;
+    <div id="transportSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
+        <button data-tab="approved" onclick="switchTransportTab('approved')">✅ Approved <span class="count" id="countTransportApproved">0</span></button>
+        <button data-tab="declined" onclick="switchTransportTab('declined')">❌ Declined <span class="count" id="countTransportDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchTransportTab('removed')">🗑️ Removed <span class="count" id="countTransportRemoved">0</span></button>
+      </div>
+      <div id="transportList"></div>
+    </div>
+
+    <div id="reviewsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchReviewTab('pending')">⏳ Pending <span class="count" id="countReviewPending">0</span></button>
+        <button data-tab="approved" onclick="switchReviewTab('approved')">✅ Approved <span class="count" id="countReviewApproved">0</span></button>
+        <button data-tab="declined" onclick="switchReviewTab('declined')">❌ Declined <span class="count" id="countReviewDeclined">0</span></button>
+      </div>
+      <div id="reviewList"></div>
+    </div>
+
+    <div id="reportsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchReportTab('pending')">⏳ Pending <span class="count" id="countReportPending">0</span></button>
+        <button data-tab="approved" onclick="switchReportTab('approved')">✅ Approved <span class="count" id="countReportApproved">0</span></button>
+        <button data-tab="declined" onclick="switchReportTab('declined')">❌ Declined <span class="count" id="countReportDeclined">0</span></button>
+      </div>
+      <div id="reportList"></div>
+    </div>
+
+    <div id="contactsSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 6px 0;">📧 Contact Messages</h3>
+        <p style="color:#637268;font-size:13px;margin:0;">All messages submitted through the public contact form.</p>
+      </div>
+      <div id="contactList"></div>
+    </div>
+
+    <div id="activitySection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0 0 6px 0;">📜 Activity Log</h3>
+          <p style="color:#637268;font-size:13px;margin:0;">Every action performed in the admin panel — with timestamp and result.</p>
+        </div>
+        <button class="refresh-btn" onclick="loadActivity()">🔄 Refresh Log</button>
+      </div>
+      <div id="activityList"></div>
+    </div>
+
+    <div id="traceSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 6px 0;">🔍 Trace Anything</h3>
+        <p style="color:#637268;font-size:13px;margin:0 0 12px 0;">Search by name, phone number, location or ID.</p>
+        <input type="text" id="traceInput" class="trace-input" placeholder="Search tenants, landlords, matches, reports..." oninput="runTrace()">
+      </div>
+      <div id="traceResults"></div>
+    </div>
+
+    <div id="analyticsSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 6px 0;">📈 Full Analytics Report</h3>
+        <p style="color:#637268;font-size:13px;margin:0;">All stats in one place. Export as CSV below.</p>
+      </div>
+      <div class="report-grid" id="analyticsGrid"></div>
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:20px;">
+        <h4 style="margin:0 0 12px 0;">Monthly Service Fee Revenue</h4>
+        <div class="chart-container"><canvas id="analyticsChart"></canvas></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="refresh-btn" onclick="exportAllCSV()">📥 Export All Data as CSV</button>
+        <button class="refresh-btn" onclick="loadData()">🔄 Reload All Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editRoomModal">
+  <div class="modal">
+    <button class="close" onclick="closeEditRoomModal()">✕</button>
+    <h3>✏️ Edit Room</h3>
+    <form id="editRoomForm">
+      <input type="hidden" id="editRoomId"><input type="hidden" id="editRoomFrom">
+      <label>Title</label><input type="text" id="editRoomTitle">
+      <label>Location</label><input type="text" id="editRoomLocation">
+      <label>Address</label><input type="text" id="editRoomAddress">
+      <label>Amount (R)</label><input type="text" id="editRoomAmount">
+      <label>Deposit (R)</label><input type="text" id="editRoomDeposit">
+      <label>Landlord Name</label><input type="text" id="editRoomPosterName">
+      <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
+      <label>Notes</label><textarea id="editRoomNotes"></textarea>
+
+      <hr class="hr">
+      <label style="color:#0f7a5f;font-size:15px;">🏠 Room Features (Admin can edit)</label>
+
+      <label>Room Type</label>
+      <input type="text" id="editRoomRoomType" placeholder="e.g., Backroom, Bachelor, House">
+
+      <label>Child Friendly?</label>
+      <select id="editRoomChild"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <label>Parking?</label>
+      <select id="editRoomParking"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <label>Has Tiles?</label>
+      <select id="editRoomTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <label>Has Ceiling?</label>
+      <select id="editRoomCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <button type="submit" class="btn-save">💾 Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editTenantModal">
+  <div class="modal">
+    <button class="close" onclick="closeEditTenantModal()">✕</button>
+    <h3>✏️ Edit Tenant</h3>
+    <form id="editTenantForm">
+      <input type="hidden" id="editTenantId"><input type="hidden" id="editTenantFrom">
+      <label>Name</label><input type="text" id="editTenantName">
+      <label>Contact</label><input type="text" id="editTenantContact">
+      <label>Room Type</label><input type="text" id="editTenantRoomType">
+      <label>Budget Range</label><input type="text" id="editTenantBudget">
+      <label>Notes</label><textarea id="editTenantNotes"></textarea>
+      <button type="submit" class="btn-save">💾 Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<div class="media-viewer" id="mediaViewer">
+  <button class="close" onclick="closeMediaViewer()">✕</button>
+  <div id="mediaContent"></div>
+</div>
+
+<script>
+  const SESSION_KEY = "adminSession";
+  let currentRoomTab = 'pending';
+  let currentTransportTab = 'pending';
+  let currentTenantTab = 'pending';
+  let currentReviewTab = 'pending';
+  let currentReportTab = 'pending';
+  let currentSection = 'rooms';
+  let allRooms = { pending: [], approved: [], taken: [], declined: [], removed: [] };
+  let allTransport = { pending: [], approved: [], declined: [], removed: [] };
+  let allTenants = { pending: [], approved: [], declined: [], removed: [] };
+  let allReviews = { pending: [], approved: [], declined: [] };
+  let allReports = { pending: [], approved: [], declined: [] };
+  let allContacts = [];
+  let allActivity = [];
+  let allReceipts = [];
+  let allMatches = [];
+  let allTraffic = { today: 0, week: 0, month: 0, total: 0 };
+  let revenueChart = null;
+  let analyticsChart = null;
+  let currentMediaList = [];
+  let currentMediaIndex = 0;
+
+  function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+  function getEl(id) { return document.getElementById(id); }
+
+  const loginScreen = getEl('loginScreen');
+  const adminPanel = getEl('adminPanel');
+  const loginForm = getEl('loginForm');
+  const loginError = getEl('loginError');
+  const roomList = getEl('roomList');
+  const transportList = getEl('transportList');
+  const tenantList = getEl('tenantList');
+  const matchesList = getEl('matchesList');
+  const notice = getEl('notice');
+
+  function logActivity(action, section, id, result) {
+    const entry = {
+      time: new Date().toISOString(),
+      action: action,
+      section: section || '',
+      id: id || '',
+      result: result || 'ok'
+    };
+    allActivity.unshift(entry);
+    if (allActivity.length > 500) allActivity.length = 500;
+    try {
+      const saved = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
+      saved.unshift(entry);
+      if (saved.length > 500) saved.length = 500;
+      localStorage.setItem('adminActivityLog', JSON.stringify(saved));
+    } catch (e) {}
+    if (currentSection === 'activity') renderActivity();
   }
-}
 
-function writeDB(db) {
-  try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    backupDB();
-    const tempFile = DB_FILE + '.tmp';
-    fs.writeFileSync(tempFile, JSON.stringify(normalizeDB(db), null, 2));
-    fs.renameSync(tempFile, DB_FILE);
-    return true;
-  } catch (error) { console.error('❌ Failed to write database:', error.message); return false; }
-}
-
-function backupDB() {
-  try {
-    if (fs.existsSync(DB_FILE)) {
-      const backupFile = path.join(DATA_DIR, `db.backup.${Date.now()}.json`);
-      fs.copyFileSync(DB_FILE, backupFile);
-      const backups = fs.readdirSync(DATA_DIR).filter(f => f.startsWith('db.backup.')).sort();
-      while (backups.length > 5) fs.unlinkSync(path.join(DATA_DIR, backups.shift()));
-    }
-  } catch (error) { console.log('⚠️ Backup failed:', error.message); }
-}
-
-function restoreFromBackup() {
-  try {
-    const backups = fs.readdirSync(DATA_DIR).filter(f => f.startsWith('db.backup.')).sort();
-    if (backups.length === 0) return false;
-    const latest = backups[backups.length - 1];
-    const data = fs.readFileSync(path.join(DATA_DIR, latest), 'utf8');
-    fs.writeFileSync(DB_FILE, JSON.stringify(JSON.parse(data), null, 2));
-    console.log(`✅ Restored from backup: ${latest}`);
-    return true;
-  } catch (error) { console.log('⚠️ Restore failed:', error.message); return false; }
-}
-
-function clearAllData() { backupDB(); writeDB(defaultDB); return true; }
-
-// =========================================================
-// VISITOR TRACKING
-// =========================================================
-function readTraffic() {
-  try {
-    if (!fs.existsSync(TRAFFIC_FILE)) return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
-    const raw = fs.readFileSync(TRAFFIC_FILE, "utf8").replace(/^\uFEFF/, "");
-    const parsed = raw.trim() ? JSON.parse(raw) : { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
-    if (!parsed.days) parsed.days = {};
-    return parsed;
-  } catch (e) { return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }; }
-}
-
-function writeTraffic(t) {
-  try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(TRAFFIC_FILE, JSON.stringify(t, null, 2));
-  } catch (e) { console.error('⚠️ Traffic write failed:', e.message); }
-}
-
-function todayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function getClientIP(req) {
-  const xff = req.headers['x-forwarded-for'];
-  if (xff) return String(xff).split(',')[0].trim();
-  return (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress) || 'unknown';
-}
-
-function isBot(req) {
-  const ua = String(req.headers['user-agent'] || '').toLowerCase();
-  if (!ua) return true;
-  const bots = ['bot','crawl','spider','slurp','facebookexternalhit','whatsapp','telegrambot','preview','curl','wget','python-requests','python-urllib','java/','monitoring','uptime','pingdom','ahrefs','semrush','mj12','dotbot','petal','yandex','baidu','googlebot','bingbot','duckduckbot','headlesschrome','phantomjs','lighthouse'];
-  return bots.some(b => ua.includes(b));
-}
-
-function getVisitorID(req) {
-  const ip = getClientIP(req);
-  const ua = String(req.headers['user-agent'] || '');
-  return crypto.createHash('md5').update(ip + '|' + ua).digest('hex').slice(0, 16);
-}
-
-function recordVisit(req) {
-  try {
-    if (isBot(req)) return;
-    const t = readTraffic();
-    const today = todayKey();
-    if (!t.days[today]) t.days[today] = { pageviews: 0, visitors: {} };
-    t.days[today].pageviews += 1;
-    const vid = getVisitorID(req);
-    if (!t.days[today].visitors[vid]) {
-      t.days[today].visitors[vid] = 1;
-      t.totalUniqueVisitors = (t.totalUniqueVisitors || 0) + 1;
-    } else {
-      t.days[today].visitors[vid] += 1;
-    }
-    t.totalPageviews = (t.totalPageviews || 0) + 1;
-    const keys = Object.keys(t.days).sort();
-    while (keys.length > 365) delete t.days[keys.shift()];
-    writeTraffic(t);
-  } catch (e) {}
-}
-
-function trafficSummary() {
-  const t = readTraffic();
-  const today = todayKey();
-  const todayData = t.days[today] || { pageviews: 0, visitors: {} };
-
-  const weekVisitors = {};
-  let weekPageviews = 0;
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const day = t.days[k];
-    if (day) {
-      weekPageviews += day.pageviews || 0;
-      Object.keys(day.visitors || {}).forEach(v => { weekVisitors[v] = true; });
-    }
+  function loadActivity() {
+    try {
+      allActivity = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
+    } catch (e) { allActivity = []; }
+    renderActivity();
   }
 
-  const monthVisitors = {};
-  let monthPageviews = 0;
-  const now = new Date();
-  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  Object.keys(t.days).forEach(k => {
-    if (k.startsWith(monthPrefix)) {
-      const day = t.days[k];
-      monthPageviews += day.pageviews || 0;
-      Object.keys(day.visitors || {}).forEach(v => { monthVisitors[v] = true; });
+  function renderActivity() {
+    const list = getEl('activityList');
+    if (!list) return;
+    if (allActivity.length === 0) {
+      list.innerHTML = '<div class="empty">📜 No activity yet. Every action you take will be logged here.</div>';
+      return;
     }
-  });
-
-  const prevWeekVisitors = {};
-  for (let i = 7; i < 14; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const day = t.days[k];
-    if (day) Object.keys(day.visitors || {}).forEach(v => { prevWeekVisitors[v] = true; });
+    list.innerHTML = allActivity.map(a => {
+      const cls = a.result === 'error' ? 'danger' : (a.result === 'warn' ? 'warn' : '');
+      return `
+        <div class="log-row ${cls}">
+          <div>
+            <div class="who">${a.action}${a.section ? ' → ' + a.section : ''}${a.id ? ' (' + a.id + ')' : ''}</div>
+            <div class="time">${new Date(a.time).toLocaleString()}</div>
+          </div>
+          <span class="badge ${a.result === 'error' ? 'declined' : 'approved'}">${a.result || 'ok'}</span>
+        </div>
+      `;
+    }).join('');
   }
 
-  const todayCount = Object.keys(todayData.visitors || {}).length;
-  const weekCount = Object.keys(weekVisitors).length;
-  const monthCount = Object.keys(monthVisitors).length;
-  const prevWeekCount = Object.keys(prevWeekVisitors).length;
-  const weekChange = prevWeekCount ? Math.round(((weekCount - prevWeekCount) / prevWeekCount) * 100) : 0;
-
-  const last7Days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const day = t.days[k] || { pageviews: 0, visitors: {} };
-    last7Days.push({
-      date: k,
-      visitors: Object.keys(day.visitors || {}).length,
-      pageviews: day.pageviews || 0
-    });
-  }
-
-  return {
-    today: todayCount, todayPageviews: todayData.pageviews || 0,
-    week: weekCount, weekPageviews: weekPageviews, weekChange: weekChange,
-    month: monthCount, monthPageviews: monthPageviews,
-    total: t.totalUniqueVisitors || 0, totalPageviews: t.totalPageviews || 0,
-    last7Days: last7Days
-  };
-}
-
-// =========================================================
-// GENERAL HELPERS
-// =========================================================
-function send(res, status, body, type = "application/json") {
-  res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
-  res.end(type === "application/json" ? JSON.stringify(body) : body);
-}
-
-function sendMedia(res, src) {
-  if (!src) return send(res, 404, { error: "Media not found" });
-  if (/^https?:\/\//i.test(src)) { res.writeHead(302, { Location: src, "Cache-Control": "no-store" }); res.end(); return; }
-  const match = String(src).match(/^data:((?:image|video)\/[a-z0-9.+-]+);base64,(.+)$/i);
-  if (!match) return send(res, 404, { error: "Media not found" });
-  res.writeHead(200, { "Content-Type": match[1], "Cache-Control": "public, max-age=3600" });
-  res.end(Buffer.from(match[2], "base64"));
-}
-
-function encodePart(v) { return encodeURIComponent(String(v || "")); }
-function cleanText(v, max = 600) { return String(v || "").trim().slice(0, max); }
-function cleanImages(images) { return Array.isArray(images) ? images.filter((s) => typeof s === "string" && /^(data:image\/|https?:\/\/)/i.test(s)).slice(0, 5) : []; }
-function cleanVideo(video) { return typeof video === "string" && /^(data:video\/|https?:\/\/)/i.test(video) ? video : ""; }
-function moneyNumber(v) { const p = Number(String(v || "").replace(/[^\d.]/g, "")); return Number.isFinite(p) ? p : 0; }
-
-function serviceFeeForRent(rent) {
-  const a = moneyNumber(rent);
-  if (a >= 1000 && a <= 1900) return 300;
-  if (a >= 2000 && a <= 3000) return 350;
-  if (a >= 3100 && a <= 3800) return 400;
-  if (a >= 3900 && a <= 7000) return 500;
-  return 0;
-}
-
-function monthKey(dateValue) {
-  const v = cleanText(dateValue, 40);
-  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 7);
-  const d = v ? new Date(v) : new Date();
-  if (Number.isNaN(d.getTime())) return new Date().toISOString().slice(0, 7);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function cleanReceipt(details) {
-  const rentAmount = cleanText(details?.rentAmount || details?.rentPrice, 40);
-  const fee = serviceFeeForRent(rentAmount) || moneyNumber(details?.serviceFee);
-  return {
-    id: cleanText(details?.id || `ART-${Date.now()}`, 80),
-    date: cleanText(details?.date || new Date().toISOString().slice(0, 10), 20),
-    tenantName: cleanText(details?.tenantName, 140),
-    tenantNumber: cleanText(details?.tenantNumber, 80),
-    paymentType: cleanText(details?.paymentType || "Cash", 80),
-    roomAddress: cleanText(details?.roomAddress, 220),
-    rentAmount,
-    depositAmount: cleanText(details?.depositAmount, 80),
-    serviceFee: fee,
-    serviceFeeText: `R${fee}`,
-    month: monthKey(details?.date || new Date().toISOString())
-  };
-}
-
-// =========================================================
-// LOCATION GROUPING
-// =========================================================
-const ALEXANDRA_EAST_GROUP = ['east bank','far east bank','ext 7','ext7','ext 8','ext8','ext 9','ext9','tsutsumane','river park','river park phase 3'];
-const ALEXANDRA_AVENUES_GROUP = ['1st avenue – 12th avenue','1st avenue - 12th avenue','12th avenue – 22nd avenue','12th avenue - 22nd avenue','13th avenue – 22nd avenue','13th avenue - 22nd avenue','1st avenue – 22nd avenue','1st avenue - 22nd avenue'];
-const NORTHERN_SUBURBS_GROUP = ['lombardy','bramley','kew','balfour','orange grove'];
-
-function locationGroup(location, suburb) {
-  const l = String(location || '').toLowerCase().trim();
-  const s = String(suburb || '').toLowerCase().trim();
-  const combined = (l + ' ' + s).trim();
-  if (ALEXANDRA_EAST_GROUP.some(x => combined.includes(x))) return 'Alexandra East';
-  if (ALEXANDRA_AVENUES_GROUP.some(x => combined.includes(x))) return 'Alexandra Avenues';
-  if (NORTHERN_SUBURBS_GROUP.some(x => combined.includes(x))) return 'Northern Suburbs';
-  if (combined.includes('alexandra')) return 'Alexandra Township';
-  if (combined.includes('marlboro')) return 'Marlboro';
-  if (combined.includes('wynberg')) return 'Wynberg';
-  if (combined.includes('sandton')) return 'Sandton';
-  if (combined.includes('kelvin')) return 'Kelvin';
-  if (combined.includes('highlands north')) return 'Highlands North';
-  if (combined.includes('savoy estate')) return 'Savoy Estate';
-  if (combined.includes('edenvale')) return 'Edenvale';
-  return l || 'Unknown';
-}
-
-function normalizeAlexandraSuburb(value) {
-  const v = cleanText(value, 80);
-  if (!v) return '';
-  const lv = v.toLowerCase();
-  if (ALEXANDRA_AVENUES_GROUP.some(x => lv.includes(x))) return 'Alexandra Avenues';
-  if (ALEXANDRA_EAST_GROUP.some(x => lv.includes(x))) return 'Alexandra East';
-  return v;
-}
-
-function publicRoom(room) {
-  return {
-    ...room,
-    images: (room.images || []).map((_, i) => `/api/room-media/${encodePart(room.id)}/image/${i}`),
-    video: room.video ? `/api/room-media/${encodePart(room.id)}/video` : ""
-  };
-}
-
-function publicTransport(d) {
-  return {
-    id: d.id, firstName: d.firstName, surname: d.surname,
-    carPicture: d.carPicture ? `/api/transport-media/${encodePart(d.id)}/carPicture` : "",
-    localPrice: d.localPrice, outsidePrice: d.outsidePrice, status: d.status
-  };
-}
-
-function adminToken(req) {
-  const auth = req.headers.authorization || "";
-  const headerToken = auth.replace(/^Bearer\s+/i, "");
-  if (req.query && req.query.token) return req.query.token;
-  return headerToken;
-}
-
-function requireAdmin(req, res) {
-  const token = adminToken(req);
-  if (!token || !sessions.has(token)) { res.status(401).json({ error: "Admin login required" }); return false; }
-  const s = sessions.get(token);
-  if (s && Date.now() - s.created > SESSION_TIMEOUT) {
-    sessions.delete(token);
-    res.status(401).json({ error: "Session expired, please login again" });
-    return false;
-  }
-  return token;
-}
-
-function adminMediaURL(section, status, id, field, index, token) {
-  const base = `/api/admin/media/${encodePart(section)}/${encodePart(status)}/${encodePart(id)}/${encodePart(field)}`;
-  const suffix = field === "images" ? `/${index}` : "";
-  return `${base}${suffix}?token=${encodePart(token)}`;
-}
-
-function adminItem(item, section, status, token) {
-  const next = { ...item };
-  if (Array.isArray(next.images)) next.images = next.images.map((_, i) => adminMediaURL(section, status, next.id, "images", i, token));
-  if (next.video) next.video = adminMediaURL(section, status, next.id, "video", 0, token);
-  if (next.carPicture) next.carPicture = adminMediaURL(section, status, next.id, "carPicture", 0, token);
-  if (next.idPicture) next.idPicture = adminMediaURL(section, status, next.id, "idPicture", 0, token);
-  return next;
-}
-
-function adminSection(name, section, token) {
-  return Object.fromEntries(
-    Object.entries(section).map(([status, list]) => [status, (Array.isArray(list) ? list : []).map((i) => adminItem(i, name, status, token))])
-  );
-}
-
-function adminDB(db, token) {
-  return {
-    rooms: adminSection("rooms", db.rooms, token),
-    reviews: db.reviews,
-    reports: db.reports,
-    transports: adminSection("transports", db.transports, token),
-    tenantRequests: adminSection("tenantRequests", db.tenantRequests, token),
-    receipts: db.receipts,
-    contacts: db.contacts
-  };
-}
-
-function moveItem(db, section, from, to, id) {
-  if (!db[section] || !Array.isArray(db[section][from]) || !Array.isArray(db[section][to])) return false;
-  const item = db[section][from].find((e) => e.id === id);
-  if (!item) return false;
-  db[section][from] = db[section][from].filter((e) => e.id !== id);
-  db[section][to] = db[section][to].filter((e) => e.id !== id);
-  db[section][to].unshift({ ...item, status: to, updatedAt: new Date().toISOString() });
-  return true;
-}
-
-function deleteItem(db, section, from, id) {
-  if (!db[section] || !Array.isArray(db[section][from])) return false;
-  const before = db[section][from].length;
-  db[section][from] = db[section][from].filter((e) => e.id !== id);
-  return db[section][from].length !== before;
-}
-
-// =========================================================
-// PUBLIC ROUTES
-// =========================================================
-app.get('/api/public', (req, res) => {
-  const db = readDB();
-  res.json({
-    rooms: db.rooms.approved.map(publicRoom),
-    reviews: db.reviews.approved,
-    transports: db.transports.approved.map(publicTransport),
-    tenantRequests: db.tenantRequests.approved
-  });
-});
-
-app.get('/api/properties', (req, res) => { res.json(readDB().rooms.approved || []); });
-
-app.get('/api/properties/:id', (req, res) => {
-  const p = readDB().rooms.approved.find(p => p.id === req.params.id);
-  if (p) res.json(p); else res.status(404).json({ error: 'Property not found' });
-});
-
-app.get('/api/room-media/:id/:kind', (req, res) => {
-  const r = readDB().rooms.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
-  if (req.params.kind === "video") return sendMedia(res, r?.video);
-  return sendMedia(res, r?.images?.[0]);
-});
-
-app.get('/api/room-media/:id/image/:index', (req, res) => {
-  const r = readDB().rooms.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
-  const i = Math.max(0, Number(req.params.index) || 0);
-  return sendMedia(res, r?.images?.[i]);
-});
-
-app.get('/api/room-media/:id/video', (req, res) => {
-  const r = readDB().rooms.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
-  return sendMedia(res, r?.video);
-});
-
-app.get('/api/transport-media/:id/carPicture', (req, res) => {
-  const d = readDB().transports.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
-  return sendMedia(res, d?.carPicture);
-});
-
-// POST ROOM
-app.post('/api/rooms', async (req, res) => {
-  const db = readDB();
-  const b = req.body;
-  db.rooms.pending.unshift({
-    id: "post-" + Date.now(),
-    title: cleanText(b.title, 120),
-    location: cleanText(b.location, 80),
-    alexandraSuburb: normalizeAlexandraSuburb(b.alexandraSuburb),
-    address: cleanText(b.address, 220),
-    type: cleanText(b.type, 40),
-    roomType: cleanText(b.roomType || "Any", 40),
-    amount: cleanText(b.amount, 40),
-    deposit: cleanText(b.deposit || "No deposit stated", 80),
-    childFriendly: cleanText(b.childFriendly, 10),
-    maxKids: cleanText(b.maxKids, 10),
-    parking: cleanText(b.parking, 10),
-    maxCars: cleanText(b.maxCars, 10),
-    tiles: cleanText(b.tiles, 10),
-    ceiling: cleanText(b.ceiling, 10),
-    bath: cleanText(b.bath, 120),
-    images: cleanImages(b.images),
-    video: cleanVideo(b.video),
-    posterName: cleanText(b.posterName, 100),
-    posterContact: cleanText(b.posterContact, 160),
-    notes: cleanText(b.notes, 800),
-    online: true,
-    status: "pending",
-    createdAt: new Date().toISOString()
-  });
-  writeDB(db);
-  res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
-});
-
-// POST TENANT
-app.post('/api/tenant-requests', async (req, res) => {
-  const db = readDB();
-  const b = req.body;
-  const preferredLocations = Array.isArray(b.preferredLocations)
-    ? b.preferredLocations.map(l => cleanText(l, 80)).filter(Boolean)
-    : [];
-  db.tenantRequests.pending.unshift({
-    id: "request-" + Date.now(),
-    tenantName: cleanText(b.tenantName, 100),
-    contactNumber: cleanText(b.contactNumber, 80),
-    preferredLocations: preferredLocations,
-    alexandraSuburb: cleanText(b.alexandraSuburb, 200),
-    roomType: cleanText(b.roomType, 40),
-    budget: cleanText(b.budget, 40),
-    budgetRange: cleanText(b.budgetRange, 40),
-    moveInDate: cleanText(b.moveInDate, 40),
-    childFriendly: cleanText(b.childFriendly, 10),
-    childrenCount: cleanText(b.childrenCount, 10),
-    childrenAges: cleanText(b.childrenAges, 120),
-    parking: cleanText(b.parking, 10),
-    carsCount: cleanText(b.carsCount, 10),
-    notes: cleanText(b.notes, 800),
-    status: "pending",
-    createdAt: new Date().toISOString()
-  });
-  writeDB(db);
-  res.status(201).json({ ok: true });
-});
-
-app.post('/api/reviews', async (req, res) => {
-  const db = readDB(); const b = req.body;
-  db.reviews.pending.unshift({
-    id: "review-" + Date.now(),
-    roomId: cleanText(b.roomId, 80),
-    roomTitle: cleanText(b.roomTitle, 140),
-    name: cleanText(b.name, 100),
-    rating: Math.max(1, Math.min(5, Number(b.rating) || 5)),
-    comment: cleanText(b.comment, 800),
-    status: "pending",
-    createdAt: new Date().toISOString()
-  });
-  writeDB(db); res.status(201).json({ ok: true });
-});
-
-app.post('/api/reports', async (req, res) => {
-  const db = readDB(); const b = req.body;
-  db.reports.pending.unshift({
-    id: "report-" + Date.now(),
-    room: cleanText(b.room, 180),
-    reporterContact: cleanText(b.reporterContact, 160),
-    reason: cleanText(b.reason, 1000),
-    status: "pending",
-    createdAt: new Date().toISOString()
-  });
-  writeDB(db); res.status(201).json({ ok: true });
-});
-
-app.post('/api/transports', async (req, res) => {
-  const db = readDB(); const b = req.body;
-  db.transports.pending.unshift({
-    id: "transport-" + Date.now(),
-    firstName: cleanText(b.firstName, 100),
-    surname: cleanText(b.surname, 100),
-    phone: cleanText(b.phone, 80),
-    email: cleanText(b.email, 160),
-    carPicture: cleanImages([b.carPicture])[0] || "",
-    idPicture: cleanImages([b.idPicture])[0] || "",
-    localPrice: cleanText(b.localPrice, 80),
-    outsidePrice: cleanText(b.outsidePrice, 80),
-    notes: cleanText(b.notes, 800),
-    status: "pending",
-    createdAt: new Date().toISOString()
-  });
-  writeDB(db); res.status(201).json({ ok: true });
-});
-
-app.post('/api/contact', async (req, res) => {
-  const db = readDB(); const b = req.body;
-  db.contacts = db.contacts || [];
-  db.contacts.push({
-    id: Date.now(),
-    name: cleanText(b.name, 100),
-    email: cleanText(b.email, 160),
-    phone: cleanText(b.phone, 80),
-    message: cleanText(b.message, 1000),
-    date: new Date().toISOString()
-  });
-  writeDB(db);
-  res.status(201).json({ success: true, message: 'Message sent successfully!' });
-});
-
-// =========================================================
-// ADMIN ROUTES
-// =========================================================
-app.post('/api/admin/login', async (req, res) => {
-  const b = req.body;
-  if (b.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { created: Date.now(), expires: Date.now() + SESSION_TIMEOUT });
-  res.json({ token, success: true });
-});
-
-app.post('/api/admin/logout', (req, res) => {
-  const token = adminToken(req);
-  if (token && sessions.has(token)) sessions.delete(token);
-  res.json({ success: true });
-});
-
-app.get('/api/admin/check-session', (req, res) => {
-  const token = adminToken(req);
-  res.json({ valid: token && sessions.has(token) });
-});
-
-app.get('/api/admin/data', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  const payload = adminDB(readDB(), token);
-  payload.traffic = trafficSummary();
-  res.json(payload);
-});
-
-app.get('/api/admin/traffic', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  res.json(trafficSummary());
-});
-
-app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  const db = readDB();
-  const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
-  const item = list.find((e) => e.id === decodeURIComponent(req.params.id || ""));
-  return sendMedia(res, item?.[decodeURIComponent(req.params.field || "")]);
-});
-
-app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  const db = readDB();
-  const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
-  const item = list.find((e) => e.id === decodeURIComponent(req.params.id || ""));
-  const i = Math.max(0, Number(req.params.index) || 0);
-  return sendMedia(res, item?.images?.[i]);
-});
-
-app.post('/api/admin/action', async (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  const db = readDB(); const body = req.body;
-
-  try {
-    if (body.action === "move") {
-      const ok = moveItem(db, body.section, body.from, body.to, body.id);
-      if (!ok) return res.status(400).json({ ok: false, error: "Item not found or invalid section" });
-    }
-
-    if (body.action === "edit") {
-      const section = db[body.section];
-      if (section && Array.isArray(section[body.from])) {
-        const i = section[body.from].findIndex(e => e.id === body.id);
-        if (i === -1) return res.status(404).json({ ok: false, error: "Item not found" });
-        const cur = section[body.from][i];
-        const u = body.data || {};
-        section[body.from][i] = {
-          ...cur,
-          title: cleanText(u.title || cur.title, 120),
-          location: cleanText(u.location || cur.location, 80),
-          address: cleanText(u.address || cur.address, 220),
-          amount: cleanText(u.amount || cur.amount, 40),
-          deposit: cleanText(u.deposit || cur.deposit, 80),
-          posterName: cleanText(u.posterName || cur.posterName, 100),
-          posterContact: cleanText(u.posterContact || cur.posterContact, 160),
-          notes: cleanText(u.notes || cur.notes, 800),
-          tenantName: cleanText(u.tenantName || cur.tenantName, 100),
-          contactNumber: cleanText(u.contactNumber || cur.contactNumber, 80),
-          roomType: cleanText(u.roomType || cur.roomType, 40),
-          budgetRange: cleanText(u.budgetRange || cur.budgetRange, 40),
-          budget: cleanText(u.budget || cur.budget, 40),
-          tiles: cleanText(u.tiles || cur.tiles, 10),
-          ceiling: cleanText(u.ceiling || cur.ceiling, 10),
-          updatedAt: new Date().toISOString()
-        };
-      }
-    }
-
-    if (body.action === "mark-taken") {
-      const room = db.rooms.approved.find((e) => e.id === body.id);
-      if (!room) return res.status(404).json({ ok: false, error: "Room not found in approved" });
-      const receipt = cleanReceipt({
-        ...(body.receipt || {}),
-        roomAddress: body.receipt?.roomAddress || room.address,
-        rentAmount: body.receipt?.rentAmount || room.amount,
-        depositAmount: body.receipt?.depositAmount || room.deposit
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.classList.remove('show');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: getEl('adminPassword').value })
       });
-      db.rooms.approved = db.rooms.approved.filter((e) => e.id !== body.id);
-      db.rooms.taken = db.rooms.taken.filter((e) => e.id !== body.id);
-      db.rooms.taken.unshift({ ...room, status: "taken", receipt, takenAt: new Date().toISOString() });
-      db.receipts.unshift({ ...receipt, roomId: room.id, manual: false });
-    }
-
-    if (body.action === "manual-receipt") {
-      const receipt = cleanReceipt(body.receipt || {});
-      const manualRoom = {
-        id: `manual-${Date.now()}`,
-        title: cleanText(body.title || "Manual receipt", 120),
-        address: receipt.roomAddress,
-        type: cleanText(body.type || "Manual room", 40),
-        roomType: cleanText(body.roomType || "Any", 40),
-        amount: receipt.rentAmount,
-        deposit: receipt.depositAmount,
-        images: [], video: "", status: "taken", receipt, manual: true,
-        takenAt: new Date().toISOString()
-      };
-      db.rooms.taken.unshift(manualRoom);
-      db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
-    }
-
-    if (body.action === "delete") {
-      const ok = deleteItem(db, body.section, body.from, body.id);
-      if (!ok) return res.status(400).json({ ok: false, error: "Item not found" });
-    }
-
-    if (body.action === "repost") {
-      const section = db[body.section];
-      const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
-      const item = fromList.find((e) => e.id === body.id);
-      if (!item) return res.status(404).json({ ok: false, error: "Item not found" });
-      section[body.from] = section[body.from].filter((e) => e.id !== body.id);
-      if (Array.isArray(section.pending)) {
-        section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('adminToken', data.token);
+        sessionStorage.setItem(SESSION_KEY, 'yes');
+        setText('adminUser', '👤 Admin');
+        logActivity('Login successful', 'auth', '', 'ok');
+        showAdminPanel();
+      } else {
+        loginError.textContent = data.error || 'Invalid password';
+        loginError.classList.add('show');
+        logActivity('Login failed', 'auth', '', 'error');
       }
+    } catch (err) {
+      loginError.textContent = 'Server error';
+      loginError.classList.add('show');
     }
+  });
 
-    if (body.action === "remove-image") {
-      const fromList = db[body.section]?.[body.from] || [];
-      const room = fromList.find((e) => e.id === body.id);
-      if (room) room.images = (room.images || []).filter((_, i) => i !== Number(body.index));
-    }
-
-    if (body.action === "remove-video") {
-      const fromList = db[body.section]?.[body.from] || [];
-      const room = fromList.find((e) => e.id === body.id);
-      if (room) room.video = "";
-    }
-
-    if (body.action === "toggle-online") {
-      const list = db[body.section]?.[body.from] || [];
-      const item = list.find((e) => e.id === body.id);
-      if (!item) return res.status(404).json({ ok: false, error: "Room not found" });
-      item.online = item.online === false ? true : false;
-    }
-
-    if (body.action === "clear-all-data") {
-      clearAllData();
-      return res.json({ ok: true });
-    }
-
-    writeDB(db);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('Admin action error:', err.message);
-    res.status(500).json({ ok: false, error: err.message });
+  function showAdminPanel() {
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (adminPanel) adminPanel.classList.add('show');
+    loadActivity();
+    loadData();
   }
-});
 
-// =========================================================
-// MATCHING ENGINE
-// =========================================================
-function budgetInRange(amount, range) {
-  const n = moneyNumber(amount);
-  if (!n) return false;
-  if (range === 'R800-R1500') return n >= 800 && n <= 1500;
-  if (range === 'R1600-R2500') return n >= 1600 && n <= 2500;
-  if (range === 'R2600-R3500') return n >= 2600 && n <= 3500;
-  if (range === 'R3600-R4500') return n >= 3600 && n <= 4500;
-  if (range === 'R4600-R8000') return n >= 4600 && n <= 8000;
-  return true;
-}
+  async function loadData() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) { logout(); return; }
+    try {
+      const res = await fetch('/api/admin/data', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
 
-function locationMatch(landlordLoc, landlordSub, tenantLocations) {
-  if (!Array.isArray(tenantLocations) || tenantLocations.length === 0) return true;
-  const lg = locationGroup(landlordLoc, landlordSub);
-  for (const tLoc of tenantLocations) {
-    const tg = locationGroup(tLoc, '');
-    if (tg === lg) return true;
-    if (lg === 'Alexandra Township' && (tg === 'Alexandra East' || tg === 'Alexandra Avenues')) return true;
-    if (tg === 'Alexandra Township' && (lg === 'Alexandra East' || lg === 'Alexandra Avenues')) return true;
-    if (lg === 'Alexandra East' && tg === 'Alexandra Avenues') return true;
-    if (lg === 'Alexandra Avenues' && tg === 'Alexandra East') return true;
-  }
-  return false;
-}
-
-function roomTypeMatch(landlordType, tenantType) {
-  const tt = String(tenantType || '').trim().toLowerCase();
-  if (!tt || tt === 'any' || tt === 'any / not sure') return true;
-  const lt = String(landlordType || '').trim().toLowerCase();
-  if (!lt) return false;
-  return lt === tt;
-}
-
-function matchOne(l, t) {
-  if (!roomTypeMatch(l.roomType, t.roomType)) return false;
-  if (t.budgetRange && !budgetInRange(l.amount, t.budgetRange)) return false;
-  if (!locationMatch(l.location, l.alexandraSuburb, t.preferredLocations)) return false;
-  if (String(l.childFriendly || 'No').toLowerCase() !== String(t.childFriendly || 'No').toLowerCase()) return false;
-  if (String(l.parking || 'No').toLowerCase() !== String(t.parking || 'No').toLowerCase()) return false;
-  return true;
-}
-
-app.get('/api/admin/matches', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  const db = readDB();
-  const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
-  const tenants = db.tenantRequests.approved;
-
-  const matches = [];
-  const tenantMatches = {};
-
-  landlords.forEach(l => {
-    tenants.forEach(t => {
-      if (matchOne(l, t)) {
-        const m = {
-          landlordId: l.id,
-          landlordTitle: l.title,
-          landlordLocation: l.location,
-          landlordSuburb: l.alexandraSuburb || '',
-          landlordLocationGroup: locationGroup(l.location, l.alexandraSuburb),
-          landlordRent: l.amount,
-          landlordContact: l.posterContact,
-          landlordName: l.posterName,
-          landlordOnline: l.online !== false,
-          landlordRoomType: l.roomType || l.type || 'room',
-          landlordTiles: l.tiles || 'No',
-          landlordCeiling: l.ceiling || 'No',
-          landlordChildFriendly: l.childFriendly || 'No',
-          landlordParking: l.parking || 'No',
-          tenantId: t.id,
-          tenantName: t.tenantName,
-          tenantContact: t.contactNumber,
-          tenantLocations: t.preferredLocations || [],
-          tenantLocationGroups: (t.preferredLocations || []).map(loc => locationGroup(loc, '')),
-          tenantBudget: t.budget,
-          tenantBudgetRange: t.budgetRange || '',
-          tenantRoomType: t.roomType,
-          childFriendly: l.childFriendly,
-          parking: l.parking
+      if (data.rooms) {
+        allRooms = {
+          pending: data.rooms.pending || [], approved: data.rooms.approved || [],
+          taken: data.rooms.taken || [], declined: data.rooms.declined || [], removed: data.rooms.removed || []
         };
-        matches.push(m);
-        if (!tenantMatches[m.tenantId]) tenantMatches[m.tenantId] = [];
-        tenantMatches[m.tenantId].push(m);
       }
+      if (data.transports) {
+        allTransport = {
+          pending: data.transports.pending || [], approved: data.transports.approved || [],
+          declined: data.transports.declined || [], removed: data.transports.removed || []
+        };
+      }
+      if (data.tenantRequests) {
+        allTenants = {
+          pending: data.tenantRequests.pending || [], approved: data.tenantRequests.approved || [],
+          declined: data.tenantRequests.declined || [], removed: data.tenantRequests.removed || []
+        };
+      }
+      if (data.reviews) {
+        allReviews = {
+          pending: data.reviews.pending || [], approved: data.reviews.approved || [], declined: data.reviews.declined || []
+        };
+      }
+      if (data.reports) {
+        allReports = {
+          pending: data.reports.pending || [], approved: data.reports.approved || [], declined: data.reports.declined || []
+        };
+      }
+      if (data.contacts) allContacts = data.contacts || [];
+      if (data.receipts) allReceipts = data.receipts || [];
+      if (data.traffic) allTraffic = data.traffic || allTraffic;
+
+      updateAllCounts();
+      updateStats();
+      renderRoomTab(currentRoomTab);
+      renderTenantTab(currentTenantTab);
+      renderTransportTab(currentTransportTab);
+      renderReviewTab(currentReviewTab);
+      renderReportTab(currentReportTab);
+      renderContacts();
+      renderChart();
+      renderAnalytics();
+      updateTrafficUI();
+      await loadMatches();
+    } catch (err) {
+      showNotice('Failed to load data: ' + err.message, 'error');
+    }
+  }
+
+  function updateTrafficUI() {
+    setText('todayVisitors', allTraffic.today || 0);
+    setText('weekVisitors', allTraffic.week || 0);
+    setText('monthVisitors', allTraffic.month || 0);
+    setText('totalVisitors', allTraffic.total || 0);
+  }
+
+  function switchSection(section) {
+    currentSection = section;
+    document.querySelectorAll('.main-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.section === section);
     });
+    document.querySelectorAll('.section-content').forEach(el => {
+      el.classList.toggle('active', el.id === section + 'Section');
+    });
+    if (section === 'rooms') renderRoomTab(currentRoomTab);
+    else if (section === 'tenants') renderTenantTab(currentTenantTab);
+    else if (section === 'matches') loadMatches();
+    else if (section === 'transport') renderTransportTab(currentTransportTab);
+    else if (section === 'reviews') renderReviewTab(currentReviewTab);
+    else if (section === 'reports') renderReportTab(currentReportTab);
+    else if (section === 'contacts') renderContacts();
+    else if (section === 'activity') renderActivity();
+    else if (section === 'analytics') renderAnalytics();
+  }
+
+  function fixMediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) return url;
+    return '/' + url;
+  }
+
+  // ===== ROOMS =====
+  function switchRoomTab(tab) {
+    currentRoomTab = tab;
+    document.querySelectorAll('#roomsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderRoomTab(tab);
+  }
+
+  function renderRoomTab(tab) {
+    const rooms = allRooms[tab] || [];
+    currentRoomTab = tab;
+    if (!roomList) return;
+    if (rooms.length === 0) { roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`; return; }
+    roomList.innerHTML = rooms.map(room => {
+      const images = room.images || [];
+      const allMedia = [...images, ...(room.video ? [room.video] : [])];
+      let mediaHtml = '';
+      if (allMedia.length > 0) {
+        const encoded = encodeURIComponent(JSON.stringify(allMedia));
+        mediaHtml = allMedia.slice(0, 4).map((m, i) => {
+          const safe = fixMediaUrl(m);
+          const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
+          return isVideo
+            ? `<video src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})" muted></video>`
+            : `<img src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})">`;
+        }).join('');
+      } else mediaHtml = `<div class="no-media">📷 No media</div>`;
+      const landlord = room.posterName ? `👤 ${room.posterName} ${room.posterContact ? '📞 '+room.posterContact : ''}` : '';
+      const waNum = (room.posterContact || '').replace(/[^0-9]/g, '');
+      const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}` : '';
+      const onlineBadge = room.online !== false ? '🟢 Online' : '🔴 Offline';
+
+      return `
+        <div class="room-card">
+          <div class="media-grid">${mediaHtml}</div>
+          <div class="info">
+            <div class="title">${room.title || 'Untitled'}</div>
+            <div class="landlord">${landlord}</div>
+            <div class="detail">📍 ${room.location || 'No location'}${room.alexandraSuburb ? ' ('+room.alexandraSuburb+')' : ''} | 💰 ${room.amount || 'Ask'} | 🏠 ${room.roomType || room.type || 'Any'}</div>
+            <div class="detail"><span class="badge ${tab}">${tab}</span> ${room.address || ''}</div>
+            <div class="detail">👶 ${room.childFriendly || 'No'}${room.maxKids ? ' (max '+room.maxKids+')' : ''} | 🚗 ${room.parking || 'No'}${room.maxCars ? ' (max '+room.maxCars+')' : ''}</div>
+            <div class="detail">🟫 Tiles: ${room.tiles || 'No'} | ⬜ Ceiling: ${room.ceiling || 'No'}</div>
+            <div class="actions">
+              ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="decline" onclick="moveRoom('${room.id}','approved','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="taken" onclick="markTaken('${room.id}')">📦 Mark Taken</button>` : ''}
+              ${tab === 'approved' ? `<button class="${room.online !== false ? 'approve' : 'delete'}" onclick="toggleOnline('${room.id}','approved')">${onlineBadge}</button>` : ''}
+              ${tab === 'approved' ? `<button class="delete" onclick="deleteRoom('${room.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'taken' ? `<button class="repost" onclick="moveRoom('${room.id}','taken','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'taken' ? `<button class="delete" onclick="deleteRoom('${room.id}','taken')">🗑️ Delete</button>` : ''}
+              ${tab === 'declined' ? `<button class="repost" onclick="moveRoom('${room.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'declined' ? `<button class="delete" onclick="deleteRoom('${room.id}','declined')">🗑️ Delete</button>` : ''}
+              ${tab === 'removed' ? `<button class="repost" onclick="moveRoom('${room.id}','removed','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'removed' ? `<button class="delete" onclick="deleteRoom('${room.id}','removed')">🗑️ Delete</button>` : ''}
+              ${tab !== 'taken' ? `<button class="edit" onclick="openEditRoomModal('${room.id}','${tab}')">✏️ Edit</button>` : ''}
+              ${waLink ? `<a class="wa" href="${waLink}" target="_blank">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function moveRoom(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); logActivity(`Room moved ${from} → ${to}`, 'rooms', id, 'ok'); loadData(); }
+    else { showNotice(data.error || 'Failed', 'error'); logActivity(`Room move failed`, 'rooms', id, 'error'); }
+  }
+
+  async function toggleOnline(id, from) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'toggle-online', section: 'rooms', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🔄 Online status updated', 'success'); logActivity('Room online toggled', 'rooms', id, 'ok'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  function calculateServiceFee(rent) {
+    if (rent >= 1000 && rent <= 1900) return 300;
+    if (rent >= 2000 && rent <= 3000) return 350;
+    if (rent >= 3100 && rent <= 3800) return 400;
+    if (rent >= 3900 && rent <= 7000) return 500;
+    return 0;
+  }
+
+  async function markTaken(id) {
+    const room = allRooms.approved.find(r => r.id === id);
+    if (!room) return;
+    const rentAmount = parseFloat(room.amount?.replace(/[^0-9.]/g, '') || 0);
+    const serviceFee = calculateServiceFee(rentAmount);
+    const tenantName = prompt('📋 Tenant name:', '') || 'Unknown tenant';
+    const tenantNumber = prompt('📞 Tenant phone:', '') || '';
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'mark-taken', section: 'rooms', id,
+        receipt: { tenantName, tenantNumber, rentAmount: String(rentAmount), serviceFee, date: new Date().toISOString().slice(0,10), paymentType: 'Cash', roomAddress: room.address }
+      })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`📦 Room TAKEN. Fee: R${serviceFee}`, 'success'); logActivity(`Room marked taken (fee R${serviceFee})`, 'rooms', id, 'ok'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  async function deleteRoom(id, from) {
+    if (!confirm('⚠️ Delete this room permanently?')) return;
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'rooms', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Room deleted', 'success'); logActivity('Room deleted', 'rooms', id, 'warn'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  function openEditRoomModal(id, from) {
+    const room = allRooms[from]?.find(r => r.id === id);
+    if (!room) return;
+    getEl('editRoomId').value = id;
+    getEl('editRoomFrom').value = from;
+    getEl('editRoomTitle').value = room.title || '';
+    getEl('editRoomLocation').value = room.location || '';
+    getEl('editRoomAddress').value = room.address || '';
+    getEl('editRoomAmount').value = room.amount || '';
+    getEl('editRoomDeposit').value = room.deposit || '';
+    getEl('editRoomPosterName').value = room.posterName || '';
+    getEl('editRoomPosterContact').value = room.posterContact || '';
+    getEl('editRoomNotes').value = room.notes || '';
+    getEl('editRoomRoomType').value = room.roomType || room.type || '';
+    getEl('editRoomChild').value = room.childFriendly || 'No';
+    getEl('editRoomParking').value = room.parking || 'No';
+    getEl('editRoomTiles').value = room.tiles || 'No';
+    getEl('editRoomCeiling').value = room.ceiling || 'No';
+    getEl('editRoomModal').classList.add('show');
+  }
+
+  function closeEditRoomModal() { getEl('editRoomModal').classList.remove('show'); }
+
+  getEl('editRoomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const id = getEl('editRoomId').value;
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'edit', section: 'rooms',
+        from: getEl('editRoomFrom').value,
+        id: id,
+        data: {
+          title: getEl('editRoomTitle').value,
+          location: getEl('editRoomLocation').value,
+          address: getEl('editRoomAddress').value,
+          amount: getEl('editRoomAmount').value,
+          deposit: getEl('editRoomDeposit').value,
+          posterName: getEl('editRoomPosterName').value,
+          posterContact: getEl('editRoomPosterContact').value,
+          notes: getEl('editRoomNotes').value,
+          roomType: getEl('editRoomRoomType').value,
+          childFriendly: getEl('editRoomChild').value,
+          parking: getEl('editRoomParking').value,
+          tiles: getEl('editRoomTiles').value,
+          ceiling: getEl('editRoomCeiling').value
+        }
+      })
+    });
+    const result = await res.json();
+    if (result.ok) { showNotice('✅ Room updated', 'success'); logActivity('Room edited', 'rooms', id, 'ok'); closeEditRoomModal(); loadData(); }
+    else showNotice('Failed', 'error');
   });
 
-  res.json({
-    matches,
-    tenantMatches,
-    totalLandlordsOnline: landlords.length,
-    totalTenantsApproved: tenants.length
+  // ===== TENANTS =====
+  function switchTenantTab(tab) {
+    currentTenantTab = tab;
+    document.querySelectorAll('#tenantsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderTenantTab(tab);
+  }
+
+  function renderTenantTab(tab) {
+    const tenants = allTenants[tab] || [];
+    currentTenantTab = tab;
+    if (!tenantList) return;
+    if (tenants.length === 0) { tenantList.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`; return; }
+    tenantList.innerHTML = tenants.map(t => {
+      const locations = Array.isArray(t.preferredLocations) && t.preferredLocations.length ? t.preferredLocations.join(', ') : '—';
+      const alex = t.alexandraSuburb ? `<div class="detail">🏘️ Suburb: <strong>${t.alexandraSuburb}</strong></div>` : '';
+      const kids = t.childFriendly === 'Yes' ? `👶 Kids: ${t.childrenCount || '?'} (ages ${t.childrenAges || '?'})` : '👶 No kids';
+      const cars = t.parking === 'Yes' ? `🚗 Cars: ${t.carsCount || '?'}` : '🚗 No parking';
+      const waNum = (t.contactNumber || '').replace(/[^0-9]/g, '');
+      const waMsg = encodeURIComponent(`Hi ${t.tenantName}, we have a room match for you at ${locations}.`);
+      const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${waMsg}` : '';
+
+      return `
+        <div class="room-card" style="grid-template-columns:1fr;">
+          <div class="info">
+            <div class="title">👤 ${t.tenantName || 'Unknown'}</div>
+            <div class="landlord">📞 ${t.contactNumber || 'No contact'}</div>
+            <div class="detail">📍 ${locations} | 🛏️ ${t.roomType || 'Any'} | 💰 ${t.budgetRange || t.budget || '—'}</div>
+            ${alex}
+            <div class="detail">📅 Move-in: ${t.moveInDate || 'Flexible'}</div>
+            <div class="detail">${kids} | ${cars}</div>
+            ${t.notes ? `<div class="detail">📝 ${t.notes}</div>` : ''}
+            <div class="actions">
+              ${tab === 'pending' ? `<button class="approve" onclick="moveTenant('${t.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${tab === 'pending' ? `<button class="decline" onclick="moveTenant('${t.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="decline" onclick="moveTenant('${t.id}','approved','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="delete" onclick="deleteTenant('${t.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'declined' ? `<button class="repost" onclick="moveTenant('${t.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'declined' ? `<button class="delete" onclick="deleteTenant('${t.id}','declined')">🗑️ Delete</button>` : ''}
+              ${tab === 'removed' ? `<button class="repost" onclick="moveTenant('${t.id}','removed','pending')">🔄 Repost</button>` : ''}
+              ${tab !== 'removed' ? `<button class="edit" onclick="openEditTenantModal('${t.id}','${tab}')">✏️ Edit</button>` : ''}
+              ${waLink ? `<a class="wa" href="${waLink}" target="_blank">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function moveTenant(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'tenantRequests', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Tenant moved to ${to}`, 'success'); logActivity(`Tenant moved ${from} → ${to}`, 'tenants', id, 'ok'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  async function deleteTenant(id, from) {
+    if (!confirm('Delete this tenant?')) return;
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'tenantRequests', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Tenant deleted', 'success'); logActivity('Tenant deleted', 'tenants', id, 'warn'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  function openEditTenantModal(id, from) {
+    const t = allTenants[from]?.find(x => x.id === id);
+    if (!t) return;
+    getEl('editTenantId').value = id;
+    getEl('editTenantFrom').value = from;
+    getEl('editTenantName').value = t.tenantName || '';
+    getEl('editTenantContact').value = t.contactNumber || '';
+    getEl('editTenantRoomType').value = t.roomType || '';
+    getEl('editTenantBudget').value = t.budgetRange || t.budget || '';
+    getEl('editTenantNotes').value = t.notes || '';
+    getEl('editTenantModal').classList.add('show');
+  }
+
+  function closeEditTenantModal() { getEl('editTenantModal').classList.remove('show'); }
+
+  getEl('editTenantForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const id = getEl('editTenantId').value;
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'edit', section: 'tenantRequests',
+        from: getEl('editTenantFrom').value,
+        id: id,
+        data: {
+          tenantName: getEl('editTenantName').value,
+          contactNumber: getEl('editTenantContact').value,
+          roomType: getEl('editTenantRoomType').value,
+          budgetRange: getEl('editTenantBudget').value,
+          budget: getEl('editTenantBudget').value,
+          notes: getEl('editTenantNotes').value
+        }
+      })
+    });
+    const result = await res.json();
+    if (result.ok) { showNotice('✅ Tenant updated', 'success'); logActivity('Tenant edited', 'tenants', id, 'ok'); closeEditTenantModal(); loadData(); }
+    else showNotice('Failed', 'error');
   });
-});
 
-// =========================================================
-// FRONTEND ROUTES
-// =========================================================
-app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
-app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
-app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+  // ===== MATCHES =====
+  async function loadMatches() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/matches', { headers: { 'Authorization': 'Bearer ' + token } });
+      const data = await res.json();
+      allMatches = data.matches || [];
+      renderMatches(data.totalLandlordsOnline, data.totalTenantsApproved);
+      updateAllCounts();
+    } catch (err) {
+      if (matchesList) matchesList.innerHTML = '<div class="empty">⚠️ Could not load matches.</div>';
+    }
+  }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
-  console.log(`📊 Visitor tracking active — see admin panel`);
-});
+  async function refreshMatches() {
+    showNotice('🔄 Refreshing matches...', 'success');
+    await loadMatches();
+    logActivity('Matches refreshed', 'matches', '', 'ok');
+    showNotice(`✅ Matches refreshed. Total: ${allMatches.length}`, 'success');
+  }
+
+  function renderMatches(onlineCount, tenantCount) {
+    if (!matchesList) return;
+    const onlineLandlords = onlineCount !== undefined
+      ? onlineCount
+      : [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+    const approvedTenants = tenantCount !== undefined ? tenantCount : (allTenants.approved || []).length;
+
+    if (allMatches.length === 0) {
+      matchesList.innerHTML = `
+        <div class="empty">
+          🔗 No matches found yet.<br><br>
+          <small>🟢 Online Landlords: <strong>${onlineLandlords}</strong> · ✅ Approved Tenants: <strong>${approvedTenants}</strong></small><br><br>
+          Approve rooms and tenants to see matches here.
+        </div>`;
+      return;
+    }
+
+    const summary = `
+      <div style="background:#0f7a5f;color:#fff;padding:14px 18px;border-radius:10px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;">
+        <div>🟢 Online Landlords: <strong>${onlineLandlords}</strong></div>
+        <div>✅ Approved Tenants: <strong>${approvedTenants}</strong></div>
+        <div>🔗 Total Matches: <strong>${allMatches.length}</strong></div>
+      </div>`;
+
+    const grouped = {};
+    allMatches.forEach(m => {
+      if (!grouped[m.landlordId]) grouped[m.landlordId] = { landlord: m, tenants: [] };
+      grouped[m.landlordId].tenants.push(m);
+    });
+
+    matchesList.innerHTML = summary + Object.values(grouped).map(g => {
+      const l = g.landlord;
+      const rentClean = String(l.landlordRent || '').replace(/^R+/i, '');
+      const roomType = l.landlordRoomType || 'room';
+      const locationFull = l.landlordLocation + (l.landlordSuburb ? ' ' + l.landlordSuburb : '');
+      const tilesLine = (l.landlordTiles === 'Yes') ? '✅ Tiles: Yes' : '❌ Tiles: No';
+      const ceilingLine = (l.landlordCeiling === 'Yes') ? '✅ Ceiling: Yes' : '❌ Ceiling: No';
+      const parkingLine = (l.landlordParking === 'Yes') ? '✅ Parking: Yes' : '❌ Parking: No';
+      const childLine = (l.landlordChildFriendly === 'Yes') ? '✅ Child friendly: Yes' : '❌ Child friendly: No';
+
+      const tenantsHtml = g.tenants.map(t => {
+        const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
+        const msg = encodeURIComponent(
+          `Hi ${t.tenantName},\n\n` +
+          `We have a *${roomType}* available for *R${rentClean}* at *${locationFull}*.\n\n` +
+          `Details:\n` +
+          `${tilesLine}\n` +
+          `${ceilingLine}\n` +
+          `${parkingLine}\n` +
+          `${childLine}\n\n` +
+          `When would you like to come and view it, and what time works for you?\n\n` +
+          `– Vusani Ikhaya Properties`
+        );
+        const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${msg}` : '';
+        return `
+          <div style="border-top:1px solid #eef3ee;padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <strong>👤 ${t.tenantName}</strong> — 📞 ${t.tenantContact}<br>
+              <span style="font-size:12px;color:#637268;">📍 ${t.tenantLocations.join(', ')} | 💰 ${t.tenantBudgetRange || t.tenantBudget} | 🛏️ ${t.tenantRoomType}</span>
+            </div>
+            ${waLink ? `<a href="${waLink}" target="_blank" class="wa">💬 WhatsApp</a>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="room-card" style="grid-template-columns:1fr;">
+          <div class="info">
+            <div class="title">🏠 ${l.landlordTitle}</div>
+            <div class="landlord">👤 ${l.landlordName || ''} 📞 ${l.landlordContact || ''}</div>
+            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} — Group: <strong>${l.landlordLocationGroup || 'N/A'}</strong> | 💰 R${rentClean}</div>
+            <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'} | 🟫 Tiles: ${l.landlordTiles || 'No'} | ⬜ Ceiling: ${l.landlordCeiling || 'No'}</div>
+            <div style="margin-top:10px;">
+              <div style="font-weight:700;color:#0f7a5f;margin-bottom:6px;">🎯 Matched Tenants (${g.tenants.length})</div>
+              ${tenantsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== TRANSPORT =====
+  function switchTransportTab(tab) {
+    currentTransportTab = tab;
+    document.querySelectorAll('#transportSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderTransportTab(tab);
+  }
+
+  function renderTransportTab(tab) {
+    const transports = allTransport[tab] || [];
+    if (!transportList) return;
+    if (transports.length === 0) { transportList.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`; return; }
+    transportList.innerHTML = transports.map(t => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">🚗 ${t.firstName || ''} ${t.surname || ''}</div>
+          <div class="landlord">📞 ${t.phone || ''} | 📧 ${t.email || ''}</div>
+          <div class="detail">Local: R${t.localPrice || '?'} | Outside: R${t.outsidePrice || '?'}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${t.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${t.id}','pending','declined')">❌ Decline</button>` : ''}
+            ${tab !== 'removed' ? `<button class="delete" onclick="deleteTransport('${t.id}','${tab}')">🗑️ Delete</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function moveTransport(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'transports', from, to, id })
+    });
+    logActivity(`Transport moved ${from} → ${to}`, 'transports', id, 'ok');
+    showNotice('✅ Moved', 'success'); loadData();
+  }
+
+  async function deleteTransport(id, from) {
+    if (!confirm('Delete?')) return;
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'transports', from, id })
+    });
+    logActivity('Transport deleted', 'transports', id, 'warn');
+    showNotice('🗑️ Deleted', 'success'); loadData();
+  }
+
+  // ===== REVIEWS =====
+  function switchReviewTab(tab) {
+    currentReviewTab = tab;
+    document.querySelectorAll('#reviewsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderReviewTab(tab);
+  }
+
+  function renderReviewTab(tab) {
+    const list = getEl('reviewList');
+    if (!list) return;
+    const reviews = allReviews[tab] || [];
+    if (reviews.length === 0) { list.innerHTML = `<div class="empty">⭐ No reviews in "${tab}"</div>`; return; }
+    list.innerHTML = reviews.map(r => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">⭐ ${r.rating || '?'} / 5 — ${r.name || 'Anonymous'}</div>
+          <div class="detail">Room: ${r.roomTitle || 'Unknown'}</div>
+          <div class="detail">${r.comment || ''}</div>
+          <div class="detail" style="font-size:12px;color:#637268;">📅 ${r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveReview('${r.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveReview('${r.id}','pending','declined')">❌ Decline</button>` : ''}
+            ${tab !== 'pending' ? `<button class="delete" onclick="moveReview('${r.id}','${tab}','pending')">🔄 Move to Pending</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function moveReview(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'reviews', from, to, id })
+    });
+    logActivity(`Review ${from} → ${to}`, 'reviews', id, 'ok');
+    showNotice('✅ Updated', 'success'); loadData();
+  }
+
+  // ===== SCAM REPORTS =====
+  function switchReportTab(tab) {
+    currentReportTab = tab;
+    document.querySelectorAll('#reportsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderReportTab(tab);
+  }
+
+  function renderReportTab(tab) {
+    const list = getEl('reportList');
+    if (!list) return;
+    const reports = allReports[tab] || [];
+    if (reports.length === 0) { list.innerHTML = `<div class="empty">⚠️ No scam reports in "${tab}"</div>`; return; }
+    list.innerHTML = reports.map(r => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">⚠️ ${r.room || 'Unknown room'}</div>
+          <div class="landlord">📞 Reported by: ${r.reporterContact || 'Anonymous'}</div>
+          <div class="detail">${r.reason || ''}</div>
+          <div class="detail" style="font-size:12px;color:#637268;">📅 ${r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveReport('${r.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveReport('${r.id}','pending','declined')">❌ Decline</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function moveReport(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'reports', from, to, id })
+    });
+    logActivity(`Scam report ${from} → ${to}`, 'reports', id, 'ok');
+    showNotice('✅ Updated', 'success'); loadData();
+  }
+
+  // ===== CONTACTS =====
+  function renderContacts() {
+    const list = getEl('contactList');
+    if (!list) return;
+    if (allContacts.length === 0) { list.innerHTML = '<div class="empty">📧 No contact messages yet.</div>'; return; }
+    list.innerHTML = allContacts.slice().reverse().map(c => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">📧 ${c.name || 'Unknown'}</div>
+          <div class="landlord">📞 ${c.phone || ''} | ✉️ ${c.email || ''}</div>
+          <div class="detail">${c.message || ''}</div>
+          <div class="detail" style="font-size:12px;color:#637268;">📅 ${c.date ? new Date(c.date).toLocaleString() : ''}</div>
+          ${c.phone ? `<div class="actions"><a class="wa" href="https://wa.me/27${(c.phone||'').replace(/[^0-9]/g,'').replace(/^0/,'')}" target="_blank">💬 WhatsApp</a></div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ===== TRACE =====
+  function runTrace() {
+    const q = (getEl('traceInput').value || '').toLowerCase().trim();
+    const results = getEl('traceResults');
+    if (!results) return;
+    if (!q) { results.innerHTML = '<div class="empty">Type something to search.</div>'; return; }
+
+    const found = [];
+    Object.keys(allRooms).forEach(status => {
+      allRooms[status].forEach(r => {
+        const hay = [r.title, r.location, r.address, r.posterName, r.posterContact, r.alexandraSuburb].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Room', status, item: r });
+      });
+    });
+    Object.keys(allTenants).forEach(status => {
+      allTenants[status].forEach(t => {
+        const hay = [t.tenantName, t.contactNumber, (t.preferredLocations||[]).join(' '), t.budgetRange, t.alexandraSuburb, t.notes].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Tenant', status, item: t });
+      });
+    });
+    Object.keys(allTransport).forEach(status => {
+      allTransport[status].forEach(t => {
+        const hay = [t.firstName, t.surname, t.phone, t.email].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Transport', status, item: t });
+      });
+    });
+    Object.keys(allReviews).forEach(status => {
+      allReviews[status].forEach(r => {
+        const hay = [r.name, r.roomTitle, r.comment].join(' ').toLowerCase();
+        if (hay.includes(q)) found.push({ type: 'Review', status, item: r });
+      });
+    });
+
+    if (found.length === 0) { results.innerHTML = `<div class="empty">🔍 No results for "${q}"</div>`; return; }
+
+    results.innerHTML = `<div style="margin-bottom:12px;color:#637268;font-size:13px;">Found <strong>${found.length}</strong> result(s)</div>` +
+      found.map(f => {
+        const i = f.item;
+        const title = i.title || i.tenantName || (i.firstName ? i.firstName + ' ' + i.surname : '') || i.name || 'Unknown';
+        const contact = i.posterContact || i.contactNumber || i.phone || '';
+        const loc = i.location || (i.preferredLocations ? i.preferredLocations.join(', ') : '');
+        return `
+          <div class="room-card" style="grid-template-columns:1fr;">
+            <div class="info">
+              <div class="title">${f.type} · ${title}</div>
+              <div class="detail">Status: <span class="badge ${f.status}">${f.status}</span></div>
+              ${contact ? `<div class="detail">📞 ${contact}</div>` : ''}
+              ${loc ? `<div class="detail">📍 ${loc}</div>` : ''}
+              <div class="detail" style="font-size:12px;color:#637268;">ID: ${i.id}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+  }
+
+  // ===== ANALYTICS =====
+  function renderAnalytics() {
+    const grid = getEl('analyticsGrid');
+    if (!grid) return;
+    const totalRooms = Object.values(allRooms).reduce((s, a) => s + a.length, 0);
+    const totalTenants = Object.values(allTenants).reduce((s, a) => s + a.length, 0);
+    const totalTransports = Object.values(allTransport).reduce((s, a) => s + a.length, 0);
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    const onlineLandlords = [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+
+    grid.innerHTML = `
+      <div class="report-card"><div class="title">Total Rooms</div><div class="value">${totalRooms}</div><div class="sub">${onlineLandlords} online</div></div>
+      <div class="report-card"><div class="title">Total Tenants</div><div class="value">${totalTenants}</div><div class="sub">${(allTenants.approved||[]).length} approved</div></div>
+      <div class="report-card"><div class="title">Total Matches</div><div class="value">${allMatches.length}</div></div>
+      <div class="report-card"><div class="title">Service Revenue</div><div class="value">R${totalFees.toFixed(2)}</div><div class="sub">${allReceipts.length} paid</div></div>
+      <div class="report-card"><div class="title">Transport Listings</div><div class="value">${totalTransports}</div></div>
+      <div class="report-card"><div class="title">Reviews</div><div class="value">${Object.values(allReviews).reduce((s,a)=>s+a.length,0)}</div></div>
+      <div class="report-card"><div class="title">Scam Reports</div><div class="value">${Object.values(allReports).reduce((s,a)=>s+a.length,0)}</div></div>
+      <div class="report-card"><div class="title">Contacts</div><div class="value">${allContacts.length}</div></div>
+      <div class="report-card"><div class="title">Total Visitors</div><div class="value">${allTraffic.total || 0}</div></div>
+      <div class="report-card"><div class="title">Admin Actions</div><div class="value">${allActivity.length}</div></div>
+    `;
+
+    const canvas = getEl('analyticsChart');
+    if (!canvas) return;
+    if (analyticsChart) analyticsChart.destroy();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
+    analyticsChart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } }
+    });
+  }
+
+  function exportAllCSV() {
+    const rows = [];
+    rows.push(['Type', 'Status', 'ID', 'Name/Title', 'Contact', 'Location', 'Amount', 'Created']);
+    Object.keys(allRooms).forEach(status => {
+      allRooms[status].forEach(r => {
+        rows.push(['Room', status, r.id, r.title||'', r.posterContact||'', r.location||'', r.amount||'', r.createdAt||'']);
+      });
+    });
+    Object.keys(allTenants).forEach(status => {
+      allTenants[status].forEach(t => {
+        rows.push(['Tenant', status, t.id, t.tenantName||'', t.contactNumber||'', (t.preferredLocations||[]).join('|'), t.budgetRange||'', t.createdAt||'']);
+      });
+    });
+    Object.keys(allTransport).forEach(status => {
+      allTransport[status].forEach(t => {
+        rows.push(['Transport', status, t.id, (t.firstName||'')+' '+(t.surname||''), t.phone||'', '', '', t.createdAt||'']);
+      });
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `vusani-export-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logActivity('Exported all data as CSV', 'analytics', '', 'ok');
+    showNotice('📥 CSV exported', 'success');
+  }
+
+  // ===== MEDIA =====
+  function openMediaViewer(encoded, idx) {
+    try {
+      currentMediaList = JSON.parse(decodeURIComponent(encoded));
+      currentMediaIndex = idx;
+      showMedia();
+      getEl('mediaViewer').classList.add('show');
+    } catch (e) {}
+  }
+  function showMedia() {
+    const m = currentMediaList[currentMediaIndex];
+    const safe = fixMediaUrl(m);
+    const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
+    getEl('mediaContent').innerHTML = isVideo
+      ? `<video src="${safe}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`
+      : `<img src="${safe}" style="max-width:95vw;max-height:85vh;">`;
+  }
+  function closeMediaViewer() {
+    getEl('mediaViewer').classList.remove('show');
+    getEl('mediaContent').innerHTML = '';
+  }
+
+  // ===== COUNTS =====
+  function updateAllCounts() {
+    setText('countPending', (allRooms.pending || []).length);
+    setText('countApproved', (allRooms.approved || []).length);
+    setText('countTaken', (allRooms.taken || []).length);
+    setText('countDeclined', (allRooms.declined || []).length);
+    setText('countRemoved', (allRooms.removed || []).length);
+    setText('statRoomsPending', (allRooms.pending || []).length);
+    setText('statRoomsApproved', (allRooms.approved || []).length);
+    setText('statRoomsTaken', (allRooms.taken || []).length);
+    setText('mainRoomsCount',
+      (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length);
+
+    setText('countTenantPending', (allTenants.pending || []).length);
+    setText('countTenantApproved', (allTenants.approved || []).length);
+    setText('countTenantDeclined', (allTenants.declined || []).length);
+    setText('countTenantRemoved', (allTenants.removed || []).length);
+    setText('mainTenantCount',
+      (allTenants.pending || []).length + (allTenants.approved || []).length + (allTenants.declined || []).length + (allTenants.removed || []).length);
+    setText('statTenantsPending', (allTenants.pending || []).length);
+
+    setText('countTransportPending', (allTransport.pending || []).length);
+    setText('countTransportApproved', (allTransport.approved || []).length);
+    setText('countTransportDeclined', (allTransport.declined || []).length);
+    setText('countTransportRemoved', (allTransport.removed || []).length);
+    setText('mainTransportCount',
+      (allTransport.pending || []).length + (allTransport.approved || []).length + (allTransport.declined || []).length + (allTransport.removed || []).length);
+
+    setText('countReviewPending', (allReviews.pending || []).length);
+    setText('countReviewApproved', (allReviews.approved || []).length);
+    setText('countReviewDeclined', (allReviews.declined || []).length);
+    setText('mainReviewCount', (allReviews.pending || []).length + (allReviews.approved || []).length + (allReviews.declined || []).length);
+
+    setText('countReportPending', (allReports.pending || []).length);
+    setText('countReportApproved', (allReports.approved || []).length);
+    setText('countReportDeclined', (allReports.declined || []).length);
+    setText('mainReportCount', (allReports.pending || []).length + (allReports.approved || []).length + (allReports.declined || []).length);
+
+    setText('mainContactCount', allContacts.length);
+
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    setText('statServiceFeeRevenue', 'R' + totalFees.toFixed(2));
+
+    setText('mainMatchCount', (allMatches || []).length);
+    setText('statMatches', (allMatches || []).length);
+  }
+
+  function updateStats() {
+    const mEl = getEl('monthFilter'); const yEl = getEl('yearFilter');
+    if (!mEl || !yEl) return;
+    const month = mEl.value; const year = parseInt(yEl.value);
+    let filtered = allReceipts;
+    if (month !== 'all') filtered = filtered.filter(r => new Date(r.date).getMonth() === parseInt(month));
+    if (year !== 'all' && !isNaN(year)) filtered = filtered.filter(r => new Date(r.date).getFullYear() === year);
+    const total = filtered.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    setText('monthlyCount', filtered.length);
+    setText('monthlyServiceFee', 'R' + total.toFixed(2));
+  }
+
+  function renderChart() {
+    const canvas = getEl('revenueChart');
+    if (!canvas) return;
+    if (revenueChart) revenueChart.destroy();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
+    revenueChart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } }
+    });
+  }
+
+  function logout() {
+    logActivity('Logout', 'auth', '', 'ok');
+    localStorage.removeItem('adminToken');
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
+  function showNotice(message, type) {
+    if (!notice) return;
+    notice.textContent = message;
+    notice.className = 'notice show ' + (type || 'success');
+    setTimeout(() => notice.classList.remove('show'), 4000);
+  }
+
+  (function populateYears() {
+    const ys = getEl('yearFilter');
+    if (!ys) return;
+    ys.innerHTML = '<option value="all">All Years</option>';
+    for (let y = 2035; y >= 2025; y--) ys.innerHTML += `<option value="${y}">${y}</option>`;
+  })();
+
+  (function init() {
+    const token = localStorage.getItem('adminToken');
+    if (token && sessionStorage.getItem(SESSION_KEY)) {
+      setText('adminUser', '👤 Admin');
+      showAdminPanel();
+    }
+  })();
+</script>
+</body>
+</html>
