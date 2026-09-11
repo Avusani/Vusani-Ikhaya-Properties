@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ⚠️ Set ADMIN_PASSWORD in Railway → Variables. The fallback is only for local dev.
+// ⚠️ Set ADMIN_PASSWORD in Railway → Variables. Fallback only for local dev.
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
 const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
 const ROOT = __dirname;
@@ -30,6 +30,7 @@ const defaultDB = {
 app.use(cors());
 app.use(express.json({ limit: '80mb' }));
 
+// ---------- VISITOR TRACKING ----------
 app.use((req, res, next) => {
   try {
     const isPublicPage =
@@ -46,6 +47,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(ROOT));
 
+// ---------- DB HELPERS ----------
 function normalizeSection(section, defaults) {
   const source = section && typeof section === "object" && !Array.isArray(section) ? section : {};
   return Object.fromEntries(
@@ -66,9 +68,18 @@ function normalizeDB(db) {
 }
 
 function ensureDB() {
-  if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR, { recursive: true }); console.log('📁 Database directory created'); }
-  if (!fs.existsSync(DB_FILE)) { writeDB(defaultDB); console.log('📁 New database created'); }
-  if (!fs.existsSync(TRAFFIC_FILE)) { writeTraffic({ days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }); console.log('📁 New traffic file created'); }
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.log('📁 Database directory created');
+  }
+  if (!fs.existsSync(DB_FILE)) {
+    writeDB(defaultDB);
+    console.log('📁 New database created');
+  }
+  if (!fs.existsSync(TRAFFIC_FILE)) {
+    writeTraffic({ days: {}, totalUniqueVisitors: 0, totalPageviews: 0 });
+    console.log('📁 New traffic file created');
+  }
 }
 
 function readDB() {
@@ -93,7 +104,10 @@ function writeDB(db) {
     fs.writeFileSync(tempFile, JSON.stringify(normalizeDB(db), null, 2));
     fs.renameSync(tempFile, DB_FILE);
     return true;
-  } catch (error) { console.error('❌ Failed to write database:', error.message); return false; }
+  } catch (error) {
+    console.error('❌ Failed to write database:', error.message);
+    return false;
+  }
 }
 
 function backupDB() {
@@ -104,7 +118,9 @@ function backupDB() {
       const backups = fs.readdirSync(DATA_DIR).filter(f => f.startsWith('db.backup.')).sort();
       while (backups.length > 5) fs.unlinkSync(path.join(DATA_DIR, backups.shift()));
     }
-  } catch (error) { console.log('⚠️ Backup failed:', error.message); }
+  } catch (error) {
+    console.log('⚠️ Backup failed:', error.message);
+  }
 }
 
 function restoreFromBackup() {
@@ -116,11 +132,19 @@ function restoreFromBackup() {
     fs.writeFileSync(DB_FILE, JSON.stringify(JSON.parse(data), null, 2));
     console.log(`✅ Restored from backup: ${latest}`);
     return true;
-  } catch (error) { console.log('⚠️ Restore failed:', error.message); return false; }
+  } catch (error) {
+    console.log('⚠️ Restore failed:', error.message);
+    return false;
+  }
 }
 
-function clearAllData() { backupDB(); writeDB(defaultDB); return true; }
+function clearAllData() {
+  backupDB();
+  writeDB(defaultDB);
+  return true;
+}
 
+// ---------- TRAFFIC ----------
 function readTraffic() {
   try {
     if (!fs.existsSync(TRAFFIC_FILE)) return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
@@ -128,14 +152,18 @@ function readTraffic() {
     const parsed = raw.trim() ? JSON.parse(raw) : { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
     if (!parsed.days) parsed.days = {};
     return parsed;
-  } catch (e) { return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }; }
+  } catch (e) {
+    return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
+  }
 }
 
 function writeTraffic(t) {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(TRAFFIC_FILE, JSON.stringify(t, null, 2));
-  } catch (e) { console.error('⚠️ Traffic write failed:', e.message); }
+  } catch (e) {
+    console.error('⚠️ Traffic write failed:', e.message);
+  }
 }
 
 function todayKey() {
@@ -191,7 +219,8 @@ function trafficSummary() {
   const weekVisitors = {};
   let weekPageviews = 0;
   for (let i = 0; i < 7; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
+    const d = new Date();
+    d.setDate(d.getDate() - i);
     const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const day = t.days[k];
     if (day) {
@@ -214,7 +243,8 @@ function trafficSummary() {
 
   const prevWeekVisitors = {};
   for (let i = 7; i < 14; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
+    const d = new Date();
+    d.setDate(d.getDate() - i);
     const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const day = t.days[k];
     if (day) Object.keys(day.visitors || {}).forEach(v => { prevWeekVisitors[v] = true; });
@@ -228,7 +258,8 @@ function trafficSummary() {
 
   const last7Days = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
+    const d = new Date();
+    d.setDate(d.getDate() - i);
     const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const day = t.days[k] || { pageviews: 0, visitors: {} };
     last7Days.push({
@@ -239,14 +270,20 @@ function trafficSummary() {
   }
 
   return {
-    today: todayCount, todayPageviews: todayData.pageviews || 0,
-    week: weekCount, weekPageviews: weekPageviews, weekChange: weekChange,
-    month: monthCount, monthPageviews: monthPageviews,
-    total: t.totalUniqueVisitors || 0, totalPageviews: t.totalPageviews || 0,
-    last7Days: last7Days
+    today: todayCount,
+    todayPageviews: todayData.pageviews || 0,
+    week: weekCount,
+    weekPageviews,
+    weekChange,
+    month: monthCount,
+    monthPageviews,
+    total: t.totalUniqueVisitors || 0,
+    totalPageviews: t.totalPageviews || 0,
+    last7Days
   };
 }
 
+// ---------- UTILITIES ----------
 function send(res, status, body, type = "application/json") {
   res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
   res.end(type === "application/json" ? JSON.stringify(body) : body);
@@ -254,7 +291,11 @@ function send(res, status, body, type = "application/json") {
 
 function sendMedia(res, src) {
   if (!src) return send(res, 404, { error: "Media not found" });
-  if (/^https?:\/\//i.test(src)) { res.writeHead(302, { Location: src, "Cache-Control": "no-store" }); res.end(); return; }
+  if (/^https?:\/\//i.test(src)) {
+    res.writeHead(302, { Location: src, "Cache-Control": "no-store" });
+    res.end();
+    return;
+  }
   const match = String(src).match(/^data:((?:image|video)\/[a-z0-9.+-]+);base64,(.+)$/i);
   if (!match) return send(res, 404, { error: "Media not found" });
   res.writeHead(200, { "Content-Type": match[1], "Cache-Control": "public, max-age=3600" });
@@ -263,9 +304,18 @@ function sendMedia(res, src) {
 
 function encodePart(v) { return encodeURIComponent(String(v || "")); }
 function cleanText(v, max = 600) { return String(v || "").trim().slice(0, max); }
-function cleanImages(images) { return Array.isArray(images) ? images.filter((s) => typeof s === "string" && /^(data:image\/|https?:\/\/)/i.test(s)).slice(0, 5) : []; }
-function cleanVideo(video) { return typeof video === "string" && /^(data:video\/|https?:\/\/)/i.test(video) ? video : ""; }
-function moneyNumber(v) { const p = Number(String(v || "").replace(/[^\d.]/g, "")); return Number.isFinite(p) ? p : 0; }
+function cleanImages(images) {
+  return Array.isArray(images)
+    ? images.filter((s) => typeof s === "string" && /^(data:image\/|https?:\/\/)/i.test(s)).slice(0, 5)
+    : [];
+}
+function cleanVideo(video) {
+  return typeof video === "string" && /^(data:video\/|https?:\/\/)/i.test(video) ? video : "";
+}
+function moneyNumber(v) {
+  const p = Number(String(v || "").replace(/[^\d.]/g, ""));
+  return Number.isFinite(p) ? p : 0;
+}
 
 function serviceFeeForRent(rent) {
   const a = moneyNumber(rent);
@@ -302,6 +352,7 @@ function cleanReceipt(details) {
   };
 }
 
+// ---------- LOCATION MATCHING ----------
 const ALEXANDRA_EAST_GROUP = ['east bank','far east bank','ext 7','ext7','ext 8','ext8','ext 9','ext9','tsutsumane','river park','river park phase 3'];
 const ALEXANDRA_AVENUES_GROUP = ['1st avenue – 12th avenue','1st avenue - 12th avenue','12th avenue – 22nd avenue','12th avenue - 22nd avenue','13th avenue – 22nd avenue','13th avenue - 22nd avenue','1st avenue – 22nd avenue','1st avenue - 22nd avenue'];
 const NORTHERN_SUBURBS_GROUP = ['lombardy','bramley','kew','balfour','orange grove'];
@@ -333,6 +384,7 @@ function normalizeAlexandraSuburb(value) {
   return v;
 }
 
+// ---------- PUBLIC MEDIA WRAPPERS ----------
 function publicRoom(room) {
   return {
     ...room,
@@ -343,12 +395,17 @@ function publicRoom(room) {
 
 function publicTransport(d) {
   return {
-    id: d.id, firstName: d.firstName, surname: d.surname,
+    id: d.id,
+    firstName: d.firstName,
+    surname: d.surname,
     carPicture: d.carPicture ? `/api/transport-media/${encodePart(d.id)}/carPicture` : "",
-    localPrice: d.localPrice, outsidePrice: d.outsidePrice, status: d.status
+    localPrice: d.localPrice,
+    outsidePrice: d.outsidePrice,
+    status: d.status
   };
 }
 
+// ---------- ADMIN AUTH ----------
 function adminToken(req) {
   const auth = req.headers.authorization || "";
   const headerToken = auth.replace(/^Bearer\s+/i, "");
@@ -358,7 +415,10 @@ function adminToken(req) {
 
 function requireAdmin(req, res) {
   const token = adminToken(req);
-  if (!token || !sessions.has(token)) { res.status(401).json({ error: "Admin login required" }); return false; }
+  if (!token || !sessions.has(token)) {
+    res.status(401).json({ error: "Admin login required" });
+    return false;
+  }
   const s = sessions.get(token);
   if (s && Date.now() - s.created > SESSION_TIMEOUT) {
     sessions.delete(token);
@@ -385,7 +445,10 @@ function adminItem(item, section, status, token) {
 
 function adminSection(name, section, token) {
   return Object.fromEntries(
-    Object.entries(section).map(([status, list]) => [status, (Array.isArray(list) ? list : []).map((i) => adminItem(i, name, status, token))])
+    Object.entries(section).map(([status, list]) => [
+      status,
+      (Array.isArray(list) ? list : []).map((i) => adminItem(i, name, status, token))
+    ])
   );
 }
 
@@ -418,6 +481,7 @@ function deleteItem(db, section, from, id) {
   return db[section][from].length !== before;
 }
 
+// ---------- PUBLIC API ----------
 app.get('/api/public', (req, res) => {
   const db = readDB();
   res.json({
@@ -428,11 +492,14 @@ app.get('/api/public', (req, res) => {
   });
 });
 
-app.get('/api/properties', (req, res) => { res.json(readDB().rooms.approved || []); });
+app.get('/api/properties', (req, res) => {
+  res.json(readDB().rooms.approved || []);
+});
 
 app.get('/api/properties/:id', (req, res) => {
   const p = readDB().rooms.approved.find(p => p.id === req.params.id);
-  if (p) res.json(p); else res.status(404).json({ error: 'Property not found' });
+  if (p) res.json(p);
+  else res.status(404).json({ error: 'Property not found' });
 });
 
 app.get('/api/room-media/:id/:kind', (req, res) => {
@@ -457,6 +524,7 @@ app.get('/api/transport-media/:id/carPicture', (req, res) => {
   return sendMedia(res, d?.carPicture);
 });
 
+// ---------- PUBLIC POSTS ----------
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const b = req.body;
@@ -500,7 +568,7 @@ app.post('/api/tenant-requests', async (req, res) => {
     id: "request-" + Date.now(),
     tenantName: cleanText(b.tenantName, 100),
     contactNumber: cleanText(b.contactNumber, 80),
-    preferredLocations: preferredLocations,
+    preferredLocations,
     alexandraSuburb: cleanText(b.alexandraSuburb, 200),
     roomType: cleanText(b.roomType, 40),
     budget: cleanText(b.budget, 40),
@@ -520,7 +588,8 @@ app.post('/api/tenant-requests', async (req, res) => {
 });
 
 app.post('/api/reviews', async (req, res) => {
-  const db = readDB(); const b = req.body;
+  const db = readDB();
+  const b = req.body;
   db.reviews.pending.unshift({
     id: "review-" + Date.now(),
     roomId: cleanText(b.roomId, 80),
@@ -531,11 +600,13 @@ app.post('/api/reviews', async (req, res) => {
     status: "pending",
     createdAt: new Date().toISOString()
   });
-  writeDB(db); res.status(201).json({ ok: true });
+  writeDB(db);
+  res.status(201).json({ ok: true });
 });
 
 app.post('/api/reports', async (req, res) => {
-  const db = readDB(); const b = req.body;
+  const db = readDB();
+  const b = req.body;
   db.reports.pending.unshift({
     id: "report-" + Date.now(),
     room: cleanText(b.room, 180),
@@ -544,11 +615,13 @@ app.post('/api/reports', async (req, res) => {
     status: "pending",
     createdAt: new Date().toISOString()
   });
-  writeDB(db); res.status(201).json({ ok: true });
+  writeDB(db);
+  res.status(201).json({ ok: true });
 });
 
 app.post('/api/transports', async (req, res) => {
-  const db = readDB(); const b = req.body;
+  const db = readDB();
+  const b = req.body;
   db.transports.pending.unshift({
     id: "transport-" + Date.now(),
     firstName: cleanText(b.firstName, 100),
@@ -563,11 +636,13 @@ app.post('/api/transports', async (req, res) => {
     status: "pending",
     createdAt: new Date().toISOString()
   });
-  writeDB(db); res.status(201).json({ ok: true });
+  writeDB(db);
+  res.status(201).json({ ok: true });
 });
 
 app.post('/api/contact', async (req, res) => {
-  const db = readDB(); const b = req.body;
+  const db = readDB();
+  const b = req.body;
   db.contacts = db.contacts || [];
   db.contacts.push({
     id: Date.now(),
@@ -581,6 +656,7 @@ app.post('/api/contact', async (req, res) => {
   res.status(201).json({ success: true, message: 'Message sent successfully!' });
 });
 
+// ---------- ADMIN AUTH ROUTES ----------
 app.post('/api/admin/login', async (req, res) => {
   const b = req.body;
   if (b.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
@@ -601,19 +677,22 @@ app.get('/api/admin/check-session', (req, res) => {
 });
 
 app.get('/api/admin/data', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
+  const token = requireAdmin(req, res);
+  if (!token) return;
   const payload = adminDB(readDB(), token);
   payload.traffic = trafficSummary();
   res.json(payload);
 });
 
 app.get('/api/admin/traffic', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
+  const token = requireAdmin(req, res);
+  if (!token) return;
   res.json(trafficSummary());
 });
 
 app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
+  const token = requireAdmin(req, res);
+  if (!token) return;
   const db = readDB();
   const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
   const item = list.find((e) => e.id === decodeURIComponent(req.params.id || ""));
@@ -621,7 +700,8 @@ app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
 });
 
 app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
+  const token = requireAdmin(req, res);
+  if (!token) return;
   const db = readDB();
   const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
   const item = list.find((e) => e.id === decodeURIComponent(req.params.id || ""));
@@ -630,8 +710,10 @@ app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
 });
 
 app.post('/api/admin/action', async (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
-  const db = readDB(); const body = req.body;
+  const token = requireAdmin(req, res);
+  if (!token) return;
+  const db = readDB();
+  const body = req.body;
 
   try {
     if (body.action === "move") {
@@ -696,7 +778,11 @@ app.post('/api/admin/action', async (req, res) => {
         roomType: cleanText(body.roomType || "Any", 40),
         amount: receipt.rentAmount,
         deposit: receipt.depositAmount,
-        images: [], video: "", status: "taken", receipt, manual: true,
+        images: [],
+        video: "",
+        status: "taken",
+        receipt,
+        manual: true,
         takenAt: new Date().toISOString()
       };
       db.rooms.taken.unshift(manualRoom);
@@ -751,6 +837,7 @@ app.post('/api/admin/action', async (req, res) => {
   }
 });
 
+// ---------- MATCHING ----------
 function budgetInRange(amount, range) {
   const n = moneyNumber(amount);
   if (!n) return false;
@@ -794,7 +881,8 @@ function matchOne(l, t) {
 }
 
 app.get('/api/admin/matches', (req, res) => {
-  const token = requireAdmin(req, res); if (!token) return;
+  const token = requireAdmin(req, res);
+  if (!token) return;
   const db = readDB();
   const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
   const tenants = db.tenantRequests.approved;
@@ -846,11 +934,13 @@ app.get('/api/admin/matches', (req, res) => {
   });
 });
 
+// ---------- PAGE ROUTES ----------
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
 app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
 app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
+// ---------- START ----------
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
   console.log(`📊 Visitor tracking active — see admin panel`);
