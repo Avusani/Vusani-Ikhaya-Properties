@@ -1,628 +1,856 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Post a Room or Request | VUSANI IKHAYA PROPERTIES</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <style>
-    :root {
-      --green: #0f3d2e;
-      --green-dark: #082418;
-      --green-light: #1a5a45;
-      --gold: #c9a227;
-      --gold-light: #e6c34a;
-      --bg: #edf4ee;
-      --text: #17201b;
-      --muted: #637268;
-      --border: #cad8cf;
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
+const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
+const ROOT = __dirname;
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "database");
+const DB_FILE = path.join(DATA_DIR, "db.json");
+const TRAFFIC_FILE = path.join(DATA_DIR, "traffic.json");
+const sessions = new Map();
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+
+const defaultDB = {
+  rooms: { pending: [], approved: [], taken: [], declined: [], removed: [] },
+  reviews: { pending: [], approved: [], declined: [] },
+  reports: { pending: [], approved: [], declined: [] },
+  transports: { pending: [], approved: [], declined: [], removed: [] },
+  tenantRequests: { pending: [], approved: [], declined: [], removed: [] },
+  receipts: [],
+  contacts: []
+};
+
+app.use(cors());
+app.use(express.json({ limit: '80mb' }));
+
+app.use((req, res, next) => {
+  try {
+    const isPublicPage =
+      req.method === 'GET' &&
+      !req.path.startsWith('/api/') &&
+      !req.path.startsWith('/admin') &&
+      !req.path.startsWith('/database/') &&
+      !req.path.startsWith('/favicon') &&
+      !/\.[a-z0-9]+$/i.test(req.path);
+    if (isPublicPage) recordVisit(req);
+  } catch (e) {}
+  next();
+});
+
+app.use(express.static(ROOT));
+
+function normalizeSection(section, defaults) {
+  const source = section && typeof section === "object" && !Array.isArray(section) ? section : {};
+  return Object.fromEntries(
+    Object.keys(defaults).map((status) => [status, Array.isArray(source[status]) ? source[status] : []])
+  );
+}
+
+function normalizeDB(db) {
+  db = db || {};
+  db.rooms = normalizeSection(db.rooms, defaultDB.rooms);
+  db.reviews = normalizeSection(db.reviews, defaultDB.reviews);
+  db.reports = normalizeSection(db.reports, defaultDB.reports);
+  db.transports = normalizeSection(db.transports, defaultDB.transports);
+  db.tenantRequests = normalizeSection(db.tenantRequests, defaultDB.tenantRequests);
+  db.receipts = Array.isArray(db.receipts) ? db.receipts : [];
+  db.contacts = Array.isArray(db.contacts) ? db.contacts : [];
+  return db;
+}
+
+function ensureDB() {
+  if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR, { recursive: true }); console.log('📁 Database directory created'); }
+  if (!fs.existsSync(DB_FILE)) { writeDB(defaultDB); console.log('📁 New database created'); }
+  if (!fs.existsSync(TRAFFIC_FILE)) { writeTraffic({ days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }); console.log('📁 New traffic file created'); }
+}
+
+function readDB() {
+  ensureDB();
+  try {
+    const raw = fs.readFileSync(DB_FILE, "utf8").replace(/^\uFEFF/, "");
+    const parsed = raw.trim() ? JSON.parse(raw) : defaultDB;
+    return normalizeDB(parsed);
+  } catch (error) {
+    console.error('❌ Failed to read database:', error.message);
+    const restored = restoreFromBackup();
+    if (restored) return readDB();
+    return defaultDB;
+  }
+}
+
+function writeDB(db) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    backupDB();
+    const tempFile = DB_FILE + '.tmp';
+    fs.writeFileSync(tempFile, JSON.stringify(normalizeDB(db), null, 2));
+    fs.renameSync(tempFile, DB_FILE);
+    return true;
+  } catch (error) { console.error('❌ Failed to write database:', error.message); return false; }
+}
+
+function backupDB() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const backupFile = path.join(DATA_DIR, `db.backup.${Date.now()}.json`);
+      fs.copyFileSync(DB_FILE, backupFile);
+      const backups = fs.readdirSync(DATA_DIR).filter(f => f.startsWith('db.backup.')).sort();
+      while (backups.length > 5) fs.unlinkSync(path.join(DATA_DIR, backups.shift()));
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
-    .topbar { background: var(--green); color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-    .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .topbar-left img { height: 52px; width: auto; background: #fff; padding: 4px; border-radius: 6px; }
-    .brand { font-weight: 900; font-size: 18px; line-height: 1.1; }
-    .brand small { color: rgba(255,255,255,0.7); font-size: 11px; display: block; font-weight: 500; letter-spacing: 0.5px; }
-    .topbar a { color: #fff; text-decoration: none; font-weight: 600; }
-    .topbar a:hover { color: var(--gold); }
-    .container { max-width: 820px; margin: 28px auto; padding: 0 20px; }
-    .hero-strip { background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%); color: #fff; border-radius: 14px; padding: 28px 24px; margin-bottom: 24px; text-align: center; border-bottom: 4px solid var(--gold); }
-    .hero-strip h1 { margin: 0; font-size: 26px; font-weight: 900; }
-    .hero-strip p { margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px; }
-    .role-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    .role-card { background: #fff; border: 3px solid var(--border); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; user-select: none; }
-    .role-card:hover { border-color: var(--green); transform: translateY(-2px); }
-    .role-card.active { border-color: var(--green); background: #f0faf6; box-shadow: 0 6px 20px rgba(15,61,46,0.15); }
-    .role-card .icon { font-size: 42px; }
-    .role-card .role-title { font-weight: 800; font-size: 18px; margin-top: 6px; color: var(--green); }
-    .role-card .role-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-    .form-card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); border: 1px solid var(--border); }
-    .form-card h2 { margin-top: 0; color: var(--green); border-bottom: 3px solid var(--gold); padding-bottom: 10px; display: inline-block; }
-    label { display: block; font-weight: 700; margin-top: 16px; font-size: 14px; }
-    input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; margin-top: 6px; font-family: inherit; background: #fff; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(15,61,46,0.1); }
-    textarea { min-height: 100px; resize: vertical; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .file-upload-box { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; margin-top: 6px; background: #f8faf9; cursor: pointer; }
-    .file-upload-box:hover { border-color: var(--green); }
-    .file-upload-box input { border: none; padding: 0; margin: 0; }
-    .preview-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    .preview-grid img, .preview-grid video { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
-    .btn-submit { width: 100%; padding: 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 17px; font-weight: 800; cursor: pointer; margin-top: 24px; letter-spacing: 0.5px; border-bottom: 4px solid var(--gold); transition: all 0.2s; }
-    .btn-submit:hover { background: var(--green-dark); }
-    .btn-submit:disabled { background: var(--muted); cursor: not-allowed; border-bottom-color: transparent; }
-    .notice { padding: 14px; border-radius: 8px; margin: 16px 0; display: none; font-weight: 600; text-align: center; }
-    .notice.show { display: block; }
-    .notice.success { background: #dbf4e9; color: var(--green); border-left: 4px solid var(--green); }
-    .notice.error { background: #fde5df; color: #7f2318; border-left: 4px solid #b8493b; }
-    .hidden { display: none !important; }
-    .conditional-box { background: #f8faf9; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 14px; margin-top: 8px; }
-    .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    .checkbox-grid label { display: flex; align-items: center; font-weight: 600; margin-top: 0; cursor: pointer; padding: 8px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
-    .checkbox-grid label:hover { background: #eef4ef; border-color: var(--border); }
-    .checkbox-grid input[type="checkbox"] { width: auto; margin: 0 10px 0 0; padding: 0; }
-    .checkbox-grid input[type="checkbox"]:checked + span { color: var(--green); font-weight: 800; }
-    .alexandra-suburb-box { background: #fff8e1; border-left-color: var(--gold); }
-    .alexandra-suburb-box select { background: #fff; }
-    .fee-info-section { background: var(--green); color: #fff; border-radius: 14px; padding: 30px 24px; margin-top: 32px; text-align: center; border-top: 4px solid var(--gold); }
-    .fee-info-section h3 { margin: 0 0 8px 0; color: var(--gold-light); font-size: 22px; letter-spacing: 0.5px; }
-    .fee-info-section p { margin: 0 0 20px 0; color: rgba(255,255,255,0.75); font-size: 13px; }
-    .fee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-    .fee-pill { background: rgba(255,255,255,0.08); border: 1px solid rgba(201,162,39,0.4); border-radius: 8px; padding: 14px; font-size: 13px; color: rgba(255,255,255,0.85); }
-    .fee-pill strong { color: var(--gold-light); display: block; font-size: 20px; margin-top: 4px; font-weight: 900; }
-    .footer { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 12px; margin-top: 20px; }
-    .footer strong { color: var(--green); display: block; margin-bottom: 4px; }
-    @media (max-width: 600px) {
-      .form-row, .role-picker, .checkbox-grid { grid-template-columns: 1fr; }
-      .topbar-left img { height: 40px; }
-      .brand { font-size: 15px; }
+  } catch (error) { console.log('⚠️ Backup failed:', error.message); }
+}
+
+function restoreFromBackup() {
+  try {
+    const backups = fs.readdirSync(DATA_DIR).filter(f => f.startsWith('db.backup.')).sort();
+    if (backups.length === 0) return false;
+    const latest = backups[backups.length - 1];
+    const data = fs.readFileSync(path.join(DATA_DIR, latest), 'utf8');
+    fs.writeFileSync(DB_FILE, JSON.stringify(JSON.parse(data), null, 2));
+    console.log(`✅ Restored from backup: ${latest}`);
+    return true;
+  } catch (error) { console.log('⚠️ Restore failed:', error.message); return false; }
+}
+
+function clearAllData() { backupDB(); writeDB(defaultDB); return true; }
+
+function readTraffic() {
+  try {
+    if (!fs.existsSync(TRAFFIC_FILE)) return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
+    const raw = fs.readFileSync(TRAFFIC_FILE, "utf8").replace(/^\uFEFF/, "");
+    const parsed = raw.trim() ? JSON.parse(raw) : { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
+    if (!parsed.days) parsed.days = {};
+    return parsed;
+  } catch (e) { return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }; }
+}
+
+function writeTraffic(t) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(TRAFFIC_FILE, JSON.stringify(t, null, 2));
+  } catch (e) { console.error('⚠️ Traffic write failed:', e.message); }
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getClientIP(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return String(xff).split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress) || 'unknown';
+}
+
+function isBot(req) {
+  const ua = String(req.headers['user-agent'] || '').toLowerCase();
+  if (!ua) return true;
+  const bots = ['bot','crawl','spider','slurp','facebookexternalhit','whatsapp','telegrambot','preview','curl','wget','python-requests','python-urllib','java/','monitoring','uptime','pingdom','ahrefs','semrush','mj12','dotbot','petal','yandex','baidu','googlebot','bingbot','duckduckbot','headlesschrome','phantomjs','lighthouse'];
+  return bots.some(b => ua.includes(b));
+}
+
+function getVisitorID(req) {
+  const ip = getClientIP(req);
+  const ua = String(req.headers['user-agent'] || '');
+  return crypto.createHash('md5').update(ip + '|' + ua).digest('hex').slice(0, 16);
+}
+
+function recordVisit(req) {
+  try {
+    if (isBot(req)) return;
+    const t = readTraffic();
+    const today = todayKey();
+    if (!t.days[today]) t.days[today] = { pageviews: 0, visitors: {} };
+    t.days[today].pageviews += 1;
+    const vid = getVisitorID(req);
+    if (!t.days[today].visitors[vid]) {
+      t.days[today].visitors[vid] = 1;
+      t.totalUniqueVisitors = (t.totalUniqueVisitors || 0) + 1;
+    } else {
+      t.days[today].visitors[vid] += 1;
     }
-  </style>
-</head>
-<body>
+    t.totalPageviews = (t.totalPageviews || 0) + 1;
+    const keys = Object.keys(t.days).sort();
+    while (keys.length > 365) delete t.days[keys.shift()];
+    writeTraffic(t);
+  } catch (e) {}
+}
 
-<div class="topbar">
-  <div class="topbar-left">
-    <img src="/logo.png" alt="Vusani Ikhaya Properties" onerror="this.style.display='none'">
-    <div class="brand">
-      VUSANI IKHAYA PROPERTIES
-      <small>TRUSTED ROOMS. REAL PEOPLE. REAL VALUE.</small>
-    </div>
-  </div>
-  <div><a href="/">🏠 Home</a></div>
-</div>
+function trafficSummary() {
+  const t = readTraffic();
+  const today = todayKey();
+  const todayData = t.days[today] || { pageviews: 0, visitors: {} };
 
-<div class="container">
-  <div class="hero-strip">
-    <h1>Post a Room or Find a Room</h1>
-    <p>Choose below whether you're a Landlord looking to list a room, or a Tenant looking for one.</p>
-  </div>
+  const weekVisitors = {};
+  let weekPageviews = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = t.days[k];
+    if (day) {
+      weekPageviews += day.pageviews || 0;
+      Object.keys(day.visitors || {}).forEach(v => { weekVisitors[v] = true; });
+    }
+  }
 
-  <div class="role-picker">
-    <div class="role-card" id="roleLandlord" onclick="selectRole('landlord')">
-      <div class="icon">🏠</div>
-      <div class="role-title">I'm a Landlord</div>
-      <div class="role-sub">I have a room to rent out</div>
-    </div>
-    <div class="role-card" id="roleTenant" onclick="selectRole('tenant')">
-      <div class="icon">🔎</div>
-      <div class="role-title">I'm a Tenant</div>
-      <div class="role-sub">I'm looking for a room</div>
-    </div>
-  </div>
+  const monthVisitors = {};
+  let monthPageviews = 0;
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  Object.keys(t.days).forEach(k => {
+    if (k.startsWith(monthPrefix)) {
+      const day = t.days[k];
+      monthPageviews += day.pageviews || 0;
+      Object.keys(day.visitors || {}).forEach(v => { monthVisitors[v] = true; });
+    }
+  });
 
-  <div id="notice" class="notice"></div>
+  const prevWeekVisitors = {};
+  for (let i = 7; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = t.days[k];
+    if (day) Object.keys(day.visitors || {}).forEach(v => { prevWeekVisitors[v] = true; });
+  }
 
-  <!-- LANDLORD FORM -->
-  <div class="form-card hidden" id="landlordFormCard">
-    <h2>🏠 List Your Room</h2>
-    <form id="landlordForm">
-      <label>📍 Location / Area * <span style="font-weight:500;color:var(--muted);font-size:12px;">(one location only)</span></label>
-      <select id="postLocation" required>
-        <option value="">Select area...</option>
-      </select>
+  const todayCount = Object.keys(todayData.visitors || {}).length;
+  const weekCount = Object.keys(weekVisitors).length;
+  const monthCount = Object.keys(monthVisitors).length;
+  const prevWeekCount = Object.keys(prevWeekVisitors).length;
+  const weekChange = prevWeekCount ? Math.round(((weekCount - prevWeekCount) / prevWeekCount) * 100) : 0;
 
-      <div id="landlordAlexandraBox" class="conditional-box hidden alexandra-suburb-box">
-        <label>🏘️ Alexandra Suburb / Avenue *</label>
-        <select id="landlordAlexandraSuburb">
-          <option value="">Select suburb...</option>
-          <option>East Bank</option>
-          <option>Far East Bank</option>
-          <option>Ext 7</option>
-          <option>Ext 8</option>
-          <option>Ext 9</option>
-          <option>Tsutsumane</option>
-          <option>River Park</option>
-          <option>River Park Phase 3</option>
-          <option>1st Avenue – 12th Avenue</option>
-          <option>13th Avenue – 22nd Avenue</option>
-        </select>
-      </div>
-
-      <label>🏠 Full Address *</label>
-      <input type="text" id="postAddress" placeholder="e.g., 123 Main Street" required>
-
-      <div class="form-row">
-        <div>
-          <label>Room Type *</label>
-          <select id="postRoomType" required>
-            <option value="">Select type...</option>
-            <option>1+ Bedroom House</option>
-            <option>2+ Bedroom House</option>
-            <option>3+ Bedroom House</option>
-            <option>4+ Bedroom House</option>
-            <option>5+ Bedroom House</option>
-            <option>6+ Bedroom House</option>
-            <option>7+ Bedroom House</option>
-            <option>8+ Bedroom House</option>
-            <option>9+ Bedroom House</option>
-            <option>10+ Bedroom House</option>
-            <option>Single Room</option>
-            <option>Bachelor</option>
-            <option>Cottage</option>
-            <option>Double Room</option>
-            <option>Backroom</option>
-            <option>Flatlet</option>
-            <option>Shared Room</option>
-          </select>
-        </div>
-        <div>
-          <label>Rent Amount (R) *</label>
-          <input type="text" id="postAmount" placeholder="e.g., 1500" required>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div><label>Deposit (R)</label><input type="text" id="postDeposit" placeholder="e.g., 1500 or No deposit"></div>
-        <div><label>Bathroom</label><input type="text" id="postBath" placeholder="e.g., Private / Shared"></div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label>Child Friendly?</label>
-          <select id="postChild"><option value="No">No</option><option value="Yes">Yes</option></select>
-        </div>
-        <div>
-          <label>Parking?</label>
-          <select id="postParking"><option value="No">No</option><option value="Yes">Yes</option></select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label>Tiles?</label>
-          <select id="postTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
-        </div>
-        <div>
-          <label>Ceiling?</label>
-          <select id="postCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
-        </div>
-      </div>
-
-      <div id="landlordKidsBox" class="conditional-box hidden">
-        <label>👶 Maximum number of children allowed *</label>
-        <input type="number" id="landlordMaxKids" min="1" placeholder="e.g., 2">
-      </div>
-      <div id="landlordCarsBox" class="conditional-box hidden">
-        <label>🚗 Maximum number of cars allowed *</label>
-        <input type="number" id="landlordMaxCars" min="1" placeholder="e.g., 2">
-      </div>
-
-      <label>📸 Room Pictures <span style="color:var(--muted);font-weight:500;font-size:12px;">(Optional — Max 5)</span></label>
-      <div class="file-upload-box">
-        <input type="file" id="postImages" accept="image/*" multiple>
-        <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">Click to upload images (optional)</p>
-      </div>
-      <div class="preview-grid" id="imagePreview"></div>
-
-      <label>🎬 Room Video <span style="color:var(--muted);font-weight:500;font-size:12px;">(Optional)</span></label>
-      <div class="file-upload-box"><input type="file" id="postVideo" accept="video/*"></div>
-      <div class="preview-grid" id="videoPreview"></div>
-
-      <label>👤 Your Name *</label>
-      <input type="text" id="posterName" placeholder="Your full name" required>
-
-      <label>📞 Your Contact Number *</label>
-      <input type="text" id="posterContact" placeholder="e.g., 072 123 4567" required>
-
-      <label>📝 Additional Notes</label>
-      <textarea id="postNotes" placeholder="Any extra details about the room, rules, etc."></textarea>
-
-      <button type="submit" class="btn-submit" id="landlordSubmitBtn">🚀 Submit Room for Approval</button>
-    </form>
-  </div>
-
-  <!-- TENANT FORM -->
-  <div class="form-card hidden" id="tenantFormCard">
-    <h2>🔎 Looking for a Room?</h2>
-    <form id="tenantForm">
-      <label>👤 Your Name *</label>
-      <input type="text" id="tenantName" placeholder="Your full name" required>
-
-      <label>📞 Your Contact Number *</label>
-      <input type="text" id="contactNumber" placeholder="e.g., 072 123 4567" required>
-
-      <label>📍 Preferred Locations * <span style="font-weight:500;color:var(--muted);font-size:12px;">(select ALL that apply — you can pick multiple)</span></label>
-      <div class="conditional-box">
-        <div class="checkbox-grid" id="locationCheckboxes"></div>
-      </div>
-
-      <div id="alexandraSuburbBox" class="conditional-box hidden alexandra-suburb-box">
-        <label>🏘️ Alexandra Suburb / Avenue <span style="font-weight:500;color:var(--muted);font-size:12px;">(select all that apply)</span></label>
-        <div class="checkbox-grid" id="alexandraSuburbCheckboxes">
-          <label><input type="checkbox" class="alex-check" value="East Bank"><span>East Bank</span></label>
-          <label><input type="checkbox" class="alex-check" value="Far East Bank"><span>Far East Bank</span></label>
-          <label><input type="checkbox" class="alex-check" value="Ext 7"><span>Ext 7</span></label>
-          <label><input type="checkbox" class="alex-check" value="Ext 8"><span>Ext 8</span></label>
-          <label><input type="checkbox" class="alex-check" value="Ext 9"><span>Ext 9</span></label>
-          <label><input type="checkbox" class="alex-check" value="Tsutsumane"><span>Tsutsumane</span></label>
-          <label><input type="checkbox" class="alex-check" value="River Park"><span>River Park</span></label>
-          <label><input type="checkbox" class="alex-check" value="River Park Phase 3"><span>River Park Phase 3</span></label>
-          <label><input type="checkbox" class="alex-check" value="1st Avenue – 12th Avenue"><span>1st – 12th Avenue</span></label>
-          <label><input type="checkbox" class="alex-check" value="13th Avenue – 22nd Avenue"><span>13th – 22nd Avenue</span></label>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label>🛏️ Room Type Needed *</label>
-          <select id="roomType" required>
-            <option value="">Select type...</option>
-            <option>Any</option>
-            <option>1+ Bedroom House</option>
-            <option>2+ Bedroom House</option>
-            <option>3+ Bedroom House</option>
-            <option>4+ Bedroom House</option>
-            <option>5+ Bedroom House</option>
-            <option>6+ Bedroom House</option>
-            <option>7+ Bedroom House</option>
-            <option>8+ Bedroom House</option>
-            <option>9+ Bedroom House</option>
-            <option>10+ Bedroom House</option>
-            <option>Single Room</option>
-            <option>Bachelor</option>
-            <option>Cottage</option>
-            <option>Double Room</option>
-            <option>Backroom</option>
-            <option>Flatlet</option>
-            <option>Shared Room</option>
-          </select>
-        </div>
-        <div>
-          <label>💰 Budget Range *</label>
-          <select id="budgetRange" required>
-            <option value="">Select range...</option>
-            <option>R800-R1500</option>
-            <option>R1600-R2500</option>
-            <option>R2600-R3500</option>
-            <option>R3600-R4500</option>
-            <option>R4600-R8000</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div><label>📅 Move-in Date</label><input type="date" id="moveInDate"></div>
-        <div>
-          <label>🏠 Child Friendly Needed? *</label>
-          <select id="tenantChild" required><option value="No">No</option><option value="Yes">Yes</option></select>
-        </div>
-      </div>
-
-      <div id="childrenDetailsBox" class="conditional-box hidden">
-        <label>👶 How many children? *</label>
-        <input type="number" id="childrenCount" min="1" placeholder="e.g., 2">
-        <label>🎂 Ages of children *</label>
-        <input type="text" id="childrenAges" placeholder="e.g., 3, 7, 12">
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label>🚗 Parking Needed? *</label>
-          <select id="tenantParking" required><option value="No">No</option><option value="Yes">Yes</option></select>
-        </div>
-        <div></div>
-      </div>
-
-      <div id="parkingDetailsBox" class="conditional-box hidden">
-        <label>🚙 How many cars? *</label>
-        <input type="number" id="carsCount" min="1" placeholder="e.g., 1">
-      </div>
-
-      <label>📝 Additional Notes</label>
-      <textarea id="notes" placeholder="e.g., I need a quiet place close to transport."></textarea>
-
-      <button type="submit" class="btn-submit" id="tenantSubmitBtn">🚀 Submit My Request</button>
-    </form>
-  </div>
-
-  <div class="fee-info-section">
-    <h3>💰 Service Fee Structure</h3>
-    <p>Applied when a tenant successfully secures a room through Vusani Ikhaya Properties.</p>
-    <div class="fee-grid">
-      <div class="fee-pill">R1000 – R1900<strong>R300</strong></div>
-      <div class="fee-pill">R2000 – R3000<strong>R350</strong></div>
-      <div class="fee-pill">R3100 – R3800<strong>R400</strong></div>
-      <div class="fee-pill">R3900 – R7000<strong>R500</strong></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <strong>VUSANI IKHAYA PROPERTIES</strong>
-    Johannesburg, South Africa | www.vusaniikhayaproperties.co.za<br>
-    avukilerrooms@gmail.com | 061 364 2449 | 068 535 3186
-  </div>
-</div>
-
-<script>
-  const notice = document.getElementById('notice');
-  let previewURLs = [];
-
-  const LOCATIONS = [
-    'Alexandra Township','Marlboro','Lombardy','Bramley','Wynberg','Balfour',
-    'Orange Grove','Sandton','Kelvin','Kew','Highlands North','Savoy Estate','Edenvale','Other'
-  ];
-
-  (function fillLandlordLocations() {
-    const sel = document.getElementById('postLocation');
-    LOCATIONS.forEach(loc => {
-      const opt = document.createElement('option');
-      opt.value = loc; opt.textContent = loc;
-      sel.appendChild(opt);
+  const last7Days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = t.days[k] || { pageviews: 0, visitors: {} };
+    last7Days.push({
+      date: k,
+      visitors: Object.keys(day.visitors || {}).length,
+      pageviews: day.pageviews || 0
     });
-    sel.addEventListener('change', function () {
-      const isAlexandra = this.value === 'Alexandra Township';
-      document.getElementById('landlordAlexandraBox').classList.toggle('hidden', !isAlexandra);
-      if (!isAlexandra) document.getElementById('landlordAlexandraSuburb').value = '';
-    });
-  })();
+  }
 
-  (function buildLocations() {
-    const wrap = document.getElementById('locationCheckboxes');
-    wrap.innerHTML = LOCATIONS.map(loc => `
-      <label>
-        <input type="checkbox" class="loc-check" value="${loc}">
-        <span>${loc}</span>
-      </label>
-    `).join('');
-    wrap.querySelectorAll('.loc-check').forEach(cb => {
-      cb.addEventListener('change', (e) => {
-        const isAlexandra = e.target.value === 'Alexandra Township' && e.target.checked;
-        document.getElementById('alexandraSuburbBox').classList.toggle('hidden', !isAlexandra);
-        if (!isAlexandra) document.querySelectorAll('.alex-check').forEach(x => x.checked = false);
+  return {
+    today: todayCount, todayPageviews: todayData.pageviews || 0,
+    week: weekCount, weekPageviews: weekPageviews, weekChange: weekChange,
+    month: monthCount, monthPageviews: monthPageviews,
+    total: t.totalUniqueVisitors || 0, totalPageviews: t.totalPageviews || 0,
+    last7Days: last7Days
+  };
+}
+
+function send(res, status, body, type = "application/json") {
+  res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
+  res.end(type === "application/json" ? JSON.stringify(body) : body);
+}
+
+function sendMedia(res, src) {
+  if (!src) return send(res, 404, { error: "Media not found" });
+  if (/^https?:\/\//i.test(src)) { res.writeHead(302, { Location: src, "Cache-Control": "no-store" }); res.end(); return; }
+  const match = String(src).match(/^data:((?:image|video)\/[a-z0-9.+-]+);base64,(.+)$/i);
+  if (!match) return send(res, 404, { error: "Media not found" });
+  res.writeHead(200, { "Content-Type": match[1], "Cache-Control": "public, max-age=3600" });
+  res.end(Buffer.from(match[2], "base64"));
+}
+
+function encodePart(v) { return encodeURIComponent(String(v || "")); }
+function cleanText(v, max = 600) { return String(v || "").trim().slice(0, max); }
+function cleanImages(images) { return Array.isArray(images) ? images.filter((s) => typeof s === "string" && /^(data:image\/|https?:\/\/)/i.test(s)).slice(0, 5) : []; }
+function cleanVideo(video) { return typeof video === "string" && /^(data:video\/|https?:\/\/)/i.test(video) ? video : ""; }
+function moneyNumber(v) { const p = Number(String(v || "").replace(/[^\d.]/g, "")); return Number.isFinite(p) ? p : 0; }
+
+function serviceFeeForRent(rent) {
+  const a = moneyNumber(rent);
+  if (a >= 1000 && a <= 1900) return 300;
+  if (a >= 2000 && a <= 3000) return 350;
+  if (a >= 3100 && a <= 3800) return 400;
+  if (a >= 3900 && a <= 7000) return 500;
+  return 0;
+}
+
+function monthKey(dateValue) {
+  const v = cleanText(dateValue, 40);
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 7);
+  const d = v ? new Date(v) : new Date();
+  if (Number.isNaN(d.getTime())) return new Date().toISOString().slice(0, 7);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function cleanReceipt(details) {
+  const rentAmount = cleanText(details?.rentAmount || details?.rentPrice, 40);
+  const fee = serviceFeeForRent(rentAmount) || moneyNumber(details?.serviceFee);
+  return {
+    id: cleanText(details?.id || `ART-${Date.now()}`, 80),
+    date: cleanText(details?.date || new Date().toISOString().slice(0, 10), 20),
+    tenantName: cleanText(details?.tenantName, 140),
+    tenantNumber: cleanText(details?.tenantNumber, 80),
+    paymentType: cleanText(details?.paymentType || "Cash", 80),
+    roomAddress: cleanText(details?.roomAddress, 220),
+    rentAmount,
+    depositAmount: cleanText(details?.depositAmount, 80),
+    serviceFee: fee,
+    serviceFeeText: `R${fee}`,
+    month: monthKey(details?.date || new Date().toISOString())
+  };
+}
+
+const ALEXANDRA_EAST_GROUP = ['east bank','far east bank','ext 7','ext7','ext 8','ext8','ext 9','ext9','tsutsumane','river park','river park phase 3'];
+const ALEXANDRA_AVENUES_GROUP = ['1st avenue – 12th avenue','1st avenue - 12th avenue','12th avenue – 22nd avenue','12th avenue - 22nd avenue','13th avenue – 22nd avenue','13th avenue - 22nd avenue','1st avenue – 22nd avenue','1st avenue - 22nd avenue'];
+const NORTHERN_SUBURBS_GROUP = ['lombardy','bramley','kew','balfour','orange grove'];
+
+function locationGroup(location, suburb) {
+  const l = String(location || '').toLowerCase().trim();
+  const s = String(suburb || '').toLowerCase().trim();
+  const combined = (l + ' ' + s).trim();
+  if (ALEXANDRA_EAST_GROUP.some(x => combined.includes(x))) return 'Alexandra East';
+  if (ALEXANDRA_AVENUES_GROUP.some(x => combined.includes(x))) return 'Alexandra Avenues';
+  if (NORTHERN_SUBURBS_GROUP.some(x => combined.includes(x))) return 'Northern Suburbs';
+  if (combined.includes('alexandra')) return 'Alexandra Township';
+  if (combined.includes('marlboro')) return 'Marlboro';
+  if (combined.includes('wynberg')) return 'Wynberg';
+  if (combined.includes('sandton')) return 'Sandton';
+  if (combined.includes('kelvin')) return 'Kelvin';
+  if (combined.includes('highlands north')) return 'Highlands North';
+  if (combined.includes('savoy estate')) return 'Savoy Estate';
+  if (combined.includes('edenvale')) return 'Edenvale';
+  return l || 'Unknown';
+}
+
+function normalizeAlexandraSuburb(value) {
+  const v = cleanText(value, 80);
+  if (!v) return '';
+  const lv = v.toLowerCase();
+  if (ALEXANDRA_AVENUES_GROUP.some(x => lv.includes(x))) return 'Alexandra Avenues';
+  if (ALEXANDRA_EAST_GROUP.some(x => lv.includes(x))) return 'Alexandra East';
+  return v;
+}
+
+function publicRoom(room) {
+  return {
+    ...room,
+    images: (room.images || []).map((_, i) => `/api/room-media/${encodePart(room.id)}/image/${i}`),
+    video: room.video ? `/api/room-media/${encodePart(room.id)}/video` : ""
+  };
+}
+
+function publicTransport(d) {
+  return {
+    id: d.id, firstName: d.firstName, surname: d.surname,
+    carPicture: d.carPicture ? `/api/transport-media/${encodePart(d.id)}/carPicture` : "",
+    localPrice: d.localPrice, outsidePrice: d.outsidePrice, status: d.status
+  };
+}
+
+function adminToken(req) {
+  const auth = req.headers.authorization || "";
+  const headerToken = auth.replace(/^Bearer\s+/i, "");
+  if (req.query && req.query.token) return req.query.token;
+  return headerToken;
+}
+
+function requireAdmin(req, res) {
+  const token = adminToken(req);
+  if (!token || !sessions.has(token)) { res.status(401).json({ error: "Admin login required" }); return false; }
+  const s = sessions.get(token);
+  if (s && Date.now() - s.created > SESSION_TIMEOUT) {
+    sessions.delete(token);
+    res.status(401).json({ error: "Session expired, please login again" });
+    return false;
+  }
+  return token;
+}
+
+function adminMediaURL(section, status, id, field, index, token) {
+  const base = `/api/admin/media/${encodePart(section)}/${encodePart(status)}/${encodePart(id)}/${encodePart(field)}`;
+  const suffix = field === "images" ? `/${index}` : "";
+  return `${base}${suffix}?token=${encodePart(token)}`;
+}
+
+function adminItem(item, section, status, token) {
+  const next = { ...item };
+  if (Array.isArray(next.images)) next.images = next.images.map((_, i) => adminMediaURL(section, status, next.id, "images", i, token));
+  if (next.video) next.video = adminMediaURL(section, status, next.id, "video", 0, token);
+  if (next.carPicture) next.carPicture = adminMediaURL(section, status, next.id, "carPicture", 0, token);
+  if (next.idPicture) next.idPicture = adminMediaURL(section, status, next.id, "idPicture", 0, token);
+  return next;
+}
+
+function adminSection(name, section, token) {
+  return Object.fromEntries(
+    Object.entries(section).map(([status, list]) => [status, (Array.isArray(list) ? list : []).map((i) => adminItem(i, name, status, token))])
+  );
+}
+
+function adminDB(db, token) {
+  return {
+    rooms: adminSection("rooms", db.rooms, token),
+    reviews: db.reviews,
+    reports: db.reports,
+    transports: adminSection("transports", db.transports, token),
+    tenantRequests: adminSection("tenantRequests", db.tenantRequests, token),
+    receipts: db.receipts,
+    contacts: db.contacts
+  };
+}
+
+function moveItem(db, section, from, to, id) {
+  if (!db[section] || !Array.isArray(db[section][from]) || !Array.isArray(db[section][to])) return false;
+  const item = db[section][from].find((e) => e.id === id);
+  if (!item) return false;
+  db[section][from] = db[section][from].filter((e) => e.id !== id);
+  db[section][to] = db[section][to].filter((e) => e.id !== id);
+  db[section][to].unshift({ ...item, status: to, updatedAt: new Date().toISOString() });
+  return true;
+}
+
+function deleteItem(db, section, from, id) {
+  if (!db[section] || !Array.isArray(db[section][from])) return false;
+  const before = db[section][from].length;
+  db[section][from] = db[section][from].filter((e) => e.id !== id);
+  return db[section][from].length !== before;
+}
+
+app.get('/api/public', (req, res) => {
+  const db = readDB();
+  res.json({
+    rooms: db.rooms.approved.map(publicRoom),
+    reviews: db.reviews.approved,
+    transports: db.transports.approved.map(publicTransport),
+    tenantRequests: db.tenantRequests.approved
+  });
+});
+
+app.get('/api/properties', (req, res) => { res.json(readDB().rooms.approved || []); });
+
+app.get('/api/properties/:id', (req, res) => {
+  const p = readDB().rooms.approved.find(p => p.id === req.params.id);
+  if (p) res.json(p); else res.status(404).json({ error: 'Property not found' });
+});
+
+app.get('/api/room-media/:id/:kind', (req, res) => {
+  const r = readDB().rooms.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
+  if (req.params.kind === "video") return sendMedia(res, r?.video);
+  return sendMedia(res, r?.images?.[0]);
+});
+
+app.get('/api/room-media/:id/image/:index', (req, res) => {
+  const r = readDB().rooms.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
+  const i = Math.max(0, Number(req.params.index) || 0);
+  return sendMedia(res, r?.images?.[i]);
+});
+
+app.get('/api/room-media/:id/video', (req, res) => {
+  const r = readDB().rooms.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
+  return sendMedia(res, r?.video);
+});
+
+app.get('/api/transport-media/:id/carPicture', (req, res) => {
+  const d = readDB().transports.approved.find((e) => e.id === decodeURIComponent(req.params.id || ""));
+  return sendMedia(res, d?.carPicture);
+});
+
+app.post('/api/rooms', async (req, res) => {
+  const db = readDB();
+  const b = req.body;
+  db.rooms.pending.unshift({
+    id: "post-" + Date.now(),
+    title: cleanText(b.title, 120),
+    location: cleanText(b.location, 80),
+    alexandraSuburb: normalizeAlexandraSuburb(b.alexandraSuburb),
+    address: cleanText(b.address, 220),
+    type: cleanText(b.type, 40),
+    roomType: cleanText(b.roomType || "Any", 40),
+    amount: cleanText(b.amount, 40),
+    deposit: cleanText(b.deposit || "No deposit stated", 80),
+    childFriendly: cleanText(b.childFriendly, 10),
+    maxKids: cleanText(b.maxKids, 10),
+    parking: cleanText(b.parking, 10),
+    maxCars: cleanText(b.maxCars, 10),
+    tiles: cleanText(b.tiles, 10),
+    ceiling: cleanText(b.ceiling, 10),
+    bath: cleanText(b.bath, 120),
+    images: cleanImages(b.images),
+    video: cleanVideo(b.video),
+    posterName: cleanText(b.posterName, 100),
+    posterContact: cleanText(b.posterContact, 160),
+    notes: cleanText(b.notes, 800),
+    online: true,
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
+});
+
+app.post('/api/tenant-requests', async (req, res) => {
+  const db = readDB();
+  const b = req.body;
+  const preferredLocations = Array.isArray(b.preferredLocations)
+    ? b.preferredLocations.map(l => cleanText(l, 80)).filter(Boolean)
+    : [];
+  db.tenantRequests.pending.unshift({
+    id: "request-" + Date.now(),
+    tenantName: cleanText(b.tenantName, 100),
+    contactNumber: cleanText(b.contactNumber, 80),
+    preferredLocations: preferredLocations,
+    alexandraSuburb: cleanText(b.alexandraSuburb, 200),
+    roomType: cleanText(b.roomType, 40),
+    budget: cleanText(b.budget, 40),
+    budgetRange: cleanText(b.budgetRange, 40),
+    moveInDate: cleanText(b.moveInDate, 40),
+    childFriendly: cleanText(b.childFriendly, 10),
+    childrenCount: cleanText(b.childrenCount, 10),
+    childrenAges: cleanText(b.childrenAges, 120),
+    parking: cleanText(b.parking, 10),
+    carsCount: cleanText(b.carsCount, 10),
+    notes: cleanText(b.notes, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true });
+});
+
+app.post('/api/reviews', async (req, res) => {
+  const db = readDB(); const b = req.body;
+  db.reviews.pending.unshift({
+    id: "review-" + Date.now(),
+    roomId: cleanText(b.roomId, 80),
+    roomTitle: cleanText(b.roomTitle, 140),
+    name: cleanText(b.name, 100),
+    rating: Math.max(1, Math.min(5, Number(b.rating) || 5)),
+    comment: cleanText(b.comment, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db); res.status(201).json({ ok: true });
+});
+
+app.post('/api/reports', async (req, res) => {
+  const db = readDB(); const b = req.body;
+  db.reports.pending.unshift({
+    id: "report-" + Date.now(),
+    room: cleanText(b.room, 180),
+    reporterContact: cleanText(b.reporterContact, 160),
+    reason: cleanText(b.reason, 1000),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db); res.status(201).json({ ok: true });
+});
+
+app.post('/api/transports', async (req, res) => {
+  const db = readDB(); const b = req.body;
+  db.transports.pending.unshift({
+    id: "transport-" + Date.now(),
+    firstName: cleanText(b.firstName, 100),
+    surname: cleanText(b.surname, 100),
+    phone: cleanText(b.phone, 80),
+    email: cleanText(b.email, 160),
+    carPicture: cleanImages([b.carPicture])[0] || "",
+    idPicture: cleanImages([b.idPicture])[0] || "",
+    localPrice: cleanText(b.localPrice, 80),
+    outsidePrice: cleanText(b.outsidePrice, 80),
+    notes: cleanText(b.notes, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db); res.status(201).json({ ok: true });
+});
+
+app.post('/api/contact', async (req, res) => {
+  const db = readDB(); const b = req.body;
+  db.contacts = db.contacts || [];
+  db.contacts.push({
+    id: Date.now(),
+    name: cleanText(b.name, 100),
+    email: cleanText(b.email, 160),
+    phone: cleanText(b.phone, 80),
+    message: cleanText(b.message, 1000),
+    date: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ success: true, message: 'Message sent successfully!' });
+});
+
+app.post('/api/admin/login', async (req, res) => {
+  const b = req.body;
+  if (b.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
+  const token = crypto.randomBytes(32).toString('hex');
+  sessions.set(token, { created: Date.now(), expires: Date.now() + SESSION_TIMEOUT });
+  res.json({ token, success: true });
+});
+
+app.post('/api/admin/logout', (req, res) => {
+  const token = adminToken(req);
+  if (token && sessions.has(token)) sessions.delete(token);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/check-session', (req, res) => {
+  const token = adminToken(req);
+  res.json({ valid: token && sessions.has(token) });
+});
+
+app.get('/api/admin/data', (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  const payload = adminDB(readDB(), token);
+  payload.traffic = trafficSummary();
+  res.json(payload);
+});
+
+app.get('/api/admin/traffic', (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  res.json(trafficSummary());
+});
+
+app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  const db = readDB();
+  const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
+  const item = list.find((e) => e.id === decodeURIComponent(req.params.id || ""));
+  return sendMedia(res, item?.[decodeURIComponent(req.params.field || "")]);
+});
+
+app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  const db = readDB();
+  const list = db[decodeURIComponent(req.params.section || "")]?.[decodeURIComponent(req.params.status || "")] || [];
+  const item = list.find((e) => e.id === decodeURIComponent(req.params.id || ""));
+  const i = Math.max(0, Number(req.params.index) || 0);
+  return sendMedia(res, item?.images?.[i]);
+});
+
+app.post('/api/admin/action', async (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  const db = readDB(); const body = req.body;
+
+  try {
+    if (body.action === "move") {
+      const ok = moveItem(db, body.section, body.from, body.to, body.id);
+      if (!ok) return res.status(400).json({ ok: false, error: "Item not found or invalid section" });
+    }
+
+    if (body.action === "edit") {
+      const section = db[body.section];
+      if (section && Array.isArray(section[body.from])) {
+        const i = section[body.from].findIndex(e => e.id === body.id);
+        if (i === -1) return res.status(404).json({ ok: false, error: "Item not found" });
+        const cur = section[body.from][i];
+        const u = body.data || {};
+        section[body.from][i] = {
+          ...cur,
+          title: cleanText(u.title !== undefined ? u.title : cur.title, 120),
+          location: cleanText(u.location !== undefined ? u.location : cur.location, 80),
+          address: cleanText(u.address !== undefined ? u.address : cur.address, 220),
+          amount: cleanText(u.amount !== undefined ? u.amount : cur.amount, 40),
+          deposit: cleanText(u.deposit !== undefined ? u.deposit : cur.deposit, 80),
+          posterName: cleanText(u.posterName !== undefined ? u.posterName : cur.posterName, 100),
+          posterContact: cleanText(u.posterContact !== undefined ? u.posterContact : cur.posterContact, 160),
+          notes: cleanText(u.notes !== undefined ? u.notes : cur.notes, 800),
+          tenantName: cleanText(u.tenantName !== undefined ? u.tenantName : cur.tenantName, 100),
+          contactNumber: cleanText(u.contactNumber !== undefined ? u.contactNumber : cur.contactNumber, 80),
+          roomType: cleanText(u.roomType !== undefined ? u.roomType : cur.roomType, 40),
+          type: cleanText(u.roomType !== undefined ? u.roomType : cur.type, 40),
+          budgetRange: cleanText(u.budgetRange !== undefined ? u.budgetRange : cur.budgetRange, 40),
+          budget: cleanText(u.budget !== undefined ? u.budget : cur.budget, 40),
+          tiles: cleanText(u.tiles !== undefined ? u.tiles : cur.tiles, 10),
+          ceiling: cleanText(u.ceiling !== undefined ? u.ceiling : cur.ceiling, 10),
+          childFriendly: cleanText(u.childFriendly !== undefined ? u.childFriendly : cur.childFriendly, 10),
+          parking: cleanText(u.parking !== undefined ? u.parking : cur.parking, 10),
+          updatedAt: new Date().toISOString()
+        };
+      }
+    }
+
+    if (body.action === "mark-taken") {
+      const room = db.rooms.approved.find((e) => e.id === body.id);
+      if (!room) return res.status(404).json({ ok: false, error: "Room not found in approved" });
+      const receipt = cleanReceipt({
+        ...(body.receipt || {}),
+        roomAddress: body.receipt?.roomAddress || room.address,
+        rentAmount: body.receipt?.rentAmount || room.amount,
+        depositAmount: body.receipt?.depositAmount || room.deposit
       });
-    });
-  })();
-
-  function showNotice(msg, type) {
-    notice.textContent = msg;
-    notice.className = 'notice show ' + (type || 'success');
-    setTimeout(() => notice.classList.remove('show'), 5000);
-  }
-
-  function selectRole(role) {
-    document.getElementById('roleLandlord').classList.toggle('active', role === 'landlord');
-    document.getElementById('roleTenant').classList.toggle('active', role === 'tenant');
-    document.getElementById('landlordFormCard').classList.toggle('hidden', role !== 'landlord');
-    document.getElementById('tenantFormCard').classList.toggle('hidden', role !== 'tenant');
-    notice.classList.remove('show');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  document.getElementById('postChild').addEventListener('change', function () {
-    const show = this.value === 'Yes';
-    document.getElementById('landlordKidsBox').classList.toggle('hidden', !show);
-    if (!show) document.getElementById('landlordMaxKids').value = '';
-  });
-  document.getElementById('postParking').addEventListener('change', function () {
-    const show = this.value === 'Yes';
-    document.getElementById('landlordCarsBox').classList.toggle('hidden', !show);
-    if (!show) document.getElementById('landlordMaxCars').value = '';
-  });
-  document.getElementById('tenantChild').addEventListener('change', function () {
-    const show = this.value === 'Yes';
-    document.getElementById('childrenDetailsBox').classList.toggle('hidden', !show);
-    if (!show) {
-      document.getElementById('childrenCount').value = '';
-      document.getElementById('childrenAges').value = '';
-    }
-  });
-  document.getElementById('tenantParking').addEventListener('change', function () {
-    const show = this.value === 'Yes';
-    document.getElementById('parkingDetailsBox').classList.toggle('hidden', !show);
-    if (!show) document.getElementById('carsCount').value = '';
-  });
-
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-    });
-  }
-  async function getImagesAsBase64() {
-    const files = document.getElementById('postImages').files;
-    const out = [];
-    for (let i = 0; i < Math.min(files.length, 5); i++) out.push(await fileToBase64(files[i]));
-    return out;
-  }
-  async function getVideoAsBase64() {
-    const file = document.getElementById('postVideo').files[0];
-    return file ? await fileToBase64(file) : '';
-  }
-
-  document.getElementById('postImages').addEventListener('change', function () {
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = '';
-    previewURLs.forEach(u => URL.revokeObjectURL(u));
-    previewURLs = [];
-    Array.from(this.files).slice(0, 5).forEach(file => {
-      const url = URL.createObjectURL(file);
-      previewURLs.push(url);
-      const img = document.createElement('img');
-      img.src = url;
-      preview.appendChild(img);
-    });
-  });
-  document.getElementById('postVideo').addEventListener('change', function () {
-    const preview = document.getElementById('videoPreview');
-    preview.innerHTML = '';
-    const file = this.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      previewURLs.push(url);
-      const v = document.createElement('video');
-      v.src = url; v.muted = true;
-      preview.appendChild(v);
-    }
-  });
-
-  document.getElementById('landlordForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    notice.classList.remove('show');
-
-    const location = document.getElementById('postLocation').value;
-    let alexandraSuburb = '';
-    if (location === 'Alexandra Township') {
-      alexandraSuburb = document.getElementById('landlordAlexandraSuburb').value;
-      if (!alexandraSuburb) { showNotice('❌ Please select an Alexandra suburb.', 'error'); return; }
-    }
-    const childFriendly = document.getElementById('postChild').value;
-    let maxKids = '';
-    if (childFriendly === 'Yes') {
-      maxKids = document.getElementById('landlordMaxKids').value.trim();
-      if (!maxKids) { showNotice('❌ Enter max children allowed.', 'error'); return; }
-    }
-    const parking = document.getElementById('postParking').value;
-    let maxCars = '';
-    if (parking === 'Yes') {
-      maxCars = document.getElementById('landlordMaxCars').value.trim();
-      if (!maxCars) { showNotice('❌ Enter max cars allowed.', 'error'); return; }
+      db.rooms.approved = db.rooms.approved.filter((e) => e.id !== body.id);
+      db.rooms.taken = db.rooms.taken.filter((e) => e.id !== body.id);
+      db.rooms.taken.unshift({ ...room, status: "taken", receipt, takenAt: new Date().toISOString() });
+      db.receipts.unshift({ ...receipt, roomId: room.id, manual: false });
     }
 
-    const btn = document.getElementById('landlordSubmitBtn');
-    btn.disabled = true; btn.textContent = '⏳ Uploading...';
-
-    try {
-      const images = await getImagesAsBase64();
-      const video = await getVideoAsBase64();
-      const payload = {
-        title: document.getElementById('postRoomType').value + ' - ' + document.getElementById('postAddress').value,
-        location: location,
-        alexandraSuburb: alexandraSuburb,
-        address: document.getElementById('postAddress').value.trim(),
-        type: document.getElementById('postRoomType').value,
-        roomType: document.getElementById('postRoomType').value,
-        amount: document.getElementById('postAmount').value.trim(),
-        deposit: document.getElementById('postDeposit').value.trim() || 'No deposit stated',
-        childFriendly: childFriendly,
-        maxKids: maxKids,
-        parking: parking,
-        maxCars: maxCars,
-        tiles: document.getElementById('postTiles').value,
-        ceiling: document.getElementById('postCeiling').value,
-        bath: document.getElementById('postBath').value.trim(),
-        images, video,
-        posterName: document.getElementById('posterName').value.trim(),
-        posterContact: document.getElementById('posterContact').value.trim(),
-        notes: document.getElementById('postNotes').value.trim()
+    if (body.action === "manual-receipt") {
+      const receipt = cleanReceipt(body.receipt || {});
+      const manualRoom = {
+        id: `manual-${Date.now()}`,
+        title: cleanText(body.title || "Manual receipt", 120),
+        address: receipt.roomAddress,
+        type: cleanText(body.type || "Manual room", 40),
+        roomType: cleanText(body.roomType || "Any", 40),
+        amount: receipt.rentAmount,
+        deposit: receipt.depositAmount,
+        images: [], video: "", status: "taken", receipt, manual: true,
+        takenAt: new Date().toISOString()
       };
-      const res = await fetch('/api/rooms', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed');
-      showNotice('✅ Room submitted! Admin will review it shortly.', 'success');
-      e.target.reset();
-      document.getElementById('imagePreview').innerHTML = '';
-      document.getElementById('videoPreview').innerHTML = '';
-      document.getElementById('landlordAlexandraBox').classList.add('hidden');
-      document.getElementById('landlordKidsBox').classList.add('hidden');
-      document.getElementById('landlordCarsBox').classList.add('hidden');
-    } catch (err) {
-      showNotice('❌ Error: ' + err.message, 'error');
-    } finally {
-      btn.disabled = false; btn.textContent = '🚀 Submit Room for Approval';
-    }
-  });
-
-  document.getElementById('tenantForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    notice.classList.remove('show');
-
-    const checkedLocations = Array.from(document.querySelectorAll('.loc-check:checked')).map(cb => cb.value);
-    if (checkedLocations.length === 0) { showNotice('❌ Choose at least one preferred location.', 'error'); return; }
-
-    let alexandraSuburbs = [];
-    if (checkedLocations.includes('Alexandra Township')) {
-      alexandraSuburbs = Array.from(document.querySelectorAll('.alex-check:checked')).map(cb => cb.value);
+      db.rooms.taken.unshift(manualRoom);
+      db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
     }
 
-    const finalLocations = [];
-    checkedLocations.forEach(loc => {
-      if (loc === 'Alexandra Township' && alexandraSuburbs.length > 0) {
-        alexandraSuburbs.forEach(sub => finalLocations.push(`Alexandra Township — ${sub}`));
-      } else {
-        finalLocations.push(loc);
+    if (body.action === "delete") {
+      const ok = deleteItem(db, body.section, body.from, body.id);
+      if (!ok) return res.status(400).json({ ok: false, error: "Item not found" });
+    }
+
+    if (body.action === "repost") {
+      const section = db[body.section];
+      const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
+      const item = fromList.find((e) => e.id === body.id);
+      if (!item) return res.status(404).json({ ok: false, error: "Item not found" });
+      section[body.from] = section[body.from].filter((e) => e.id !== body.id);
+      if (Array.isArray(section.pending)) {
+        section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
+      }
+    }
+
+    if (body.action === "remove-image") {
+      const fromList = db[body.section]?.[body.from] || [];
+      const room = fromList.find((e) => e.id === body.id);
+      if (room) room.images = (room.images || []).filter((_, i) => i !== Number(body.index));
+    }
+
+    if (body.action === "remove-video") {
+      const fromList = db[body.section]?.[body.from] || [];
+      const room = fromList.find((e) => e.id === body.id);
+      if (room) room.video = "";
+    }
+
+    if (body.action === "toggle-online") {
+      const list = db[body.section]?.[body.from] || [];
+      const item = list.find((e) => e.id === body.id);
+      if (!item) return res.status(404).json({ ok: false, error: "Room not found" });
+      item.online = item.online === false ? true : false;
+    }
+
+    if (body.action === "clear-all-data") {
+      clearAllData();
+      return res.json({ ok: true });
+    }
+
+    writeDB(db);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Admin action error:', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+function budgetInRange(amount, range) {
+  const n = moneyNumber(amount);
+  if (!n) return false;
+  if (range === 'R800-R1500') return n >= 800 && n <= 1500;
+  if (range === 'R1600-R2500') return n >= 1600 && n <= 2500;
+  if (range === 'R2600-R3500') return n >= 2600 && n <= 3500;
+  if (range === 'R3600-R4500') return n >= 3600 && n <= 4500;
+  if (range === 'R4600-R8000') return n >= 4600 && n <= 8000;
+  return true;
+}
+
+function locationMatch(landlordLoc, landlordSub, tenantLocations) {
+  if (!Array.isArray(tenantLocations) || tenantLocations.length === 0) return true;
+  const lg = locationGroup(landlordLoc, landlordSub);
+  for (const tLoc of tenantLocations) {
+    const tg = locationGroup(tLoc, '');
+    if (tg === lg) return true;
+    if (lg === 'Alexandra Township' && (tg === 'Alexandra East' || tg === 'Alexandra Avenues')) return true;
+    if (tg === 'Alexandra Township' && (lg === 'Alexandra East' || lg === 'Alexandra Avenues')) return true;
+    if (lg === 'Alexandra East' && tg === 'Alexandra Avenues') return true;
+    if (lg === 'Alexandra Avenues' && tg === 'Alexandra East') return true;
+  }
+  return false;
+}
+
+function roomTypeMatch(landlordType, tenantType) {
+  const tt = String(tenantType || '').trim().toLowerCase();
+  if (!tt || tt === 'any' || tt === 'any / not sure') return true;
+  const lt = String(landlordType || '').trim().toLowerCase();
+  if (!lt) return false;
+  return lt === tt;
+}
+
+function matchOne(l, t) {
+  if (!roomTypeMatch(l.roomType, t.roomType)) return false;
+  if (t.budgetRange && !budgetInRange(l.amount, t.budgetRange)) return false;
+  if (!locationMatch(l.location, l.alexandraSuburb, t.preferredLocations)) return false;
+  if (String(l.childFriendly || 'No').toLowerCase() !== String(t.childFriendly || 'No').toLowerCase()) return false;
+  if (String(l.parking || 'No').toLowerCase() !== String(t.parking || 'No').toLowerCase()) return false;
+  return true;
+}
+
+app.get('/api/admin/matches', (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  const db = readDB();
+  const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
+  const tenants = db.tenantRequests.approved;
+
+  const matches = [];
+  const tenantMatches = {};
+
+  landlords.forEach(l => {
+    tenants.forEach(t => {
+      if (matchOne(l, t)) {
+        const m = {
+          landlordId: l.id,
+          landlordTitle: l.title,
+          landlordLocation: l.location,
+          landlordSuburb: l.alexandraSuburb || '',
+          landlordLocationGroup: locationGroup(l.location, l.alexandraSuburb),
+          landlordRent: l.amount,
+          landlordContact: l.posterContact,
+          landlordName: l.posterName,
+          landlordOnline: l.online !== false,
+          landlordRoomType: l.roomType || l.type || 'room',
+          landlordTiles: l.tiles || 'No',
+          landlordCeiling: l.ceiling || 'No',
+          landlordChildFriendly: l.childFriendly || 'No',
+          landlordParking: l.parking || 'No',
+          tenantId: t.id,
+          tenantName: t.tenantName,
+          tenantContact: t.contactNumber,
+          tenantLocations: t.preferredLocations || [],
+          tenantLocationGroups: (t.preferredLocations || []).map(loc => locationGroup(loc, '')),
+          tenantBudget: t.budget,
+          tenantBudgetRange: t.budgetRange || '',
+          tenantRoomType: t.roomType,
+          childFriendly: l.childFriendly,
+          parking: l.parking
+        };
+        matches.push(m);
+        if (!tenantMatches[m.tenantId]) tenantMatches[m.tenantId] = [];
+        tenantMatches[m.tenantId].push(m);
       }
     });
-
-    const childFriendly = document.getElementById('tenantChild').value;
-    let childrenCount = '', childrenAges = '';
-    if (childFriendly === 'Yes') {
-      childrenCount = document.getElementById('childrenCount').value.trim();
-      childrenAges = document.getElementById('childrenAges').value.trim();
-      if (!childrenCount || !childrenAges) { showNotice('❌ Enter children count and ages.', 'error'); return; }
-    }
-    const parking = document.getElementById('tenantParking').value;
-    let carsCount = '';
-    if (parking === 'Yes') {
-      carsCount = document.getElementById('carsCount').value.trim();
-      if (!carsCount) { showNotice('❌ Enter how many cars.', 'error'); return; }
-    }
-    const budgetRange = document.getElementById('budgetRange').value;
-    if (!budgetRange) { showNotice('❌ Please select a budget range.', 'error'); return; }
-
-    const btn = document.getElementById('tenantSubmitBtn');
-    btn.disabled = true; btn.textContent = '⏳ Submitting...';
-
-    try {
-      const payload = {
-        tenantName: document.getElementById('tenantName').value.trim(),
-        contactNumber: document.getElementById('contactNumber').value.trim(),
-        preferredLocations: finalLocations,
-        alexandraSuburb: alexandraSuburbs.join(', '),
-        roomType: document.getElementById('roomType').value,
-        budget: budgetRange,
-        budgetRange: budgetRange,
-        moveInDate: document.getElementById('moveInDate').value,
-        childFriendly: childFriendly,
-        childrenCount: childrenCount,
-        childrenAges: childrenAges,
-        parking: parking,
-        carsCount: carsCount,
-        notes: document.getElementById('notes').value.trim()
-      };
-      const res = await fetch('/api/tenant-requests', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Submission failed');
-      showNotice('✅ Request submitted! We will contact you when a match is found.', 'success');
-      e.target.reset();
-      document.getElementById('alexandraSuburbBox').classList.add('hidden');
-      document.getElementById('childrenDetailsBox').classList.add('hidden');
-      document.getElementById('parkingDetailsBox').classList.add('hidden');
-    } catch (err) {
-      showNotice('❌ Error: ' + err.message, 'error');
-    } finally {
-      btn.disabled = false; btn.textContent = '🚀 Submit My Request';
-    }
   });
-</script>
-</body>
-</html>
+
+  res.json({
+    matches,
+    tenantMatches,
+    totalLandlordsOnline: landlords.length,
+    totalTenantsApproved: tenants.length
+  });
+});
+
+app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
+app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
+app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
+  console.log(`📊 Visitor tracking active — see admin panel`);
+});
