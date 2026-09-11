@@ -29,7 +29,6 @@ const defaultDB = {
 app.use(cors());
 app.use(express.json({ limit: '80mb' }));
 
-// Visitor tracking middleware
 app.use((req, res, next) => {
   try {
     const isPublicPage =
@@ -46,7 +45,6 @@ app.use((req, res, next) => {
 
 app.use(express.static(ROOT));
 
-// ---------- DB HELPERS ----------
 function normalizeSection(section, defaults) {
   const source = section && typeof section === "object" && !Array.isArray(section) ? section : {};
   return Object.fromEntries(
@@ -847,7 +845,6 @@ app.get('/api/admin/matches', (req, res) => {
   });
 });
 
-// PAGE ROUTES — all files at root
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
 app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
