@@ -68,8 +68,9 @@
     .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
     .modal .close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #637268; background: none; border: none; }
     .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
-    .modal input, .modal textarea { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
+    .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
+    .modal .hr { margin:18px 0;border:none;border-top:2px solid #eef3ee; }
     .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .media-viewer.show { display: flex; }
     .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
@@ -293,6 +294,25 @@
       <label>Landlord Name</label><input type="text" id="editRoomPosterName">
       <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
       <label>Notes</label><textarea id="editRoomNotes"></textarea>
+
+      <hr class="hr">
+      <label style="color:#0f7a5f;font-size:15px;">🏠 Room Features (Admin can edit)</label>
+
+      <label>Room Type</label>
+      <input type="text" id="editRoomRoomType" placeholder="e.g., Backroom, Bachelor, House">
+
+      <label>Child Friendly?</label>
+      <select id="editRoomChild"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <label>Parking?</label>
+      <select id="editRoomParking"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <label>Has Tiles?</label>
+      <select id="editRoomTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
+
+      <label>Has Ceiling?</label>
+      <select id="editRoomCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
+
       <button type="submit" class="btn-save">💾 Save Changes</button>
     </form>
   </div>
@@ -664,6 +684,11 @@
     getEl('editRoomPosterName').value = room.posterName || '';
     getEl('editRoomPosterContact').value = room.posterContact || '';
     getEl('editRoomNotes').value = room.notes || '';
+    getEl('editRoomRoomType').value = room.roomType || room.type || '';
+    getEl('editRoomChild').value = room.childFriendly || 'No';
+    getEl('editRoomParking').value = room.parking || 'No';
+    getEl('editRoomTiles').value = room.tiles || 'No';
+    getEl('editRoomCeiling').value = room.ceiling || 'No';
     getEl('editRoomModal').classList.add('show');
   }
 
@@ -687,7 +712,12 @@
           deposit: getEl('editRoomDeposit').value,
           posterName: getEl('editRoomPosterName').value,
           posterContact: getEl('editRoomPosterContact').value,
-          notes: getEl('editRoomNotes').value
+          notes: getEl('editRoomNotes').value,
+          roomType: getEl('editRoomRoomType').value,
+          childFriendly: getEl('editRoomChild').value,
+          parking: getEl('editRoomParking').value,
+          tiles: getEl('editRoomTiles').value,
+          ceiling: getEl('editRoomCeiling').value
         }
       })
     });
