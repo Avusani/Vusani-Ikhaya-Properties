@@ -114,7 +114,7 @@
 
   <div id="notice" class="notice"></div>
 
-  <!-- ============ LANDLORD FORM ============ -->
+  <!-- LANDLORD FORM -->
   <div class="form-card hidden" id="landlordFormCard">
     <h2>🏠 List Your Room</h2>
     <form id="landlordForm">
@@ -189,6 +189,17 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div>
+          <label>Tiles?</label>
+          <select id="postTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div>
+          <label>Ceiling?</label>
+          <select id="postCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+      </div>
+
       <div id="landlordKidsBox" class="conditional-box hidden">
         <label>👶 Maximum number of children allowed *</label>
         <input type="number" id="landlordMaxKids" min="1" placeholder="e.g., 2">
@@ -222,7 +233,7 @@
     </form>
   </div>
 
-  <!-- ============ TENANT FORM ============ -->
+  <!-- TENANT FORM -->
   <div class="form-card hidden" id="tenantFormCard">
     <h2>🔎 Looking for a Room?</h2>
     <form id="tenantForm">
@@ -234,9 +245,7 @@
 
       <label>📍 Preferred Locations * <span style="font-weight:500;color:var(--muted);font-size:12px;">(select ALL that apply — you can pick multiple)</span></label>
       <div class="conditional-box">
-        <div class="checkbox-grid" id="locationCheckboxes">
-          <!-- Filled by JS -->
-        </div>
+        <div class="checkbox-grid" id="locationCheckboxes"></div>
       </div>
 
       <div id="alexandraSuburbBox" class="conditional-box hidden alexandra-suburb-box">
@@ -350,27 +359,11 @@
   const notice = document.getElementById('notice');
   let previewURLs = [];
 
-  // =========================================================
-  // TOP-LEVEL LOCATIONS (Landlord dropdown + Tenant checkboxes)
-  // =========================================================
   const LOCATIONS = [
-    'Alexandra Township',
-    'Marlboro',
-    'Lombardy',
-    'Bramley',
-    'Wynberg',
-    'Balfour',
-    'Orange Grove',
-    'Sandton',
-    'Kelvin',
-    'Kew',
-    'Highlands North',
-    'Savoy Estate',
-    'Edenvale',
-    'Other'
+    'Alexandra Township','Marlboro','Lombardy','Bramley','Wynberg','Balfour',
+    'Orange Grove','Sandton','Kelvin','Kew','Highlands North','Savoy Estate','Edenvale','Other'
   ];
 
-  // Fill landlord dropdown
   (function fillLandlordLocations() {
     const sel = document.getElementById('postLocation');
     LOCATIONS.forEach(loc => {
@@ -385,7 +378,6 @@
     });
   })();
 
-  // Fill tenant top-level location checkboxes
   (function buildLocations() {
     const wrap = document.getElementById('locationCheckboxes');
     wrap.innerHTML = LOCATIONS.map(loc => `
@@ -394,14 +386,11 @@
         <span>${loc}</span>
       </label>
     `).join('');
-
     wrap.querySelectorAll('.loc-check').forEach(cb => {
       cb.addEventListener('change', (e) => {
         const isAlexandra = e.target.value === 'Alexandra Township' && e.target.checked;
         document.getElementById('alexandraSuburbBox').classList.toggle('hidden', !isAlexandra);
-        if (!isAlexandra) {
-          document.querySelectorAll('.alex-check').forEach(x => x.checked = false);
-        }
+        if (!isAlexandra) document.querySelectorAll('.alex-check').forEach(x => x.checked = false);
       });
     });
   })();
@@ -421,7 +410,6 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Conditional toggles — LANDLORD
   document.getElementById('postChild').addEventListener('change', function () {
     const show = this.value === 'Yes';
     document.getElementById('landlordKidsBox').classList.toggle('hidden', !show);
@@ -432,8 +420,6 @@
     document.getElementById('landlordCarsBox').classList.toggle('hidden', !show);
     if (!show) document.getElementById('landlordMaxCars').value = '';
   });
-
-  // Conditional toggles — TENANT
   document.getElementById('tenantChild').addEventListener('change', function () {
     const show = this.value === 'Yes';
     document.getElementById('childrenDetailsBox').classList.toggle('hidden', !show);
@@ -448,7 +434,6 @@
     if (!show) document.getElementById('carsCount').value = '';
   });
 
-  // File → base64
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -494,7 +479,6 @@
     }
   });
 
-  // ===== LANDLORD SUBMIT =====
   document.getElementById('landlordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     notice.classList.remove('show');
@@ -537,6 +521,8 @@
         maxKids: maxKids,
         parking: parking,
         maxCars: maxCars,
+        tiles: document.getElementById('postTiles').value,
+        ceiling: document.getElementById('postCeiling').value,
         bath: document.getElementById('postBath').value.trim(),
         images, video,
         posterName: document.getElementById('posterName').value.trim(),
@@ -563,30 +549,22 @@
     }
   });
 
-  // ===== TENANT SUBMIT =====
   document.getElementById('tenantForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     notice.classList.remove('show');
 
-    // Collect all checked top-level locations
     const checkedLocations = Array.from(document.querySelectorAll('.loc-check:checked')).map(cb => cb.value);
     if (checkedLocations.length === 0) { showNotice('❌ Choose at least one preferred location.', 'error'); return; }
 
-    // If Alexandra Township is selected, collect ALL Alexandra suburbs checked
     let alexandraSuburbs = [];
     if (checkedLocations.includes('Alexandra Township')) {
       alexandraSuburbs = Array.from(document.querySelectorAll('.alex-check:checked')).map(cb => cb.value);
     }
 
-    // Compose the combined locations array:
-    // ['Marlboro', 'Alexandra Township (Ext 8)', 'Alexandra Township (River Park)', ...]
     const finalLocations = [];
     checkedLocations.forEach(loc => {
       if (loc === 'Alexandra Township' && alexandraSuburbs.length > 0) {
-        // Send each Alexandra suburb as its own entry prefixed with "Alexandra Township — X"
-        alexandraSuburbs.forEach(sub => {
-          finalLocations.push(`Alexandra Township — ${sub}`);
-        });
+        alexandraSuburbs.forEach(sub => finalLocations.push(`Alexandra Township — ${sub}`));
       } else {
         finalLocations.push(loc);
       }
@@ -616,7 +594,7 @@
         tenantName: document.getElementById('tenantName').value.trim(),
         contactNumber: document.getElementById('contactNumber').value.trim(),
         preferredLocations: finalLocations,
-        alexandraSuburb: alexandraSuburbs.join(', '), // combined
+        alexandraSuburb: alexandraSuburbs.join(', '),
         roomType: document.getElementById('roomType').value,
         budget: budgetRange,
         budgetRange: budgetRange,
