@@ -84,25 +84,18 @@
     .chart-container { height: 300px; margin-top: 16px; }
     .refresh-btn { background: #c9a227; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
     .refresh-btn:hover { background: #a88516; }
-
-    /* Activity log */
     .log-row { background: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #0f7a5f; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .log-row.warn { border-left-color: #e5a638; }
     .log-row.danger { border-left-color: #b8493b; }
     .log-row .time { font-size: 12px; color: #637268; }
     .log-row .who { font-size: 13px; font-weight: 600; }
-
-    /* Trace search */
     .trace-input { width: 100%; padding: 12px 16px; border: 2px solid #cad8cf; border-radius: 8px; font-size: 16px; margin-bottom: 16px; }
     .trace-input:focus { outline: none; border-color: #0f7a5f; }
-
-    /* Reports grid */
     .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .report-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; }
     .report-card .title { font-size: 13px; color: #637268; margin-bottom: 6px; }
     .report-card .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
     .report-card .sub { font-size: 12px; color: #637268; margin-top: 4px; }
-
     @media (max-width: 700px) { .room-card { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -162,7 +155,6 @@
       <button data-section="analytics" onclick="switchSection('analytics')">📈 Analytics</button>
     </div>
 
-    <!-- ROOMS -->
     <div id="roomsSection" class="section-content active">
       <div class="stats-section">
         <div class="header">
@@ -192,7 +184,6 @@
       <div id="roomList"></div>
     </div>
 
-    <!-- TENANTS -->
     <div id="tenantsSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending <span class="count" id="countTenantPending">0</span></button>
@@ -203,7 +194,6 @@
       <div id="tenantList"></div>
     </div>
 
-    <!-- MATCHES -->
     <div id="matchesSection" class="section-content">
       <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
         <div>
@@ -215,7 +205,6 @@
       <div id="matchesList"></div>
     </div>
 
-    <!-- TRANSPORT -->
     <div id="transportSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
@@ -226,7 +215,6 @@
       <div id="transportList"></div>
     </div>
 
-    <!-- REVIEWS -->
     <div id="reviewsSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchReviewTab('pending')">⏳ Pending <span class="count" id="countReviewPending">0</span></button>
@@ -236,7 +224,6 @@
       <div id="reviewList"></div>
     </div>
 
-    <!-- SCAM REPORTS -->
     <div id="reportsSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchReportTab('pending')">⏳ Pending <span class="count" id="countReportPending">0</span></button>
@@ -246,7 +233,6 @@
       <div id="reportList"></div>
     </div>
 
-    <!-- CONTACTS -->
     <div id="contactsSection" class="section-content">
       <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
         <h3 style="margin:0 0 6px 0;">📧 Contact Messages</h3>
@@ -255,29 +241,26 @@
       <div id="contactList"></div>
     </div>
 
-    <!-- ACTIVITY LOG -->
     <div id="activitySection" class="section-content">
       <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
         <div>
           <h3 style="margin:0 0 6px 0;">📜 Activity Log</h3>
-          <p style="color:#637268;font-size:13px;margin:0;">Every action performed in the admin panel — with timestamp, IP address and result.</p>
+          <p style="color:#637268;font-size:13px;margin:0;">Every action performed in the admin panel — with timestamp and result.</p>
         </div>
         <button class="refresh-btn" onclick="loadActivity()">🔄 Refresh Log</button>
       </div>
       <div id="activityList"></div>
     </div>
 
-    <!-- TRACE -->
     <div id="traceSection" class="section-content">
       <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
         <h3 style="margin:0 0 6px 0;">🔍 Trace Anything</h3>
-        <p style="color:#637268;font-size:13px;margin:0 0 12px 0;">Search by name, phone number, location or ID. Results show every record that matches.</p>
+        <p style="color:#637268;font-size:13px;margin:0 0 12px 0;">Search by name, phone number, location or ID.</p>
         <input type="text" id="traceInput" class="trace-input" placeholder="Search tenants, landlords, matches, reports..." oninput="runTrace()">
       </div>
       <div id="traceResults"></div>
     </div>
 
-    <!-- ANALYTICS -->
     <div id="analyticsSection" class="section-content">
       <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
         <h3 style="margin:0 0 6px 0;">📈 Full Analytics Report</h3>
@@ -296,7 +279,6 @@
   </div>
 </div>
 
-<!-- Modals -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
     <button class="close" onclick="closeEditRoomModal()">✕</button>
@@ -361,7 +343,6 @@
   let currentMediaIndex = 0;
 
   function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
-  function setHtml(id, value) { const el = document.getElementById(id); if (el) el.innerHTML = value; }
   function getEl(id) { return document.getElementById(id); }
 
   const loginScreen = getEl('loginScreen');
@@ -374,9 +355,6 @@
   const matchesList = getEl('matchesList');
   const notice = getEl('notice');
 
-  // =========================================================
-  // ACTIVITY LOG HELPER — logs every admin action
-  // =========================================================
   function logActivity(action, section, id, result) {
     const entry = {
       time: new Date().toISOString(),
@@ -424,9 +402,6 @@
     }).join('');
   }
 
-  // =========================================================
-  // LOGIN
-  // =========================================================
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.classList.remove('show');
@@ -591,6 +566,7 @@
             <div class="detail">📍 ${room.location || 'No location'}${room.alexandraSuburb ? ' ('+room.alexandraSuburb+')' : ''} | 💰 ${room.amount || 'Ask'} | 🏠 ${room.roomType || room.type || 'Any'}</div>
             <div class="detail"><span class="badge ${tab}">${tab}</span> ${room.address || ''}</div>
             <div class="detail">👶 ${room.childFriendly || 'No'}${room.maxKids ? ' (max '+room.maxKids+')' : ''} | 🚗 ${room.parking || 'No'}${room.maxCars ? ' (max '+room.maxCars+')' : ''}</div>
+            <div class="detail">🟫 Tiles: ${room.tiles || 'No'} | ⬜ Ceiling: ${room.ceiling || 'No'}</div>
             <div class="actions">
               ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
               ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
@@ -887,9 +863,27 @@
 
     matchesList.innerHTML = summary + Object.values(grouped).map(g => {
       const l = g.landlord;
+      const rentClean = String(l.landlordRent || '').replace(/^R+/i, '');
+      const roomType = l.landlordRoomType || 'room';
+      const locationFull = l.landlordLocation + (l.landlordSuburb ? ' ' + l.landlordSuburb : '');
+      const tilesLine = (l.landlordTiles === 'Yes') ? '✅ Tiles: Yes' : '❌ Tiles: No';
+      const ceilingLine = (l.landlordCeiling === 'Yes') ? '✅ Ceiling: Yes' : '❌ Ceiling: No';
+      const parkingLine = (l.landlordParking === 'Yes') ? '✅ Parking: Yes' : '❌ Parking: No';
+      const childLine = (l.landlordChildFriendly === 'Yes') ? '✅ Child friendly: Yes' : '❌ Child friendly: No';
+
       const tenantsHtml = g.tenants.map(t => {
         const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
-        const msg = encodeURIComponent(`Hi ${t.tenantName}, we have a room available at ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} for R${l.landlordRent}. Reply if interested.`);
+        const msg = encodeURIComponent(
+          `Hi ${t.tenantName},\n\n` +
+          `We have a *${roomType}* available for *R${rentClean}* at *${locationFull}*.\n\n` +
+          `Details:\n` +
+          `${tilesLine}\n` +
+          `${ceilingLine}\n` +
+          `${parkingLine}\n` +
+          `${childLine}\n\n` +
+          `When would you like to come and view it, and what time works for you?\n\n` +
+          `– Vusani Ikhaya Properties`
+        );
         const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${msg}` : '';
         return `
           <div style="border-top:1px solid #eef3ee;padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -907,8 +901,8 @@
           <div class="info">
             <div class="title">🏠 ${l.landlordTitle}</div>
             <div class="landlord">👤 ${l.landlordName || ''} 📞 ${l.landlordContact || ''}</div>
-            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} — Group: <strong>${l.landlordLocationGroup || 'N/A'}</strong> | 💰 R${l.landlordRent}</div>
-            <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'}</div>
+            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} — Group: <strong>${l.landlordLocationGroup || 'N/A'}</strong> | 💰 R${rentClean}</div>
+            <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'} | 🟫 Tiles: ${l.landlordTiles || 'No'} | ⬜ Ceiling: ${l.landlordCeiling || 'No'}</div>
             <div style="margin-top:10px;">
               <div style="font-weight:700;color:#0f7a5f;margin-bottom:6px;">🎯 Matched Tenants (${g.tenants.length})</div>
               ${tenantsHtml}
@@ -1076,28 +1070,24 @@
     if (!q) { results.innerHTML = '<div class="empty">Type something to search.</div>'; return; }
 
     const found = [];
-    // Rooms
     Object.keys(allRooms).forEach(status => {
       allRooms[status].forEach(r => {
         const hay = [r.title, r.location, r.address, r.posterName, r.posterContact, r.alexandraSuburb].join(' ').toLowerCase();
         if (hay.includes(q)) found.push({ type: 'Room', status, item: r });
       });
     });
-    // Tenants
     Object.keys(allTenants).forEach(status => {
       allTenants[status].forEach(t => {
         const hay = [t.tenantName, t.contactNumber, (t.preferredLocations||[]).join(' '), t.budgetRange, t.alexandraSuburb, t.notes].join(' ').toLowerCase();
         if (hay.includes(q)) found.push({ type: 'Tenant', status, item: t });
       });
     });
-    // Transports
     Object.keys(allTransport).forEach(status => {
       allTransport[status].forEach(t => {
         const hay = [t.firstName, t.surname, t.phone, t.email].join(' ').toLowerCase();
         if (hay.includes(q)) found.push({ type: 'Transport', status, item: t });
       });
     });
-    // Reviews
     Object.keys(allReviews).forEach(status => {
       allReviews[status].forEach(r => {
         const hay = [r.name, r.roomTitle, r.comment].join(' ').toLowerCase();
