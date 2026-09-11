@@ -7,205 +7,51 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #edf4ee;
-      color: #17201b;
-    }
-    .topbar {
-      background: #101713;
-      color: #fff;
-      padding: 14px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #edf4ee; color: #17201b; }
+    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .topbar a { color: #fff; text-decoration: none; }
     .brand { font-weight: 900; font-size: 20px; }
     .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
     .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
 
-    .login-box {
-      max-width: 400px;
-      margin: 60px auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-    }
+    .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
     .login-box h2 { margin-top: 0; }
-    .login-box input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cad8cf;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    .login-box button {
-      width: 100%;
-      padding: 12px;
-      background: #0f7a5f;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .login-box input { width: 100%; padding: 12px; border: 1px solid #cad8cf; border-radius: 8px; font-size: 16px; }
+    .login-box button { width: 100%; padding: 12px; background: #0f7a5f; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
     .login-box button:hover { background: #095741; }
     .error { color: #b8493b; background: #fde5df; padding: 10px; border-radius: 6px; display: none; margin-top: 10px; }
     .error.show { display: block; }
     .panel { display: none; }
     .panel.show { display: block; }
 
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: #fff;
-      padding: 16px;
-      border-radius: 10px;
-      border: 1px solid #cad8cf;
-      text-align: center;
-    }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
     .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
     .stat-card .label { font-size: 12px; color: #637268; }
 
-    .main-tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-      background: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #cad8cf;
-    }
-    .main-tabs button {
-      padding: 10px 20px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    .main-tabs button.active {
-      background: #0f7a5f;
-      color: #fff;
-      border-color: #0f7a5f;
-    }
-    .main-tabs button .count {
-      background: #eef3ee;
-      padding: 1px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      margin-left: 4px;
-    }
+    .main-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .main-tabs button { padding: 10px 20px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; }
+    .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .main-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
     .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
 
-    .sub-tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-      background: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #cad8cf;
-    }
-    .sub-tabs button {
-      padding: 8px 16px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-    .sub-tabs button.active {
-      background: #0f7a5f;
-      color: #fff;
-      border-color: #0f7a5f;
-    }
-    .sub-tabs button .count {
-      background: #eef3ee;
-      padding: 1px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      margin-left: 4px;
-    }
+    .sub-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .sub-tabs button { padding: 8px 16px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+    .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .sub-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
     .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
 
-    .room-card {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid #cad8cf;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 16px;
-    }
-    .room-card .media-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .room-card .media-grid .media-item {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 6px;
-      background: #eef3ee;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .room-card .media-grid .media-item:hover {
-      transform: scale(1.02);
-    }
-    .room-card .media-grid .media-item video {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 6px;
-      background: #eef3ee;
-      cursor: pointer;
-    }
-    .room-card .media-grid .no-media {
-      background: #edf4ee;
-      height: 120px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #637268;
-      font-size: 12px;
-      grid-column: 1 / -1;
-    }
+    .room-card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #cad8cf; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .room-card .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .room-card .media-grid .media-item { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; background: #eef3ee; cursor: pointer; transition: transform 0.2s; }
+    .room-card .media-grid .media-item:hover { transform: scale(1.02); }
+    .room-card .media-grid .no-media { background: #edf4ee; height: 120px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #637268; font-size: 12px; grid-column: 1 / -1; }
     .room-card .info { display: grid; gap: 4px; }
     .room-card .info .title { font-weight: 700; font-size: 18px; }
     .room-card .info .detail { font-size: 14px; color: #637268; }
     .room-card .info .landlord { font-size: 13px; color: #0f7a5f; font-weight: 600; }
     .room-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .room-card .actions button {
-      padding: 5px 12px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
+    .room-card .actions button { padding: 5px 12px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
     .room-card .actions button:hover { opacity: 0.8; }
     .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
     .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
@@ -213,13 +59,9 @@
     .room-card .actions .repost { background: #e5a638; color: #fff; border-color: #e5a638; }
     .room-card .actions .taken { background: #1e40af; color: #fff; border-color: #1e40af; }
     .room-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
-    .badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-    }
+    .room-card .actions .wa { background: #25D366; color: #fff; border-color: #25D366; text-decoration: none; display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
     .badge.pending { background: #fef3c7; color: #92400e; }
     .badge.approved { background: #d1fae5; color: #065f46; }
     .badge.taken { background: #dbeafe; color: #1e40af; }
@@ -228,311 +70,54 @@
 
     .empty { color: #637268; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #cad8cf; }
 
-    .notice {
-      padding: 12px;
-      border-radius: 8px;
-      margin: 10px 0;
-      display: none;
-      font-weight: 600;
-    }
+    .notice { padding: 12px; border-radius: 8px; margin: 10px 0; display: none; font-weight: 600; }
     .notice.show { display: block; }
     .notice.success { background: #dbf4e9; color: #0d4c3a; }
     .notice.error { background: #fde5df; color: #7f2318; }
 
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
-    .modal {
-      background: #fff;
-      border-radius: 12px;
-      max-width: 700px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 24px;
-      position: relative;
-    }
-    .modal .close {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      font-size: 24px;
-      cursor: pointer;
-      color: #637268;
-      background: none;
-      border: none;
-    }
+    .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
+    .modal .close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #637268; background: none; border: none; }
     .modal h3 { margin-top: 0; }
     .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
-    .modal input, .modal textarea, .modal select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      font-size: 14px;
-    }
+    .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
     .modal textarea { min-height: 80px; resize: vertical; }
     .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
-    .modal .btn-save:hover { background: #095741; }
 
-    .media-manager {
-      border: 2px dashed #cad8cf;
-      border-radius: 8px;
-      padding: 16px;
-      margin: 10px 0;
-    }
-    .media-manager .media-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .media-manager .media-item-edit {
-      position: relative;
-      border: 1px solid #eef3ee;
-      border-radius: 6px;
-      overflow: hidden;
-      background: #f8faf9;
-    }
-    .media-manager .media-item-edit img,
-    .media-manager .media-item-edit video {
-      width: 100%;
-      height: 100px;
-      object-fit: cover;
-      display: block;
-    }
-    .media-manager .media-item-edit .remove-btn {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(184, 73, 59, 0.9);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .media-manager .media-item-edit .remove-btn:hover {
-      background: #b8493b;
-      transform: scale(1.1);
-    }
-    .media-manager .media-item-edit .media-type-label {
-      position: absolute;
-      bottom: 4px;
-      left: 4px;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      padding: 1px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    .media-manager .add-media-area {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-    .media-manager .add-media-area input[type="file"] {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      background: #fff;
-    }
-    .media-manager .add-media-area button {
-      padding: 8px 16px;
-      background: #0f7a5f;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .media-manager .add-media-area button:hover { background: #095741; }
-
-    .stats-section {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid #cad8cf;
-    }
-    .stats-section .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .stats-section .filters {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .stats-section .filters select,
-    .stats-section .filters input {
-      padding: 8px 12px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .stats-grid .stat-item {
-      background: #f8faf9;
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .stats-grid .stat-item .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
-    .stats-grid .stat-item .label { font-size: 12px; color: #637268; }
-    .chart-container { height: 300px; margin-top: 16px; }
-
-    .transport-card {
-      background: #fff;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid #cad8cf;
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 16px;
-    }
-    .transport-card .info { display: grid; gap: 4px; }
-    .transport-card .info .title { font-weight: 700; font-size: 18px; }
-    .transport-card .info .detail { font-size: 14px; color: #637268; }
-    .transport-card .info .driver { font-size: 13px; color: #0f7a5f; font-weight: 600; }
-    .transport-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .transport-card .actions button {
-      padding: 5px 12px;
-      border: 1px solid #cad8cf;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-    .transport-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-    .transport-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
-    .transport-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
-    .transport-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
-
-    .media-viewer {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+    .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .media-viewer.show { display: flex; }
-    .media-viewer img, .media-viewer video {
-      max-width: 95vw;
-      max-height: 90vh;
-      border-radius: 8px;
-      object-fit: contain;
-    }
-    .media-viewer .close {
-      position: fixed;
-      top: 20px;
-      right: 30px;
-      font-size: 40px;
-      color: #fff;
-      cursor: pointer;
-      background: none;
-      border: none;
-      z-index: 2001;
-    }
-    .media-viewer .nav-controls {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 20px;
-      background: rgba(0,0,0,0.7);
-      padding: 10px 20px;
-      border-radius: 30px;
-      z-index: 2001;
-    }
-    .media-viewer .nav-controls button {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 24px;
-      cursor: pointer;
-      padding: 0 10px;
-    }
-    .media-viewer .nav-controls .counter {
-      color: #fff;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-    }
+    .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+    .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; z-index: 2001; }
 
     .section-content { display: none; }
     .section-content.active { display: block; }
 
-    .traffic-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .traffic-card {
-      background: #fff;
-      padding: 16px;
-      border-radius: 10px;
-      border: 1px solid #cad8cf;
-      text-align: center;
-    }
+    .traffic-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .traffic-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
     .traffic-card .number { font-size: 32px; font-weight: 900; color: #0f7a5f; }
     .traffic-card .label { font-size: 12px; color: #637268; }
     .traffic-card .change { font-size: 13px; font-weight: 600; }
     .traffic-card .change.up { color: #0f7a5f; }
     .traffic-card .change.down { color: #b8493b; }
 
-    .fee-info {
-      background: #f8faf9;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: #637268;
-      border: 1px solid #eef3ee;
-    }
+    .stats-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #cad8cf; }
+    .stats-section .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    .stats-section .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .stats-section .filters select, .stats-section .filters input { padding: 8px 12px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stats-grid .stat-item { background: #f8faf9; padding: 12px; border-radius: 8px; text-align: center; }
+    .stats-grid .stat-item .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
+    .stats-grid .stat-item .label { font-size: 12px; color: #637268; }
+    .chart-container { height: 300px; margin-top: 16px; }
+    .fee-info { background: #f8faf9; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #637268; border: 1px solid #eef3ee; }
     .fee-info strong { color: #0f7a5f; }
 
     @media (max-width: 700px) {
-      .room-card, .transport-card { grid-template-columns: 1fr; }
-      .room-card .media-grid { grid-template-columns: 1fr 1fr; }
-      .room-card .media-grid .media-item { height: 100px; }
+      .room-card { grid-template-columns: 1fr; }
       .modal .form-row { grid-template-columns: 1fr; }
       .stats-section .header { flex-direction: column; align-items: stretch; }
-      .topbar { flex-direction: column; align-items: stretch; text-align: center; }
-      .media-manager .media-list { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
     }
   </style>
 </head>
@@ -554,7 +139,7 @@
 
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
-    <p style="color:#637268;font-size:14px;">Log in to manage room posts, transport listings, approve, decline, and track service fees.</p>
+    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches, transport listings and service fees.</p>
     <form id="loginForm">
       <div style="margin-bottom:16px;">
         <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
@@ -573,38 +158,26 @@
       <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
       <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
       <div class="stat-card"><div class="number" id="statRoomsTaken">0</div><div class="label">📦 Rooms Taken</div></div>
-      <div class="stat-card"><div class="number" id="statTransportPending">0</div><div class="label">🚗 Transport Pending</div></div>
+      <div class="stat-card"><div class="number" id="statTenantsPending">0</div><div class="label">👥 Tenants Pending</div></div>
+      <div class="stat-card"><div class="number" id="statMatches">0</div><div class="label">🔗 Matches</div></div>
       <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
     </div>
 
     <div class="traffic-stats">
-      <div class="traffic-card">
-        <div class="number" id="todayVisitors">0</div>
-        <div class="label">👁️ Today's Visitors</div>
-        <div class="change up" id="todayChange">↑ 0%</div>
-      </div>
-      <div class="traffic-card">
-        <div class="number" id="weekVisitors">0</div>
-        <div class="label">📊 This Week</div>
-        <div class="change up" id="weekChange">↑ 0%</div>
-      </div>
-      <div class="traffic-card">
-        <div class="number" id="monthVisitors">0</div>
-        <div class="label">📅 This Month</div>
-        <div class="change up" id="monthChange">↑ 0%</div>
-      </div>
-      <div class="traffic-card">
-        <div class="number" id="totalVisitors">0</div>
-        <div class="label">🌐 Total Visitors</div>
-        <div class="change up" id="totalChange">↑ 0%</div>
-      </div>
+      <div class="traffic-card"><div class="number" id="todayVisitors">0</div><div class="label">👁️ Today's Visitors</div><div class="change up" id="todayChange">↑ 0%</div></div>
+      <div class="traffic-card"><div class="number" id="weekVisitors">0</div><div class="label">📊 This Week</div><div class="change up" id="weekChange">↑ 0%</div></div>
+      <div class="traffic-card"><div class="number" id="monthVisitors">0</div><div class="label">📅 This Month</div><div class="change up" id="monthChange">↑ 0%</div></div>
+      <div class="traffic-card"><div class="number" id="totalVisitors">0</div><div class="label">🌐 Total Visitors</div><div class="change up" id="totalChange">↑ 0%</div></div>
     </div>
 
     <div class="main-tabs">
       <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
+      <button data-section="tenants" onclick="switchSection('tenants')">👥 Tenants <span class="count" id="mainTenantCount">0</span></button>
+      <button data-section="matches" onclick="switchSection('matches')">🔗 Matches <span class="count" id="mainMatchCount">0</span></button>
       <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
     </div>
 
+    <!-- ROOMS -->
     <div id="roomsSection" class="section-content active">
       <div class="stats-section">
         <div class="header">
@@ -618,23 +191,14 @@
               <option value="9">October</option><option value="10">November</option><option value="11">December</option>
             </select>
             <select id="yearFilter" onchange="updateStats()"></select>
-            <button onclick="updateStats()" style="padding:8px 16px;background:#0f7a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Update</button>
           </div>
         </div>
-        <div class="fee-info">
-          💰 <strong>Service Fee Structure:</strong> 
-          R1000-R1900 = R300 | 
-          R2000-R3000 = R350 | 
-          R3100-R3800 = R400 | 
-          R3900-R7000 = R500
-        </div>
+        <div class="fee-info">💰 <strong>Service Fee:</strong> R1000-R1900 = R300 | R2000-R3000 = R350 | R3100-R3800 = R400 | R3900-R7000 = R500</div>
         <div class="stats-grid">
           <div class="stat-item"><div class="value" id="monthlyCount">0</div><div class="label">📦 Rooms Taken</div></div>
           <div class="stat-item"><div class="value" id="monthlyServiceFee">R0</div><div class="label">📊 Service Fees</div></div>
         </div>
-        <div class="chart-container">
-          <canvas id="revenueChart"></canvas>
-        </div>
+        <div class="chart-container"><canvas id="revenueChart"></canvas></div>
       </div>
 
       <div class="sub-tabs">
@@ -644,10 +208,30 @@
         <button data-tab="declined" onclick="switchRoomTab('declined')">❌ Declined <span class="count" id="countDeclined">0</span></button>
         <button data-tab="removed" onclick="switchRoomTab('removed')">🗑️ Removed <span class="count" id="countRemoved">0</span></button>
       </div>
-
       <div id="roomList"></div>
     </div>
 
+    <!-- TENANTS -->
+    <div id="tenantsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending <span class="count" id="countTenantPending">0</span></button>
+        <button data-tab="approved" onclick="switchTenantTab('approved')">✅ Approved <span class="count" id="countTenantApproved">0</span></button>
+        <button data-tab="declined" onclick="switchTenantTab('declined')">❌ Declined <span class="count" id="countTenantDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchTenantTab('removed')">🗑️ Removed <span class="count" id="countTenantRemoved">0</span></button>
+      </div>
+      <div id="tenantList"></div>
+    </div>
+
+    <!-- MATCHES -->
+    <div id="matchesSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <h3 style="margin:0 0 10px 0;">🔗 Landlord ↔ Tenant Matches</h3>
+        <p style="color:#637268;font-size:13px;margin:0;">Only <strong>Online</strong> landlords are matched. Matching uses Room Type, Budget Range, Location (with Alexandra Mix), Kids (Yes/No) and Parking (Yes/No).</p>
+      </div>
+      <div id="matchesList"></div>
+    </div>
+
+    <!-- TRANSPORT -->
     <div id="transportSection" class="section-content">
       <div class="sub-tabs">
         <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
@@ -668,64 +252,34 @@
     <form id="editRoomForm">
       <input type="hidden" id="editRoomId">
       <input type="hidden" id="editRoomFrom">
-      
-      <label>Title</label>
-      <input type="text" id="editRoomTitle">
-      
-      <label>Location</label>
-      <input type="text" id="editRoomLocation">
-      
-      <label>Address</label>
-      <input type="text" id="editRoomAddress">
-      
+      <label>Title</label><input type="text" id="editRoomTitle">
+      <label>Location</label><input type="text" id="editRoomLocation">
+      <label>Address</label><input type="text" id="editRoomAddress">
       <div class="form-row">
         <div><label>Amount (R)</label><input type="text" id="editRoomAmount"></div>
         <div><label>Deposit (R)</label><input type="text" id="editRoomDeposit"></div>
       </div>
-      
-      <label>Landlord Name</label>
-      <input type="text" id="editRoomPosterName">
-      
-      <label>Landlord Contact</label>
-      <input type="text" id="editRoomPosterContact">
-      
-      <label>Notes</label>
-      <textarea id="editRoomNotes"></textarea>
-      
-      <label style="margin-top:16px;">📸 Current Media</label>
-      <div class="media-manager">
-        <div id="editMediaList" class="media-list"></div>
-        <div class="add-media-area">
-          <p style="font-size:12px;color:#637268;margin:0;width:100%;">⚠️ To add new media, you need to upload files to the server first. Use the public site's post form to upload new images.</p>
-        </div>
-        <div id="editMediaStatus" style="font-size:12px;color:#637268;margin-top:6px;"></div>
-      </div>
-      
+      <label>Landlord Name</label><input type="text" id="editRoomPosterName">
+      <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
+      <label>Notes</label><textarea id="editRoomNotes"></textarea>
       <button type="submit" class="btn-save">💾 Save Changes</button>
     </form>
   </div>
 </div>
 
-<!-- EDIT TRANSPORT MODAL -->
-<div class="modal-overlay" id="editTransportModal">
+<!-- EDIT TENANT MODAL -->
+<div class="modal-overlay" id="editTenantModal">
   <div class="modal">
-    <button class="close" onclick="closeEditTransportModal()">✕</button>
-    <h3>✏️ Edit Transport</h3>
-    <form id="editTransportForm">
-      <input type="hidden" id="editTransportId">
-      <input type="hidden" id="editTransportFrom">
-      <label>Title / Service</label>
-      <input type="text" id="editTransportTitle">
-      <label>Description</label>
-      <textarea id="editTransportDescription"></textarea>
-      <label>Location</label>
-      <input type="text" id="editTransportLocation">
-      <div class="form-row">
-        <div><label>Price (R)</label><input type="text" id="editTransportPrice"></div>
-        <div><label>Contact</label><input type="text" id="editTransportContact"></div>
-      </div>
-      <label>Driver Name</label>
-      <input type="text" id="editTransportDriverName">
+    <button class="close" onclick="closeEditTenantModal()">✕</button>
+    <h3>✏️ Edit Tenant</h3>
+    <form id="editTenantForm">
+      <input type="hidden" id="editTenantId">
+      <input type="hidden" id="editTenantFrom">
+      <label>Name</label><input type="text" id="editTenantName">
+      <label>Contact</label><input type="text" id="editTenantContact">
+      <label>Room Type</label><input type="text" id="editTenantRoomType">
+      <label>Budget Range</label><input type="text" id="editTenantBudget">
+      <label>Notes</label><textarea id="editTenantNotes"></textarea>
       <button type="submit" class="btn-save">💾 Save Changes</button>
     </form>
   </div>
@@ -735,51 +289,38 @@
 <div class="media-viewer" id="mediaViewer">
   <button class="close" onclick="closeMediaViewer()">✕</button>
   <div id="mediaContent"></div>
-  <div class="nav-controls">
-    <button onclick="prevMedia()">◀</button>
-    <span class="counter" id="mediaCounter">1 / 1</span>
-    <button onclick="nextMedia()">▶</button>
-  </div>
 </div>
 
 <script>
-  // ========================================
-  // CONFIGURATION
-  // ========================================
   const SESSION_KEY = "adminSession";
 
   let currentRoomTab = 'pending';
   let currentTransportTab = 'pending';
+  let currentTenantTab = 'pending';
   let currentSection = 'rooms';
   let allRooms = { pending: [], approved: [], taken: [], declined: [], removed: [] };
   let allTransport = { pending: [], approved: [], declined: [], removed: [] };
+  let allTenants = { pending: [], approved: [], declined: [], removed: [] };
   let allReceipts = [];
-  let adminToken = null;
+  let allMatches = [];
   let revenueChart = null;
   let currentMediaList = [];
   let currentMediaIndex = 0;
-  let editingRoomId = null;
-  let editingRoomFrom = null;
 
-  // ========================================
-  // DOM REFS
-  // ========================================
   const loginScreen = document.getElementById('loginScreen');
   const adminPanel = document.getElementById('adminPanel');
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
   const roomList = document.getElementById('roomList');
   const transportList = document.getElementById('transportList');
+  const tenantList = document.getElementById('tenantList');
+  const matchesList = document.getElementById('matchesList');
   const notice = document.getElementById('notice');
 
-  // ========================================
-  // LOGIN (Securely verified by backend)
-  // ========================================
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = document.getElementById('adminPassword').value;
     loginError.classList.remove('show');
-
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
@@ -787,10 +328,8 @@
         body: JSON.stringify({ password })
       });
       const data = await res.json();
-
       if (data.token) {
-        adminToken = data.token;
-        localStorage.setItem('adminToken', adminToken);
+        localStorage.setItem('adminToken', data.token);
         sessionStorage.setItem(SESSION_KEY, 'yes');
         document.getElementById('adminUser').textContent = '👤 Admin';
         showAdminPanel();
@@ -804,31 +343,22 @@
     }
   });
 
-  // ========================================
-  // SHOW ADMIN PANEL
-  // ========================================
   function showAdminPanel() {
     loginScreen.style.display = 'none';
     adminPanel.classList.add('show');
     loadData();
   }
 
-  // ========================================
-  // LOAD DATA
-  // ========================================
   async function loadData() {
     const token = localStorage.getItem('adminToken');
     if (!token) { logout(); return; }
-
     try {
       const res = await fetch('/api/admin/data', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
-
       if (res.status === 401) { logout(); return; }
-
       const data = await res.json();
-      
+
       if (data.rooms) {
         allRooms = {
           pending: (data.rooms.pending || []).map(r => ({ ...r })),
@@ -838,68 +368,36 @@
           removed: (data.rooms.removed || []).map(r => ({ ...r }))
         };
       }
-      
-      if (data.transport) {
+      if (data.transports) {
         allTransport = {
-          pending: (data.transport.pending || []).map(t => ({ ...t })),
-          approved: (data.transport.approved || []).map(t => ({ ...t })),
-          declined: (data.transport.declined || []).map(t => ({ ...t })),
-          removed: (data.transport.removed || []).map(t => ({ ...t }))
+          pending: (data.transports.pending || []).map(t => ({ ...t })),
+          approved: (data.transports.approved || []).map(t => ({ ...t })),
+          declined: (data.transports.declined || []).map(t => ({ ...t })),
+          removed: (data.transports.removed || []).map(t => ({ ...t }))
         };
       }
-      
-      if (data.receipts) {
-        allReceipts = (data.receipts || []).map(r => ({ ...r }));
+      if (data.tenantRequests) {
+        allTenants = {
+          pending: (data.tenantRequests.pending || []).map(t => ({ ...t })),
+          approved: (data.tenantRequests.approved || []).map(t => ({ ...t })),
+          declined: (data.tenantRequests.declined || []).map(t => ({ ...t })),
+          removed: (data.tenantRequests.removed || []).map(t => ({ ...t }))
+        };
       }
-      
-      if (data.traffic) {
-        updateTrafficStats(data.traffic);
-      }
-      
+      if (data.receipts) allReceipts = (data.receipts || []).map(r => ({ ...r }));
+
       updateAllCounts();
       updateStats();
       renderRoomTab(currentRoomTab);
+      renderTenantTab(currentTenantTab);
       renderTransportTab(currentTransportTab);
       renderChart();
+      loadMatches();
     } catch (err) {
       showNotice('Failed to load data: ' + err.message, 'error');
     }
   }
 
-  // ========================================
-  // TRAFFIC STATS
-  // ========================================
-  function updateTrafficStats(traffic) {
-    document.getElementById('todayVisitors').textContent = traffic.today || 0;
-    document.getElementById('weekVisitors').textContent = traffic.week || 0;
-    document.getElementById('monthVisitors').textContent = traffic.month || 0;
-    document.getElementById('totalVisitors').textContent = traffic.total || 0;
-    
-    if (traffic.todayChange) {
-      const el = document.getElementById('todayChange');
-      el.textContent = (traffic.todayChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.todayChange) + '%';
-      el.className = 'change ' + (traffic.todayChange >= 0 ? 'up' : 'down');
-    }
-    if (traffic.weekChange) {
-      const el = document.getElementById('weekChange');
-      el.textContent = (traffic.weekChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.weekChange) + '%';
-      el.className = 'change ' + (traffic.weekChange >= 0 ? 'up' : 'down');
-    }
-    if (traffic.monthChange) {
-      const el = document.getElementById('monthChange');
-      el.textContent = (traffic.monthChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.monthChange) + '%';
-      el.className = 'change ' + (traffic.monthChange >= 0 ? 'up' : 'down');
-    }
-    if (traffic.totalChange) {
-      const el = document.getElementById('totalChange');
-      el.textContent = (traffic.totalChange >= 0 ? '↑ ' : '↓ ') + Math.abs(traffic.totalChange) + '%';
-      el.className = 'change ' + (traffic.totalChange >= 0 ? 'up' : 'down');
-    }
-  }
-
-  // ========================================
-  // SECTION SWITCHING
-  // ========================================
   function switchSection(section) {
     currentSection = section;
     document.querySelectorAll('.main-tabs button').forEach(btn => {
@@ -908,15 +406,14 @@
     document.querySelectorAll('.section-content').forEach(el => {
       el.classList.toggle('active', el.id === section + 'Section');
     });
-    if (section === 'rooms') {
-      renderRoomTab(currentRoomTab);
-    } else {
-      renderTransportTab(currentTransportTab);
-    }
+    if (section === 'rooms') renderRoomTab(currentRoomTab);
+    else if (section === 'tenants') renderTenantTab(currentTenantTab);
+    else if (section === 'matches') loadMatches();
+    else if (section === 'transport') renderTransportTab(currentTransportTab);
   }
 
   // ========================================
-  // ROOM FUNCTIONS
+  // ROOMS
   // ========================================
   function switchRoomTab(tab) {
     currentRoomTab = tab;
@@ -926,7 +423,6 @@
     renderRoomTab(tab);
   }
 
-  // Helper to fix relative image paths so they show correctly in admin and public
   function fixMediaUrl(url) {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) return url;
@@ -936,56 +432,47 @@
   function renderRoomTab(tab) {
     const rooms = allRooms[tab] || [];
     currentRoomTab = tab;
-
     if (rooms.length === 0) {
       roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`;
       return;
     }
-
-    let html = '';
-    rooms.forEach(room => {
+    roomList.innerHTML = rooms.map(room => {
       const images = room.images || [];
-      const videos = room.videos || [];
-      const allMedia = [...images, ...videos];
-      
+      const allMedia = [...images, ...(room.video ? [room.video] : [])];
       let mediaHtml = '';
       if (allMedia.length > 0) {
-        const displayMedia = allMedia.slice(0, 4);
-        const encodedAllMedia = encodeURIComponent(JSON.stringify(allMedia));
-        
-        mediaHtml = displayMedia.map((media, idx) => {
-          const safeMedia = fixMediaUrl(media);
-          const isVideo = safeMedia.match(/\.(mp4|webm|ogg|mov)$/i) || safeMedia.includes('video');
-          if (isVideo) {
-            return `<video src="${safeMedia}" class="media-item" onclick="openMediaViewer('${encodedAllMedia}', ${idx})" muted></video>`;
-          }
-          return `<img src="${safeMedia}" class="media-item" alt="Room" onclick="openMediaViewer('${encodedAllMedia}', ${idx})" onerror="this.src='https://placehold.co/150x100/cccccc/969696?text=Image+Error'">`;
+        const encoded = encodeURIComponent(JSON.stringify(allMedia));
+        mediaHtml = allMedia.slice(0, 4).map((m, i) => {
+          const safe = fixMediaUrl(m);
+          const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
+          return isVideo
+            ? `<video src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})" muted></video>`
+            : `<img src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})" onerror="this.src='https://placehold.co/150x100/cccccc/969696?text=Error'">`;
         }).join('');
-        
-        if (allMedia.length > 4) {
-          mediaHtml += `<div class="media-item" style="background:#0f7a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;border-radius:6px;" onclick="openMediaViewer('${encodedAllMedia}', 0)">+${allMedia.length - 4} more</div>`;
-        }
       } else {
-        mediaHtml = `<div class="no-media">📷 No media uploaded</div>`;
+        mediaHtml = `<div class="no-media">📷 No media</div>`;
       }
-
-      const statusBadge = `<span class="badge ${tab}">${tab}</span>`;
       const landlord = room.posterName ? `👤 ${room.posterName} ${room.posterContact ? '📞 '+room.posterContact : ''}` : '';
+      const waNum = (room.posterContact || '').replace(/[^0-9]/g, '');
+      const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}` : '';
+      const onlineBadge = room.online !== false ? '🟢 Online' : '🔴 Offline';
 
-      html += `
+      return `
         <div class="room-card">
           <div class="media-grid">${mediaHtml}</div>
           <div class="info">
             <div class="title">${room.title || 'Untitled'}</div>
             <div class="landlord">${landlord}</div>
-            <div class="detail">📍 ${room.location || 'No location'} | 💰 ${room.amount || 'Ask price'} | 🏠 ${room.type || 'Any'}</div>
-            <div class="detail">${statusBadge} ${room.address || ''} ${room.roomType ? '| 🛏️ '+room.roomType : ''}</div>
-            <div class="detail" style="font-size:12px;color:#637268;">📅 ${room.createdAt ? new Date(room.createdAt).toLocaleDateString() : ''}</div>
+            <div class="detail">📍 ${room.location || 'No location'}${room.alexandraSuburb ? ' ('+room.alexandraSuburb+')' : ''} | 💰 ${room.amount || 'Ask'} | 🏠 ${room.roomType || room.type || 'Any'}</div>
+            <div class="detail"><span class="badge ${tab}">${tab}</span> ${room.address || ''}</div>
+            <div class="detail">👶 ${room.childFriendly || 'No'}${room.maxKids ? ' (max '+room.maxKids+')' : ''} | 🚗 ${room.parking || 'No'}${room.maxCars ? ' (max '+room.maxCars+')' : ''}</div>
+            <div class="detail" style="font-size:12px;color:#637268;">📅 ${room.createdAt ? new Date(room.createdAt).toLocaleDateString() : ''} | ${tab === 'approved' ? onlineBadge : ''}</div>
             <div class="actions">
               ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
               ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
               ${tab === 'approved' ? `<button class="decline" onclick="moveRoom('${room.id}','approved','declined')">❌ Decline</button>` : ''}
               ${tab === 'approved' ? `<button class="taken" onclick="markTaken('${room.id}')">📦 Mark Taken</button>` : ''}
+              ${tab === 'approved' ? `<button class="${room.online !== false ? 'approve' : 'delete'}" onclick="toggleOnline('${room.id}','approved')">${onlineBadge}</button>` : ''}
               ${tab === 'approved' ? `<button class="delete" onclick="deleteRoom('${room.id}','approved')">🗑️ Delete</button>` : ''}
               ${tab === 'taken' ? `<button class="repost" onclick="moveRoom('${room.id}','taken','pending')">🔄 Repost</button>` : ''}
               ${tab === 'taken' ? `<button class="delete" onclick="deleteRoom('${room.id}','taken')">🗑️ Delete</button>` : ''}
@@ -994,18 +481,14 @@
               ${tab === 'removed' ? `<button class="repost" onclick="moveRoom('${room.id}','removed','pending')">🔄 Repost</button>` : ''}
               ${tab === 'removed' ? `<button class="delete" onclick="deleteRoom('${room.id}','removed')">🗑️ Delete</button>` : ''}
               ${tab !== 'taken' ? `<button class="edit" onclick="openEditRoomModal('${room.id}','${tab}')">✏️ Edit</button>` : ''}
+              ${waLink ? `<a class="wa" href="${waLink}" target="_blank">💬 WhatsApp</a>` : ''}
             </div>
           </div>
         </div>
       `;
-    });
-
-    roomList.innerHTML = html;
+    }).join('');
   }
 
-  // ========================================
-  // SERVICE FEE CALCULATION
-  // ========================================
   function calculateServiceFee(rent) {
     if (rent >= 1000 && rent <= 1900) return 300;
     if (rent >= 2000 && rent <= 3000) return 350;
@@ -1014,145 +497,83 @@
     return 0;
   }
 
-  // ========================================
-  // MOVE ROOM
-  // ========================================
   async function moveRoom(id, from, to) {
     const token = localStorage.getItem('adminToken');
     if (!token) return;
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'move',
-          section: 'rooms',
-          from: from,
-          to: to,
-          id: id
-        })
-      });
-      const data = await res.json();
-      if (data.ok) {
-        showNotice(`✅ Room moved to ${to}`, 'success');
-        loadData();
-      } else {
-        showNotice(data.error || 'Action failed', 'error');
-      }
-    } catch (err) {
-      showNotice('Action failed', 'error');
-    }
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Action failed', 'error');
   }
 
-  // ========================================
-  // MARK TAKEN with Service Fee
-  // ========================================
+  async function toggleOnline(id, from) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'toggle-online', section: 'rooms', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🔄 Online status updated', 'success'); loadData(); }
+    else showNotice(data.error || 'Toggle failed', 'error');
+  }
+
   async function markTaken(id) {
     const room = allRooms.approved.find(r => r.id === id);
     if (!room) return;
-
     const rentAmount = parseFloat(room.amount?.replace(/[^0-9.]/g, '') || 0);
     const serviceFee = calculateServiceFee(rentAmount);
-
     if (serviceFee === 0) {
-      if (!confirm(`⚠️ Rent amount R${rentAmount} doesn't match any service fee tier.\n\nService Fee Tiers:\nR1000-R1900 = R300\nR2000-R3000 = R350\nR3100-R3800 = R400\nR3900-R7000 = R500\n\nContinue anyway with R0 service fee?`)) {
-        return;
-      }
+      if (!confirm(`⚠️ Rent R${rentAmount} doesn't match any service fee tier.\n\nContinue with R0?`)) return;
     }
-
-    const tenantName = prompt('📋 Enter tenant name:', '') || 'Unknown tenant';
-    if (tenantName === null) return;
-    const tenantNumber = prompt('📞 Enter tenant phone number:', '') || '';
-
+    const tenantName = prompt('📋 Tenant name:', '') || 'Unknown tenant';
+    const tenantNumber = prompt('📞 Tenant phone:', '') || '';
     const token = localStorage.getItem('adminToken');
     if (!token) return;
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'mark-taken',
-          section: 'rooms',
-          id: id,
-          receipt: {
-            tenantName: tenantName,
-            tenantNumber: tenantNumber,
-            rentAmount: String(rentAmount),
-            serviceFee: serviceFee,
-            date: new Date().toISOString().slice(0,10),
-            paymentType: 'Cash',
-            roomAddress: room.address
-          }
-        })
-      });
-      const data = await res.json();
-      if (data.ok) {
-        showNotice(`📦 Room marked as TAKEN! Service Fee: R${serviceFee}`, 'success');
-        loadData();
-      } else {
-        showNotice(data.error || 'Failed to mark as taken', 'error');
-      }
-    } catch (err) {
-      showNotice('Action failed', 'error');
-    }
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'mark-taken',
+        section: 'rooms',
+        id: id,
+        receipt: {
+          tenantName, tenantNumber,
+          rentAmount: String(rentAmount),
+          serviceFee,
+          date: new Date().toISOString().slice(0,10),
+          paymentType: 'Cash',
+          roomAddress: room.address
+        }
+      })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`📦 Room TAKEN. Fee: R${serviceFee}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
   }
 
-  // ========================================
-  // DELETE ROOM
-  // ========================================
   async function deleteRoom(id, from) {
     if (!confirm('⚠️ Delete this room permanently?')) return;
-
     const token = localStorage.getItem('adminToken');
     if (!token) return;
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'delete',
-          section: 'rooms',
-          from: from,
-          id: id
-        })
-      });
-      const data = await res.json();
-      if (data.ok) {
-        showNotice('🗑️ Room deleted', 'success');
-        loadData();
-      } else {
-        showNotice(data.error || 'Delete failed', 'error');
-      }
-    } catch (err) {
-      showNotice('Delete failed', 'error');
-    }
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'rooms', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Room deleted', 'success'); loadData(); }
+    else showNotice(data.error || 'Delete failed', 'error');
   }
 
-  // ========================================
-  // EDIT ROOM (Updates text safely, preserves media, NO accidental deletion)
-  // ========================================
   function openEditRoomModal(id, from) {
     const room = allRooms[from]?.find(r => r.id === id);
-    if (!room) {
-      showNotice('Room not found', 'error');
-      return;
-    }
-
-    editingRoomId = id;
-    editingRoomFrom = from;
-
+    if (!room) return;
     document.getElementById('editRoomId').value = id;
     document.getElementById('editRoomFrom').value = from;
     document.getElementById('editRoomTitle').value = room.title || '';
@@ -1163,76 +584,11 @@
     document.getElementById('editRoomPosterName').value = room.posterName || '';
     document.getElementById('editRoomPosterContact').value = room.posterContact || '';
     document.getElementById('editRoomNotes').value = room.notes || '';
-    document.getElementById('editMediaStatus').textContent = '';
-
-    renderEditMedia(room);
     document.getElementById('editRoomModal').classList.add('show');
-  }
-
-  function renderEditMedia(room) {
-    const container = document.getElementById('editMediaList');
-    const images = room.images || [];
-    const videos = room.videos || [];
-    const allMedia = [...images, ...videos];
-    
-    if (allMedia.length === 0) {
-      container.innerHTML = '<div style="color:#637268;font-size:13px;padding:8px;">No media uploaded yet</div>';
-      return;
-    }
-
-    let html = '';
-    allMedia.forEach((media, idx) => {
-      const safeMedia = fixMediaUrl(media);
-      const isVideo = safeMedia.match(/\.(mp4|webm|ogg|mov)$/i) || safeMedia.includes('video');
-      const typeLabel = isVideo ? '🎬 Video' : '🖼️ Image';
-      
-      html += `
-        <div class="media-item-edit">
-          ${isVideo ? 
-            `<video src="${safeMedia}" muted></video>` : 
-            `<img src="${safeMedia}" onerror="this.src='https://placehold.co/100x100/cccccc/969696?text=Error'">`
-          }
-          <span class="media-type-label">${typeLabel}</span>
-          <button class="remove-btn" onclick="removeEditMedia(${idx})" title="Remove this media">✕</button>
-        </div>
-      `;
-    });
-    
-    container.innerHTML = html;
-  }
-
-  function removeEditMedia(index) {
-    const room = allRooms[editingRoomFrom]?.find(r => r.id === editingRoomId);
-    if (!room) return;
-
-    const images = room.images || [];
-    const videos = room.videos || [];
-    const allMedia = [...images, ...videos];
-    
-    if (index < allMedia.length) {
-      const removed = allMedia[index];
-      const imgIdx = images.indexOf(removed);
-      if (imgIdx !== -1) {
-        room.images.splice(imgIdx, 1);
-      } else {
-        const vidIdx = videos.indexOf(removed);
-        if (vidIdx !== -1) {
-          room.videos.splice(vidIdx, 1);
-        }
-      }
-      const roomIdx = allRooms[editingRoomFrom].findIndex(r => r.id === editingRoomId);
-      if (roomIdx !== -1) {
-        allRooms[editingRoomFrom][roomIdx] = room;
-      }
-      renderEditMedia(room);
-      renderRoomTab(currentRoomTab);
-      showNotice('Media removed', 'success');
-    }
   }
 
   function closeEditRoomModal() {
     document.getElementById('editRoomModal').classList.remove('show');
-    document.getElementById('editMediaStatus').textContent = '';
   }
 
   document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
@@ -1241,16 +597,6 @@
     const from = document.getElementById('editRoomFrom').value;
     const token = localStorage.getItem('adminToken');
     if (!token) return;
-
-    const room = allRooms[from]?.find(r => r.id === id);
-    if (!room) {
-      showNotice('Room not found', 'error');
-      return;
-    }
-
-    const originalImages = (room.images || []).filter(url => !url.startsWith('blob:'));
-    const originalVideos = (room.videos || []).filter(url => !url.startsWith('blob:'));
-
     const updatedRoom = {
       title: document.getElementById('editRoomTitle').value,
       location: document.getElementById('editRoomLocation').value,
@@ -1259,43 +605,223 @@
       deposit: document.getElementById('editRoomDeposit').value,
       posterName: document.getElementById('editRoomPosterName').value,
       posterContact: document.getElementById('editRoomPosterContact').value,
-      notes: document.getElementById('editRoomNotes').value,
-      images: originalImages,
-      videos: originalVideos
+      notes: document.getElementById('editRoomNotes').value
     };
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'edit',
-          section: 'rooms',
-          from: from,
-          id: id,
-          data: updatedRoom
-        })
-      });
-
-      const result = await res.json();
-      
-      if (res.ok && result.ok) {
-        showNotice('✅ Room updated successfully! Original media preserved.', 'success');
-        closeEditRoomModal();
-        await loadData();
-      } else {
-        showNotice('Failed to update room: ' + (result.error || 'Unknown error'), 'error');
-      }
-    } catch (err) {
-      showNotice('Update failed: ' + err.message, 'error');
-    }
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'edit', section: 'rooms', from, id, data: updatedRoom })
+    });
+    const result = await res.json();
+    if (result.ok) { showNotice('✅ Room updated', 'success'); closeEditRoomModal(); loadData(); }
+    else showNotice('Failed: ' + (result.error || 'Unknown'), 'error');
   });
 
   // ========================================
-  // TRANSPORT FUNCTIONS
+  // TENANTS
+  // ========================================
+  function switchTenantTab(tab) {
+    currentTenantTab = tab;
+    document.querySelectorAll('#tenantsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderTenantTab(tab);
+  }
+
+  function renderTenantTab(tab) {
+    const tenants = allTenants[tab] || [];
+    currentTenantTab = tab;
+    if (tenants.length === 0) {
+      tenantList.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`;
+      return;
+    }
+    tenantList.innerHTML = tenants.map(t => {
+      const locations = Array.isArray(t.preferredLocations) && t.preferredLocations.length
+        ? t.preferredLocations.join(', ') : '—';
+      const alex = t.alexandraSuburb ? `<div class="detail">🏘️ Suburb: <strong>${t.alexandraSuburb}</strong></div>` : '';
+      const kids = t.childFriendly === 'Yes'
+        ? `👶 Kids: ${t.childrenCount || '?'} (ages ${t.childrenAges || '?'})`
+        : '👶 No kids';
+      const cars = t.parking === 'Yes'
+        ? `🚗 Cars: ${t.carsCount || '?'}`
+        : '🚗 No parking';
+      const waNum = (t.contactNumber || '').replace(/[^0-9]/g, '');
+      const waMsg = encodeURIComponent(`Hi ${t.tenantName}, we have a room match for you at ${locations}.`);
+      const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${waMsg}` : '';
+
+      return `
+        <div class="room-card" style="grid-template-columns:1fr;">
+          <div class="info">
+            <div class="title">👤 ${t.tenantName || 'Unknown'}</div>
+            <div class="landlord">📞 ${t.contactNumber || 'No contact'}</div>
+            <div class="detail">📍 ${locations} | 🛏️ ${t.roomType || 'Any'} | 💰 ${t.budgetRange || t.budget || '—'}</div>
+            ${alex}
+            <div class="detail">📅 Move-in: ${t.moveInDate || 'Flexible'}</div>
+            <div class="detail">${kids} | ${cars}</div>
+            ${t.notes ? `<div class="detail">📝 ${t.notes}</div>` : ''}
+            <div class="detail" style="font-size:12px;color:#637268;">📅 ${t.createdAt ? new Date(t.createdAt).toLocaleDateString() : ''}</div>
+            <div class="actions">
+              ${tab === 'pending' ? `<button class="approve" onclick="moveTenant('${t.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${tab === 'pending' ? `<button class="decline" onclick="moveTenant('${t.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="decline" onclick="moveTenant('${t.id}','approved','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="delete" onclick="deleteTenant('${t.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'declined' ? `<button class="repost" onclick="moveTenant('${t.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'declined' ? `<button class="delete" onclick="deleteTenant('${t.id}','declined')">🗑️ Delete</button>` : ''}
+              ${tab === 'removed' ? `<button class="repost" onclick="moveTenant('${t.id}','removed','pending')">🔄 Repost</button>` : ''}
+              ${tab !== 'removed' ? `<button class="edit" onclick="openEditTenantModal('${t.id}','${tab}')">✏️ Edit</button>` : ''}
+              ${waLink ? `<a class="wa" href="${waLink}" target="_blank">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function moveTenant(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'tenantRequests', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Tenant moved to ${to}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Action failed', 'error');
+  }
+
+  async function deleteTenant(id, from) {
+    if (!confirm('⚠️ Delete this tenant permanently?')) return;
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'tenantRequests', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Tenant deleted', 'success'); loadData(); }
+    else showNotice(data.error || 'Delete failed', 'error');
+  }
+
+  function openEditTenantModal(id, from) {
+    const t = allTenants[from]?.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('editTenantId').value = id;
+    document.getElementById('editTenantFrom').value = from;
+    document.getElementById('editTenantName').value = t.tenantName || '';
+    document.getElementById('editTenantContact').value = t.contactNumber || '';
+    document.getElementById('editTenantRoomType').value = t.roomType || '';
+    document.getElementById('editTenantBudget').value = t.budgetRange || t.budget || '';
+    document.getElementById('editTenantNotes').value = t.notes || '';
+    document.getElementById('editTenantModal').classList.add('show');
+  }
+
+  function closeEditTenantModal() {
+    document.getElementById('editTenantModal').classList.remove('show');
+  }
+
+  document.getElementById('editTenantForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editTenantId').value;
+    const from = document.getElementById('editTenantFrom').value;
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    // Since our /api/admin/action "edit" only edits rooms, we use a light custom payload
+    // We'll reuse the same action but on tenantRequests section
+    const updatedTenant = {
+      tenantName: document.getElementById('editTenantName').value,
+      contactNumber: document.getElementById('editTenantContact').value,
+      roomType: document.getElementById('editTenantRoomType').value,
+      budgetRange: document.getElementById('editTenantBudget').value,
+      budget: document.getElementById('editTenantBudget').value,
+      notes: document.getElementById('editTenantNotes').value
+    };
+
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'edit',
+        section: 'tenantRequests',
+        from,
+        id,
+        data: updatedTenant
+      })
+    });
+    const result = await res.json();
+    if (result.ok) { showNotice('✅ Tenant updated', 'success'); closeEditTenantModal(); loadData(); }
+    else showNotice('Failed: ' + (result.error || 'Unknown'), 'error');
+  });
+
+  // ========================================
+  // MATCHES
+  // ========================================
+  async function loadMatches() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/matches', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      allMatches = data.matches || [];
+      renderMatches();
+      updateAllCounts();
+    } catch (err) {
+      matchesList.innerHTML = '<div class="empty">⚠️ Could not load matches.</div>';
+    }
+  }
+
+  function renderMatches() {
+    if (allMatches.length === 0) {
+      matchesList.innerHTML = '<div class="empty">🔗 No matches yet. Approve rooms and tenants to see matches here.</div>';
+      return;
+    }
+    // Group by landlord
+    const grouped = {};
+    allMatches.forEach(m => {
+      if (!grouped[m.landlordId]) grouped[m.landlordId] = { landlord: m, tenants: [] };
+      grouped[m.landlordId].tenants.push(m);
+    });
+
+    matchesList.innerHTML = Object.values(grouped).map(g => {
+      const l = g.landlord;
+      const tenantsHtml = g.tenants.map(t => {
+        const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
+        const msg = encodeURIComponent(`Hi ${t.tenantName}, we have a room available at ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} for R${l.landlordRent}. Reply if interested.`);
+        const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${msg}` : '';
+        return `
+          <div style="border-top:1px solid #eef3ee;padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <strong>👤 ${t.tenantName}</strong> — 📞 ${t.tenantContact}<br>
+              <span style="font-size:12px;color:#637268;">📍 ${t.tenantLocations.join(', ')} | 💰 ${t.tenantBudgetRange || t.tenantBudget} | 🛏️ ${t.tenantRoomType}</span>
+            </div>
+            ${waLink ? `<a href="${waLink}" target="_blank" class="wa">💬 WhatsApp</a>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="room-card" style="grid-template-columns:1fr;">
+          <div class="info">
+            <div class="title">🏠 ${l.landlordTitle}</div>
+            <div class="landlord">👤 ${l.landlordName || ''} 📞 ${l.landlordContact || ''}</div>
+            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} | 💰 R${l.landlordRent}</div>
+            <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'}</div>
+            <div style="margin-top:10px;">
+              <div style="font-weight:700;color:#0f7a5f;margin-bottom:6px;">🎯 Matched Tenants (${g.tenants.length})</div>
+              ${tenantsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ========================================
+  // TRANSPORT
   // ========================================
   function switchTransportTab(tab) {
     currentTransportTab = tab;
@@ -1308,214 +834,73 @@
   function renderTransportTab(tab) {
     const transports = allTransport[tab] || [];
     currentTransportTab = tab;
-
     if (transports.length === 0) {
-      transportList.innerHTML = `<div class="empty">🚗 No transport listings in "${tab}"</div>`;
+      transportList.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`;
       return;
     }
-
-    let html = '';
-    transports.forEach(transport => {
-      const statusBadge = `<span class="badge ${tab}">${tab}</span>`;
-      const driver = transport.driverName ? `👤 ${transport.driverName} ${transport.contact ? '📞 '+transport.contact : ''}` : '';
-      const safeImg = fixMediaUrl(transport.images && transport.images.length > 0 ? transport.images[0] : '');
-
-      html += `
-        <div class="transport-card">
-          <div class="media-grid">
-            ${transport.images && transport.images.length > 0 ? 
-              `<img src="${safeImg}" class="media-item" alt="Transport" onclick="viewMedia('${encodeURIComponent(safeImg)}','image')" onerror="this.src='https://placehold.co/150x100/cccccc/969696?text=Image+Error'">` :
-              `<div class="no-media">🚗 No image</div>`
-            }
-          </div>
-          <div class="info">
-            <div class="title">${transport.title || 'Untitled Transport'}</div>
-            <div class="driver">${driver}</div>
-            <div class="detail">📍 ${transport.location || 'No location'} | 💰 ${transport.price || 'Ask price'}</div>
-            <div class="detail">${statusBadge} ${transport.description || ''}</div>
-            <div class="detail" style="font-size:12px;color:#637268;">📅 ${transport.createdAt ? new Date(transport.createdAt).toLocaleDateString() : ''}</div>
-            <div class="actions">
-              ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${transport.id}','pending','approved')">✅ Approve</button>` : ''}
-              ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${transport.id}','pending','declined')">❌ Decline</button>` : ''}
-              ${tab === 'approved' ? `<button class="delete" onclick="deleteTransport('${transport.id}','approved')">🗑️ Delete</button>` : ''}
-              ${tab === 'declined' ? `<button class="repost" onclick="moveTransport('${transport.id}','declined','pending')">🔄 Repost</button>` : ''}
-              ${tab === 'declined' ? `<button class="delete" onclick="deleteTransport('${transport.id}','declined')">🗑️ Delete</button>` : ''}
-              ${tab === 'removed' ? `<button class="repost" onclick="moveTransport('${transport.id}','removed','pending')">🔄 Repost</button>` : ''}
-              ${tab === 'removed' ? `<button class="delete" onclick="deleteTransport('${transport.id}','removed')">🗑️ Delete</button>` : ''}
-              ${tab !== 'taken' ? `<button class="edit" onclick="openEditTransportModal('${transport.id}','${tab}')">✏️ Edit</button>` : ''}
-            </div>
+    transportList.innerHTML = transports.map(t => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">🚗 ${t.firstName || ''} ${t.surname || ''}</div>
+          <div class="landlord">📞 ${t.phone || ''} | 📧 ${t.email || ''}</div>
+          <div class="detail">Local: R${t.localPrice || '?'} | Outside: R${t.outsidePrice || '?'}</div>
+          <div class="detail">${t.notes || ''}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${t.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${t.id}','pending','declined')">❌ Decline</button>` : ''}
+            ${tab !== 'removed' ? `<button class="delete" onclick="deleteTransport('${t.id}','${tab}')">🗑️ Delete</button>` : ''}
           </div>
         </div>
-      `;
-    });
-
-    transportList.innerHTML = html;
+      </div>
+    `).join('');
   }
 
-  // ========================================
-  // MOVE TRANSPORT
-  // ========================================
   async function moveTransport(id, from, to) {
     const token = localStorage.getItem('adminToken');
     if (!token) return;
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'move',
-          section: 'transport',
-          from: from,
-          to: to,
-          id: id
-        })
-      });
-      const data = await res.json();
-      if (data.ok) {
-        showNotice(`✅ Transport moved to ${to}`, 'success');
-        loadData();
-      } else {
-        showNotice(data.error || 'Action failed', 'error');
-      }
-    } catch (err) {
-      showNotice('Action failed', 'error');
-    }
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'transports', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('✅ Moved', 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
   }
 
-  // ========================================
-  // DELETE TRANSPORT
-  // ========================================
   async function deleteTransport(id, from) {
-    if (!confirm('⚠️ Delete this transport listing permanently?')) return;
-
+    if (!confirm('Delete this transport?')) return;
     const token = localStorage.getItem('adminToken');
     if (!token) return;
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'delete',
-          section: 'transport',
-          from: from,
-          id: id
-        })
-      });
-      const data = await res.json();
-      if (data.ok) {
-        showNotice('🗑️ Transport deleted', 'success');
-        loadData();
-      } else {
-        showNotice(data.error || 'Delete failed', 'error');
-      }
-    } catch (err) {
-      showNotice('Delete failed', 'error');
-    }
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'transports', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Deleted', 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
   }
-
-  // ========================================
-  // EDIT TRANSPORT (Updates text safely, preserves media, NO accidental deletion)
-  // ========================================
-  function openEditTransportModal(id, from) {
-    const transport = allTransport[from]?.find(t => t.id === id);
-    if (!transport) return;
-
-    document.getElementById('editTransportId').value = id;
-    document.getElementById('editTransportFrom').value = from;
-    document.getElementById('editTransportTitle').value = transport.title || '';
-    document.getElementById('editTransportDescription').value = transport.description || '';
-    document.getElementById('editTransportLocation').value = transport.location || '';
-    document.getElementById('editTransportPrice').value = transport.price || '';
-    document.getElementById('editTransportContact').value = transport.contact || '';
-    document.getElementById('editTransportDriverName').value = transport.driverName || '';
-
-    document.getElementById('editTransportModal').classList.add('show');
-  }
-
-  function closeEditTransportModal() {
-    document.getElementById('editTransportModal').classList.remove('show');
-  }
-
-  document.getElementById('editTransportForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('editTransportId').value;
-    const from = document.getElementById('editTransportFrom').value;
-    const token = localStorage.getItem('adminToken');
-    if (!token) return;
-
-    const updatedTransport = {
-      title: document.getElementById('editTransportTitle').value,
-      description: document.getElementById('editTransportDescription').value,
-      location: document.getElementById('editTransportLocation').value,
-      price: document.getElementById('editTransportPrice').value,
-      contact: document.getElementById('editTransportContact').value,
-      driverName: document.getElementById('editTransportDriverName').value
-    };
-
-    try {
-      const res = await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          action: 'edit',
-          section: 'transport',
-          from: from,
-          id: id,
-          data: updatedTransport
-        })
-      });
-
-      if (res.ok) {
-        showNotice('✅ Transport updated successfully!', 'success');
-        closeEditTransportModal();
-        loadData();
-      } else {
-        showNotice('Failed to update transport', 'error');
-      }
-    } catch (err) {
-      showNotice('Update failed: ' + err.message, 'error');
-    }
-  });
 
   // ========================================
   // MEDIA VIEWER
   // ========================================
-  function openMediaViewer(encodedList, index) {
+  function openMediaViewer(encoded, idx) {
     try {
-      currentMediaList = JSON.parse(decodeURIComponent(encodedList));
-      currentMediaIndex = index;
+      currentMediaList = JSON.parse(decodeURIComponent(encoded));
+      currentMediaIndex = idx;
       showMedia();
       document.getElementById('mediaViewer').classList.add('show');
-    } catch (e) {
-      console.error("Error opening media viewer:", e);
-    }
+    } catch (e) { console.error(e); }
   }
 
   function showMedia() {
-    let media = currentMediaList[currentMediaIndex];
-    const safeMedia = fixMediaUrl(media);
-    const content = document.getElementById('mediaContent');
-    const counter = document.getElementById('mediaCounter');
-    
-    counter.textContent = `${currentMediaIndex + 1} / ${currentMediaList.length}`;
-    
-    const isVideo = safeMedia.match(/\.(mp4|webm|ogg|mov)$/i) || safeMedia.includes('video');
-    if (isVideo) {
-      content.innerHTML = `<video src="${safeMedia}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`;
-    } else {
-      content.innerHTML = `<img src="${safeMedia}" style="max-width:95vw;max-height:85vh;" onerror="this.src='https://placehold.co/600x400/cccccc/969696?text=Media+not+found'">`;
-    }
+    const m = currentMediaList[currentMediaIndex];
+    const safe = fixMediaUrl(m);
+    const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
+    document.getElementById('mediaContent').innerHTML = isVideo
+      ? `<video src="${safe}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`
+      : `<img src="${safe}" style="max-width:95vw;max-height:85vh;">`;
   }
 
   function closeMediaViewer() {
@@ -1523,35 +908,19 @@
     document.getElementById('mediaContent').innerHTML = '';
   }
 
-  function prevMedia() {
-    if (currentMediaIndex > 0) {
-      currentMediaIndex--;
-      showMedia();
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('mediaViewer').classList.contains('show')) return;
+    if (e.key === 'Escape') closeMediaViewer();
+    if (e.key === 'ArrowRight' && currentMediaIndex < currentMediaList.length - 1) {
+      currentMediaIndex++; showMedia();
     }
-  }
-
-  function nextMedia() {
-    if (currentMediaIndex < currentMediaList.length - 1) {
-      currentMediaIndex++;
-      showMedia();
-    }
-  }
-
-  function viewMedia(srcEncoded, type) {
-    const decodedSrc = decodeURIComponent(srcEncoded);
-    openMediaViewer(encodeURIComponent(JSON.stringify([decodedSrc])), 0);
-  }
-
-  document.addEventListener('keydown', function(e) {
-    if (document.getElementById('mediaViewer').classList.contains('show')) {
-      if (e.key === 'ArrowLeft') prevMedia();
-      if (e.key === 'ArrowRight') nextMedia();
-      if (e.key === 'Escape') closeMediaViewer();
+    if (e.key === 'ArrowLeft' && currentMediaIndex > 0) {
+      currentMediaIndex--; showMedia();
     }
   });
 
   // ========================================
-  // UPDATE COUNTS
+  // COUNTS & STATS
   // ========================================
   function updateAllCounts() {
     document.getElementById('countPending').textContent = (allRooms.pending || []).length;
@@ -1559,140 +928,88 @@
     document.getElementById('countTaken').textContent = (allRooms.taken || []).length;
     document.getElementById('countDeclined').textContent = (allRooms.declined || []).length;
     document.getElementById('countRemoved').textContent = (allRooms.removed || []).length;
-    
     document.getElementById('statRoomsPending').textContent = (allRooms.pending || []).length;
     document.getElementById('statRoomsApproved').textContent = (allRooms.approved || []).length;
     document.getElementById('statRoomsTaken').textContent = (allRooms.taken || []).length;
-    
-    document.getElementById('mainRoomsCount').textContent = 
-      (allRooms.pending || []).length + (allRooms.approved || []).length + 
-      (allRooms.taken || []).length + (allRooms.declined || []).length + 
-      (allRooms.removed || []).length;
+    document.getElementById('mainRoomsCount').textContent =
+      (allRooms.pending || []).length + (allRooms.approved || []).length +
+      (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length;
+
+    document.getElementById('countTenantPending').textContent = (allTenants.pending || []).length;
+    document.getElementById('countTenantApproved').textContent = (allTenants.approved || []).length;
+    document.getElementById('countTenantDeclined').textContent = (allTenants.declined || []).length;
+    document.getElementById('countTenantRemoved').textContent = (allTenants.removed || []).length;
+    document.getElementById('mainTenantCount').textContent =
+      (allTenants.pending || []).length + (allTenants.approved || []).length +
+      (allTenants.declined || []).length + (allTenants.removed || []).length;
+    document.getElementById('statTenantsPending').textContent = (allTenants.pending || []).length;
 
     document.getElementById('countTransportPending').textContent = (allTransport.pending || []).length;
     document.getElementById('countTransportApproved').textContent = (allTransport.approved || []).length;
     document.getElementById('countTransportDeclined').textContent = (allTransport.declined || []).length;
     document.getElementById('countTransportRemoved').textContent = (allTransport.removed || []).length;
-    
-    document.getElementById('statTransportPending').textContent = (allTransport.pending || []).length;
-    
-    document.getElementById('mainTransportCount').textContent = 
-      (allTransport.pending || []).length + (allTransport.approved || []).length + 
+    document.getElementById('mainTransportCount').textContent =
+      (allTransport.pending || []).length + (allTransport.approved || []).length +
       (allTransport.declined || []).length + (allTransport.removed || []).length;
 
-    const totalServiceFees = allReceipts.reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
-    document.getElementById('statServiceFeeRevenue').textContent = 'R' + totalServiceFees.toFixed(2);
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    document.getElementById('statServiceFeeRevenue').textContent = 'R' + totalFees.toFixed(2);
+
+    document.getElementById('mainMatchCount').textContent = (allMatches || []).length;
+    document.getElementById('statMatches').textContent = (allMatches || []).length;
   }
 
-  // ========================================
-  // UPDATE STATS
-  // ========================================
   function updateStats() {
     const month = document.getElementById('monthFilter').value;
     const year = parseInt(document.getElementById('yearFilter').value);
-    
-    let filteredReceipts = allReceipts;
-    if (month !== 'all') {
-      filteredReceipts = filteredReceipts.filter(r => {
-        const d = new Date(r.date);
-        return d.getMonth() === parseInt(month);
-      });
-    }
-    if (year !== 'all' && !isNaN(year)) {
-      filteredReceipts = filteredReceipts.filter(r => {
-        const d = new Date(r.date);
-        return d.getFullYear() === year;
-      });
-    }
-    
-    const totalServiceFee = filteredReceipts.reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
-    
-    document.getElementById('monthlyCount').textContent = filteredReceipts.length;
-    document.getElementById('monthlyServiceFee').textContent = 'R' + totalServiceFee.toFixed(2);
+    let filtered = allReceipts;
+    if (month !== 'all') filtered = filtered.filter(r => new Date(r.date).getMonth() === parseInt(month));
+    if (year !== 'all' && !isNaN(year)) filtered = filtered.filter(r => new Date(r.date).getFullYear() === year);
+    const total = filtered.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    document.getElementById('monthlyCount').textContent = filtered.length;
+    document.getElementById('monthlyServiceFee').textContent = 'R' + total.toFixed(2);
   }
 
-  // ========================================
-  // RENDER CHART
-  // ========================================
   function renderChart() {
     const ctx = document.getElementById('revenueChart').getContext('2d');
     if (revenueChart) revenueChart.destroy();
-    
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlyData = months.map((_, i) => {
-      return allReceipts.filter(r => new Date(r.date).getMonth() === i)
-        .reduce((sum, r) => sum + parseFloat(r.serviceFee || 0), 0);
-    });
-    
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
     revenueChart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: months,
-        datasets: [{
-          label: 'Service Fee Revenue (R)',
-          data: monthlyData,
-          backgroundColor: '#0f7a5f',
-          borderRadius: 4
-        }]
+        datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return 'R' + value.toFixed(0);
-              }
-            }
-          }
-        }
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } }
       }
     });
   }
 
-  // ========================================
-  // LOGOUT
-  // ========================================
   function logout() {
     localStorage.removeItem('adminToken');
     sessionStorage.removeItem(SESSION_KEY);
     location.reload();
   }
 
-  // ========================================
-  // SHOW NOTICE
-  // ========================================
   function showNotice(message, type) {
     notice.textContent = message;
     notice.className = 'notice show ' + (type || 'success');
-    setTimeout(() => {
-      notice.classList.remove('show');
-    }, 4000);
+    setTimeout(() => notice.classList.remove('show'), 4000);
   }
 
-  // ========================================
-  // POPULATE YEAR FILTER (2025-2035)
-  // ========================================
   (function populateYears() {
-    const yearSelect = document.getElementById('yearFilter');
-    yearSelect.innerHTML = '<option value="all">All Years</option>';
-    for (let y = 2035; y >= 2025; y--) {
-      yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
-    }
+    const ys = document.getElementById('yearFilter');
+    ys.innerHTML = '<option value="all">All Years</option>';
+    for (let y = 2035; y >= 2025; y--) ys.innerHTML += `<option value="${y}">${y}</option>`;
   })();
 
-  // ========================================
-  // CHECK SESSION ON LOAD
-  // ========================================
   (function init() {
     const token = localStorage.getItem('adminToken');
     if (token && sessionStorage.getItem(SESSION_KEY)) {
-      adminToken = token;
       document.getElementById('adminUser').textContent = '👤 Admin';
       showAdminPanel();
     }
