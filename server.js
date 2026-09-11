@@ -12,6 +12,7 @@ const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
 const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "database");
 const DB_FILE = path.join(DATA_DIR, "db.json");
+const TRAFFIC_FILE = path.join(DATA_DIR, "traffic.json");
 const sessions = new Map();
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
@@ -27,8 +28,29 @@ const defaultDB = {
 
 app.use(cors());
 app.use(express.json({ limit: '80mb' }));
+
+// =========================================================
+// VISITOR TRACKING MIDDLEWARE (runs before static serving)
+// =========================================================
+app.use((req, res, next) => {
+  try {
+    const isPublicPage =
+      req.method === 'GET' &&
+      !req.path.startsWith('/api/') &&
+      !req.path.startsWith('/admin') &&
+      !req.path.startsWith('/database/') &&
+      !req.path.startsWith('/favicon') &&
+      !/\.[a-z0-9]+$/i.test(req.path); // skip files with extensions (.png, .css, .js)
+    if (isPublicPage) recordVisit(req);
+  } catch (e) { /* never block */ }
+  next();
+});
+
 app.use(express.static(ROOT));
 
+// =========================================================
+// DATABASE HELPERS
+// =========================================================
 function normalizeSection(section, defaults) {
   const source = section && typeof section === "object" && !Array.isArray(section) ? section : {};
   return Object.fromEntries(
@@ -51,6 +73,7 @@ function normalizeDB(db) {
 function ensureDB() {
   if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR, { recursive: true }); console.log('📁 Database directory created'); }
   if (!fs.existsSync(DB_FILE)) { writeDB(defaultDB); console.log('📁 New database created'); }
+  if (!fs.existsSync(TRAFFIC_FILE)) { writeTraffic({ days: {}, totalUniqueVisitors: 0, totalPageviews: 0 }); console.log('📁 New traffic file created'); }
 }
 
 function readDB() {
@@ -103,6 +126,154 @@ function restoreFromBackup() {
 
 function clearAllData() { backupDB(); writeDB(defaultDB); return true; }
 
+// =========================================================
+// VISITOR TRACKING
+// =========================================================
+function readTraffic() {
+  try {
+    if (!fs.existsSync(TRAFFIC_FILE)) {
+      return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
+    }
+    const raw = fs.readFileSync(TRAFFIC_FILE, "utf8").replace(/^\uFEFF/, "");
+    const parsed = raw.trim() ? JSON.parse(raw) : { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
+    if (!parsed.days) parsed.days = {};
+    return parsed;
+  } catch (e) {
+    return { days: {}, totalUniqueVisitors: 0, totalPageviews: 0 };
+  }
+}
+
+function writeTraffic(t) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(TRAFFIC_FILE, JSON.stringify(t, null, 2));
+  } catch (e) { console.error('⚠️ Traffic write failed:', e.message); }
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getClientIP(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return String(xff).split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress) || 'unknown';
+}
+
+function isBot(req) {
+  const ua = String(req.headers['user-agent'] || '').toLowerCase();
+  if (!ua) return true;
+  const bots = ['bot', 'crawl', 'spider', 'slurp', 'facebookexternalhit', 'whatsapp', 'telegrambot', 'preview', 'curl', 'wget', 'python-requests', 'python-urllib', 'java/', 'monitoring', 'uptime', 'pingdom', 'ahrefs', 'semrush', 'mj12', 'dotbot', 'petal', 'yandex', 'baidu', 'googlebot', 'bingbot', 'duckduckbot', 'headlesschrome', 'phantomjs', 'lighthouse'];
+  return bots.some(b => ua.includes(b));
+}
+
+function getVisitorID(req) {
+  const ip = getClientIP(req);
+  const ua = String(req.headers['user-agent'] || '');
+  return crypto.createHash('md5').update(ip + '|' + ua).digest('hex').slice(0, 16);
+}
+
+function recordVisit(req) {
+  try {
+    if (isBot(req)) return;
+    const t = readTraffic();
+    const today = todayKey();
+    if (!t.days[today]) t.days[today] = { pageviews: 0, visitors: {} };
+    t.days[today].pageviews += 1;
+    const vid = getVisitorID(req);
+    if (!t.days[today].visitors[vid]) {
+      t.days[today].visitors[vid] = 1;
+      t.totalUniqueVisitors = (t.totalUniqueVisitors || 0) + 1;
+    } else {
+      t.days[today].visitors[vid] += 1;
+    }
+    t.totalPageviews = (t.totalPageviews || 0) + 1;
+
+    // Keep last 365 days
+    const keys = Object.keys(t.days).sort();
+    while (keys.length > 365) delete t.days[keys.shift()];
+
+    writeTraffic(t);
+  } catch (e) { /* silently fail */ }
+}
+
+function trafficSummary() {
+  const t = readTraffic();
+  const today = todayKey();
+  const todayData = t.days[today] || { pageviews: 0, visitors: {} };
+
+  // This week — last 7 days including today
+  const weekVisitors = {};
+  let weekPageviews = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = t.days[k];
+    if (day) {
+      weekPageviews += day.pageviews || 0;
+      Object.keys(day.visitors || {}).forEach(v => { weekVisitors[v] = true; });
+    }
+  }
+
+  // This month
+  const monthVisitors = {};
+  let monthPageviews = 0;
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  Object.keys(t.days).forEach(k => {
+    if (k.startsWith(monthPrefix)) {
+      const day = t.days[k];
+      monthPageviews += day.pageviews || 0;
+      Object.keys(day.visitors || {}).forEach(v => { monthVisitors[v] = true; });
+    }
+  });
+
+  // Previous 7 days for % change
+  const prevWeekVisitors = {};
+  for (let i = 7; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = t.days[k];
+    if (day) Object.keys(day.visitors || {}).forEach(v => { prevWeekVisitors[v] = true; });
+  }
+
+  const todayCount = Object.keys(todayData.visitors || {}).length;
+  const weekCount = Object.keys(weekVisitors).length;
+  const monthCount = Object.keys(monthVisitors).length;
+  const prevWeekCount = Object.keys(prevWeekVisitors).length;
+  const weekChange = prevWeekCount ? Math.round(((weekCount - prevWeekCount) / prevWeekCount) * 100) : 0;
+
+  // Last 7 days chart data
+  const last7Days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = t.days[k] || { pageviews: 0, visitors: {} };
+    last7Days.push({
+      date: k,
+      visitors: Object.keys(day.visitors || {}).length,
+      pageviews: day.pageviews || 0
+    });
+  }
+
+  return {
+    today: todayCount,
+    todayPageviews: todayData.pageviews || 0,
+    week: weekCount,
+    weekPageviews: weekPageviews,
+    weekChange: weekChange,
+    month: monthCount,
+    monthPageviews: monthPageviews,
+    total: t.totalUniqueVisitors || 0,
+    totalPageviews: t.totalPageviews || 0,
+    last7Days: last7Days
+  };
+}
+
+// =========================================================
+// GENERAL HELPERS
+// =========================================================
 function send(res, status, body, type = "application/json") {
   res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
   res.end(type === "application/json" ? JSON.stringify(body) : body);
@@ -159,7 +330,7 @@ function cleanReceipt(details) {
 }
 
 // =========================================================
-// LOCATION GROUPING — SMART MATCHING
+// LOCATION GROUPING
 // =========================================================
 const ALEXANDRA_EAST_GROUP = [
   'east bank', 'far east bank',
@@ -182,7 +353,6 @@ function locationGroup(location, suburb) {
   const l = String(location || '').toLowerCase().trim();
   const s = String(suburb || '').toLowerCase().trim();
   const combined = (l + ' ' + s).trim();
-
   if (ALEXANDRA_EAST_GROUP.some(x => combined.includes(x))) return 'Alexandra East';
   if (ALEXANDRA_AVENUES_GROUP.some(x => combined.includes(x))) return 'Alexandra Avenues';
   if (NORTHERN_SUBURBS_GROUP.some(x => combined.includes(x))) return 'Northern Suburbs';
@@ -269,24 +439,31 @@ function adminDB(db, token) {
     reports: db.reports,
     transports: adminSection("transports", db.transports, token),
     tenantRequests: adminSection("tenantRequests", db.tenantRequests, token),
-    receipts: db.receipts
+    receipts: db.receipts,
+    contacts: db.contacts
   };
 }
 
 function moveItem(db, section, from, to, id) {
-  if (!db[section] || !Array.isArray(db[section][from]) || !Array.isArray(db[section][to])) return;
+  if (!db[section] || !Array.isArray(db[section][from]) || !Array.isArray(db[section][to])) return false;
   const item = db[section][from].find((e) => e.id === id);
-  if (!item) return;
+  if (!item) return false;
   db[section][from] = db[section][from].filter((e) => e.id !== id);
   db[section][to] = db[section][to].filter((e) => e.id !== id);
   db[section][to].unshift({ ...item, status: to, updatedAt: new Date().toISOString() });
+  return true;
 }
 
 function deleteItem(db, section, from, id) {
-  if (!db[section] || !Array.isArray(db[section][from])) return;
+  if (!db[section] || !Array.isArray(db[section][from])) return false;
+  const before = db[section][from].length;
   db[section][from] = db[section][from].filter((e) => e.id !== id);
+  return db[section][from].length !== before;
 }
 
+// =========================================================
+// PUBLIC ROUTES
+// =========================================================
 app.get('/api/public', (req, res) => {
   const db = readDB();
   res.json({
@@ -326,7 +503,7 @@ app.get('/api/transport-media/:id/carPicture', (req, res) => {
   return sendMedia(res, d?.carPicture);
 });
 
-// POST ROOM
+// ===== POST ROOM =====
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const b = req.body;
@@ -358,7 +535,7 @@ app.post('/api/rooms', async (req, res) => {
   res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
 });
 
-// POST TENANT
+// ===== POST TENANT =====
 app.post('/api/tenant-requests', async (req, res) => {
   const db = readDB();
   const b = req.body;
@@ -450,7 +627,9 @@ app.post('/api/contact', async (req, res) => {
   res.status(201).json({ success: true, message: 'Message sent successfully!' });
 });
 
-// ADMIN
+// =========================================================
+// ADMIN ROUTES
+// =========================================================
 app.post('/api/admin/login', async (req, res) => {
   const b = req.body;
   if (b.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
@@ -472,7 +651,14 @@ app.get('/api/admin/check-session', (req, res) => {
 
 app.get('/api/admin/data', (req, res) => {
   const token = requireAdmin(req, res); if (!token) return;
-  res.json(adminDB(readDB(), token));
+  const payload = adminDB(readDB(), token);
+  payload.traffic = trafficSummary();
+  res.json(payload);
+});
+
+app.get('/api/admin/traffic', (req, res) => {
+  const token = requireAdmin(req, res); if (!token) return;
+  res.json(trafficSummary());
 });
 
 app.get('/api/admin/media/:section/:status/:id/:field', (req, res) => {
@@ -492,17 +678,24 @@ app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
   return sendMedia(res, item?.images?.[i]);
 });
 
+// =========================================================
+// ADMIN ACTION (fixed — every action returns a proper ok/error)
+// =========================================================
 app.post('/api/admin/action', async (req, res) => {
   const token = requireAdmin(req, res); if (!token) return;
   const db = readDB(); const body = req.body;
 
-  if (body.action === "move") moveItem(db, body.section, body.from, body.to, body.id);
+  try {
+    if (body.action === "move") {
+      const ok = moveItem(db, body.section, body.from, body.to, body.id);
+      if (!ok) return res.status(400).json({ ok: false, error: "Item not found or invalid section" });
+    }
 
-  if (body.action === "edit") {
-    const section = db[body.section];
-    if (section && Array.isArray(section[body.from])) {
-      const i = section[body.from].findIndex(e => e.id === body.id);
-      if (i !== -1) {
+    if (body.action === "edit") {
+      const section = db[body.section];
+      if (section && Array.isArray(section[body.from])) {
+        const i = section[body.from].findIndex(e => e.id === body.id);
+        if (i === -1) return res.status(404).json({ ok: false, error: "Item not found" });
         const cur = section[body.from][i];
         const u = body.data || {};
         section[body.from][i] = {
@@ -524,11 +717,10 @@ app.post('/api/admin/action', async (req, res) => {
         };
       }
     }
-  }
 
-  if (body.action === "mark-taken") {
-    const room = db.rooms.approved.find((e) => e.id === body.id);
-    if (room) {
+    if (body.action === "mark-taken") {
+      const room = db.rooms.approved.find((e) => e.id === body.id);
+      if (!room) return res.status(404).json({ ok: false, error: "Room not found in approved" });
       const receipt = cleanReceipt({
         ...(body.receipt || {}),
         roomAddress: body.receipt?.roomAddress || room.address,
@@ -540,61 +732,75 @@ app.post('/api/admin/action', async (req, res) => {
       db.rooms.taken.unshift({ ...room, status: "taken", receipt, takenAt: new Date().toISOString() });
       db.receipts.unshift({ ...receipt, roomId: room.id, manual: false });
     }
-  }
 
-  if (body.action === "manual-receipt") {
-    const receipt = cleanReceipt(body.receipt || {});
-    const manualRoom = {
-      id: `manual-${Date.now()}`,
-      title: cleanText(body.title || "Manual receipt", 120),
-      address: receipt.roomAddress,
-      type: cleanText(body.type || "Manual room", 40),
-      roomType: cleanText(body.roomType || "Any", 40),
-      amount: receipt.rentAmount,
-      deposit: receipt.depositAmount,
-      images: [], video: "", status: "taken", receipt, manual: true,
-      takenAt: new Date().toISOString()
-    };
-    db.rooms.taken.unshift(manualRoom);
-    db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
-  }
-
-  if (body.action === "delete") deleteItem(db, body.section, body.from, body.id);
-
-  if (body.action === "repost") {
-    const section = db[body.section];
-    const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
-    const item = fromList.find((e) => e.id === body.id);
-    if (item && Array.isArray(section.pending)) {
-      section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
+    if (body.action === "manual-receipt") {
+      const receipt = cleanReceipt(body.receipt || {});
+      const manualRoom = {
+        id: `manual-${Date.now()}`,
+        title: cleanText(body.title || "Manual receipt", 120),
+        address: receipt.roomAddress,
+        type: cleanText(body.type || "Manual room", 40),
+        roomType: cleanText(body.roomType || "Any", 40),
+        amount: receipt.rentAmount,
+        deposit: receipt.depositAmount,
+        images: [], video: "", status: "taken", receipt, manual: true,
+        takenAt: new Date().toISOString()
+      };
+      db.rooms.taken.unshift(manualRoom);
+      db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
     }
+
+    if (body.action === "delete") {
+      const ok = deleteItem(db, body.section, body.from, body.id);
+      if (!ok) return res.status(400).json({ ok: false, error: "Item not found" });
+    }
+
+    if (body.action === "repost") {
+      const section = db[body.section];
+      const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
+      const item = fromList.find((e) => e.id === body.id);
+      if (!item) return res.status(404).json({ ok: false, error: "Item not found" });
+      section[body.from] = section[body.from].filter((e) => e.id !== body.id);
+      if (Array.isArray(section.pending)) {
+        section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
+      }
+    }
+
+    if (body.action === "remove-image") {
+      const fromList = db[body.section]?.[body.from] || [];
+      const room = fromList.find((e) => e.id === body.id);
+      if (room) room.images = (room.images || []).filter((_, i) => i !== Number(body.index));
+    }
+
+    if (body.action === "remove-video") {
+      const fromList = db[body.section]?.[body.from] || [];
+      const room = fromList.find((e) => e.id === body.id);
+      if (room) room.video = "";
+    }
+
+    if (body.action === "toggle-online") {
+      const list = db[body.section]?.[body.from] || [];
+      const item = list.find((e) => e.id === body.id);
+      if (!item) return res.status(404).json({ ok: false, error: "Room not found" });
+      item.online = item.online === false ? true : false;
+    }
+
+    if (body.action === "clear-all-data") {
+      clearAllData();
+      return res.json({ ok: true });
+    }
+
+    writeDB(db);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Admin action error:', err.message);
+    res.status(500).json({ ok: false, error: err.message });
   }
-
-  if (body.action === "remove-image") {
-    const fromList = db[body.section]?.[body.from] || [];
-    const room = fromList.find((e) => e.id === body.id);
-    if (room) room.images = (room.images || []).filter((_, i) => i !== Number(body.index));
-  }
-
-  if (body.action === "remove-video") {
-    const fromList = db[body.section]?.[body.from] || [];
-    const room = fromList.find((e) => e.id === body.id);
-    if (room) room.video = "";
-  }
-
-  if (body.action === "toggle-online") {
-    const list = db[body.section]?.[body.from] || [];
-    const item = list.find((e) => e.id === body.id);
-    if (item) item.online = item.online === false ? true : false;
-  }
-
-  if (body.action === "clear-all-data") { clearAllData(); return res.json({ ok: true }); }
-
-  writeDB(db);
-  res.json({ ok: true });
 });
 
-// ===== MATCHING ENGINE =====
+// =========================================================
+// MATCHING ENGINE
+// =========================================================
 function budgetInRange(amount, range) {
   const n = moneyNumber(amount);
   if (!n) return false;
@@ -685,6 +891,9 @@ app.get('/api/admin/matches', (req, res) => {
   });
 });
 
+// =========================================================
+// FRONTEND ROUTES
+// =========================================================
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
 app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
@@ -692,4 +901,5 @@ app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
+  console.log(`📊 Visitor tracking active — see admin panel`);
 });
