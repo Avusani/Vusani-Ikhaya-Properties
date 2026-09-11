@@ -22,6 +22,12 @@
     "declined": [],
     "removed": []
   },
+  "tenantRequests": {
+    "pending": [],
+    "approved": [],
+    "declined": [],
+    "removed": []
+  },
   "receipts": [],
   "contacts": []
 }
