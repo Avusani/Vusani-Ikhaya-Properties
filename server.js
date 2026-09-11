@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 8080;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
 const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
 const ROOT = __dirname;
-const PUBLIC_DIR = path.join(ROOT, 'public');
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "database");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 const TRAFFIC_FILE = path.join(DATA_DIR, "traffic.json");
@@ -45,8 +44,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve ONLY the public folder (server.js, database/, package.json stay private)
-app.use(express.static(PUBLIC_DIR));
+app.use(express.static(ROOT));
 
 // ---------- DB HELPERS ----------
 function normalizeSection(section, defaults) {
@@ -849,11 +847,11 @@ app.get('/api/admin/matches', (req, res) => {
   });
 });
 
-// PAGE ROUTES — serve from public/
-app.get('/', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
-app.get('/transport', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'transport.html')));
-app.get('*', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
+// PAGE ROUTES — all files at root
+app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
+app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
+app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ VUSANI IKHAYA PROPERTIES running on port ${PORT}`);
