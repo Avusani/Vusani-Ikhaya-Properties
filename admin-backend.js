@@ -1,61 +1,452 @@
-(function () {
-  window.liveAdminBackendReady = true;
-  window.liveAdminBackendConnected = false;
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | VUSANI IKHAYA PROPERTIES</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #edf4ee; color: #17201b; }
+    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .topbar a { color: #fff; text-decoration: none; }
+    .brand { font-weight: 900; font-size: 20px; }
+    .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+    .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+    .login-box h2 { margin-top: 0; }
+    .login-box input { width: 100%; padding: 12px; border: 1px solid #cad8cf; border-radius: 8px; font-size: 16px; }
+    .login-box button { width: 100%; padding: 12px; background: #0f7a5f; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .error { color: #b8493b; background: #fde5df; padding: 10px; border-radius: 6px; display: none; margin-top: 10px; }
+    .error.show { display: block; }
+    .panel { display: none; }
+    .panel.show { display: block; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
+    .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
+    .stat-card .label { font-size: 12px; color: #637268; }
+    .main-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .main-tabs button { padding: 10px 20px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; }
+    .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .main-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
+    .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
+    .sub-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
+    .sub-tabs button { padding: 8px 16px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
+    .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .sub-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
+    .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
+    .room-card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #cad8cf; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .room-card .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .room-card .media-grid .media-item { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; background: #eef3ee; cursor: pointer; }
+    .room-card .media-grid .no-media { background: #edf4ee; height: 120px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #637268; font-size: 12px; grid-column: 1 / -1; }
+    .room-card .info { display: grid; gap: 4px; }
+    .room-card .info .title { font-weight: 700; font-size: 18px; }
+    .room-card .info .detail { font-size: 14px; color: #637268; }
+    .room-card .info .landlord { font-size: 13px; color: #0f7a5f; font-weight: 600; }
+    .room-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .room-card .actions button { padding: 5px 12px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
+    .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
+    .room-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
+    .room-card .actions .repost { background: #e5a638; color: #fff; border-color: #e5a638; }
+    .room-card .actions .taken { background: #1e40af; color: #fff; border-color: #1e40af; }
+    .room-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
+    .room-card .actions .wa { background: #25D366; color: #fff; border-color: #25D366; text-decoration: none; display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge.pending { background: #fef3c7; color: #92400e; }
+    .badge.approved { background: #d1fae5; color: #065f46; }
+    .badge.taken { background: #dbeafe; color: #1e40af; }
+    .badge.declined { background: #fee2e2; color: #991b1b; }
+    .badge.removed { background: #f3f4f6; color: #4b5563; }
+    .empty { color: #637268; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #cad8cf; }
+    .notice { padding: 12px; border-radius: 8px; margin: 10px 0; display: none; font-weight: 600; }
+    .notice.show { display: block; }
+    .notice.success { background: #dbf4e9; color: #0d4c3a; }
+    .notice.error { background: #fde5df; color: #7f2318; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
+    .modal .close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #637268; background: none; border: none; }
+    .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
+    .modal input, .modal textarea { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
+    .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
+    .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+    .media-viewer.show { display: flex; }
+    .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
+    .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; }
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+    .stats-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #cad8cf; }
+    .stats-section .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    .stats-section .filters select { padding: 8px 12px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
+    .fee-info { background: #f8faf9; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #637268; border: 1px solid #eef3ee; }
+    .fee-info strong { color: #0f7a5f; }
+    .chart-container { height: 300px; margin-top: 16px; }
+    .refresh-btn { background: #c9a227; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+    .refresh-btn:hover { background: #a88516; }
+    @media (max-width: 700px) { .room-card { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">VUSANI IKHAYA PROPERTIES<small>Trusted rooms. Real people. Real value.</small></div>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <a href="/" target="_blank">🌐 View Public Site</a>
+    <span id="adminUser" style="color:rgba(255,255,255,0.6);font-size:13px;"></span>
+    <button onclick="logout()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);padding:4px 12px;border-radius:4px;cursor:pointer;">Logout</button>
+  </div>
+</div>
 
-  const TOKEN_KEY = "alexandra-admin-token";
-  const SESSION_KEY = "adminSession"; 
-  // SECURITY FIX: Removed the hardcoded password. It is safely checked on the server only.
+<div class="container">
+  <div id="loginScreen" class="login-box">
+    <h2>🔐 Admin Login</h2>
+    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches and transport.</p>
+    <form id="loginForm">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+      </div>
+      <div id="loginError" class="error"></div>
+      <button type="submit">Log In</button>
+    </form>
+  </div>
 
-  const viewMap = {
-    pending: ["rooms", "pending"],
-    approved: ["rooms", "approved"],
-    taken: ["rooms", "taken"],
-    declined: ["rooms", "declined"],
-    removed: ["rooms", "removed"],
-    "review-pending": ["reviews", "pending"],
-    "review-approved": ["reviews", "approved"],
-    "review-declined": ["reviews", "declined"],
-    "report-pending": ["reports", "pending"],
-    "report-approved": ["reports", "approved"],
-    "report-declined": ["reports", "declined"],
-    "transport-pending": ["transports", "pending"],
-    "transport-approved": ["transports", "approved"],
-    "transport-declined": ["transports", "declined"],
-    "transport-removed": ["transports", "removed"]
-  };
+  <div id="adminPanel" class="panel">
+    <div id="notice" class="notice"></div>
 
-  const storageMap = {
-    "alexandra-room-pending": ["rooms", "pending"],
-    "alexandra-room-approved": ["rooms", "approved"],
-    "alexandra-room-taken": ["rooms", "taken"],
-    "alexandra-room-declined": ["rooms", "declined"],
-    "alexandra-room-removed": ["rooms", "removed"],
-    "alexandra-review-pending": ["reviews", "pending"],
-    "alexandra-review-approved": ["reviews", "approved"],
-    "alexandra-review-declined": ["reviews", "declined"],
-    "alexandra-report-pending": ["reports", "pending"],
-    "alexandra-report-approved": ["reports", "approved"],
-    "alexandra-report-declined": ["reports", "declined"],
-    "alexandra-transport-pending": ["transports", "pending"],
-    "alexandra-transport-approved": ["transports", "approved"],
-    "alexandra-transport-declined": ["transports", "declined"],
-    "alexandra-transport-removed": ["transports", "removed"]
-  };
+    <div class="stats-bar">
+      <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
+      <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
+      <div class="stat-card"><div class="number" id="statRoomsTaken">0</div><div class="label">📦 Rooms Taken</div></div>
+      <div class="stat-card"><div class="number" id="statTenantsPending">0</div><div class="label">👥 Tenants Pending</div></div>
+      <div class="stat-card"><div class="number" id="statMatches">0</div><div class="label">🔗 Matches</div></div>
+      <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
+    </div>
 
-  const emptyDB = {
-    rooms: { pending: [], approved: [], taken: [], declined: [], removed: [] },
-    reviews: { pending: [], approved: [], declined: [] },
-    reports: { pending: [], approved: [], declined: [] },
-    transports: { pending: [], approved: [], declined: [], removed: [] },
-    receipts: []
-  };
+    <div class="main-tabs">
+      <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
+      <button data-section="tenants" onclick="switchSection('tenants')">👥 Tenants <span class="count" id="mainTenantCount">0</span></button>
+      <button data-section="matches" onclick="switchSection('matches')">🔗 Matches <span class="count" id="mainMatchCount">0</span></button>
+      <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
+    </div>
 
-  let liveDB = null;
-  const storedGetList = window.getList;
+    <div id="roomsSection" class="section-content active">
+      <div class="stats-section">
+        <div class="header">
+          <h3 style="margin:0;">📊 Service Fee Revenue</h3>
+          <div class="filters">
+            <select id="monthFilter" onchange="updateStats()">
+              <option value="all">All Months</option>
+              <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+              <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+              <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+              <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+            </select>
+            <select id="yearFilter" onchange="updateStats()"></select>
+          </div>
+        </div>
+        <div class="fee-info">💰 <strong>Service Fee:</strong> R1000-R1900 = R300 | R2000-R3000 = R350 | R3100-R3800 = R400 | R3900-R7000 = R500</div>
+        <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+      </div>
 
-  // Service fee calculation based on rent amount
-  function serviceFeeForRent(rentAmount) {
-    const rent = parseFloat(String(rentAmount).replace(/[^0-9.]/g, '')) || 0;
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchRoomTab('pending')">⏳ Pending <span class="count" id="countPending">0</span></button>
+        <button data-tab="approved" onclick="switchRoomTab('approved')">✅ Approved <span class="count" id="countApproved">0</span></button>
+        <button data-tab="taken" onclick="switchRoomTab('taken')">📦 Taken <span class="count" id="countTaken">0</span></button>
+        <button data-tab="declined" onclick="switchRoomTab('declined')">❌ Declined <span class="count" id="countDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchRoomTab('removed')">🗑️ Removed <span class="count" id="countRemoved">0</span></button>
+      </div>
+      <div id="roomList"></div>
+    </div>
+
+    <div id="tenantsSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending <span class="count" id="countTenantPending">0</span></button>
+        <button data-tab="approved" onclick="switchTenantTab('approved')">✅ Approved <span class="count" id="countTenantApproved">0</span></button>
+        <button data-tab="declined" onclick="switchTenantTab('declined')">❌ Declined <span class="count" id="countTenantDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchTenantTab('removed')">🗑️ Removed <span class="count" id="countTenantRemoved">0</span></button>
+      </div>
+      <div id="tenantList"></div>
+    </div>
+
+    <div id="matchesSection" class="section-content">
+      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0 0 6px 0;">🔗 Landlord ↔ Tenant Matches</h3>
+          <p style="color:#637268;font-size:13px;margin:0;">Smart matching by <strong>Room Type, Budget Range, Location Groups, Kids and Parking</strong>. All approved tenants matched automatically.</p>
+        </div>
+        <button class="refresh-btn" onclick="refreshMatches()">🔄 Refresh Matches</button>
+      </div>
+      <div id="matchesList"></div>
+    </div>
+
+    <div id="transportSection" class="section-content">
+      <div class="sub-tabs">
+        <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending <span class="count" id="countTransportPending">0</span></button>
+        <button data-tab="approved" onclick="switchTransportTab('approved')">✅ Approved <span class="count" id="countTransportApproved">0</span></button>
+        <button data-tab="declined" onclick="switchTransportTab('declined')">❌ Declined <span class="count" id="countTransportDeclined">0</span></button>
+        <button data-tab="removed" onclick="switchTransportTab('removed')">🗑️ Removed <span class="count" id="countTransportRemoved">0</span></button>
+      </div>
+      <div id="transportList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editRoomModal">
+  <div class="modal">
+    <button class="close" onclick="closeEditRoomModal()">✕</button>
+    <h3>✏️ Edit Room</h3>
+    <form id="editRoomForm">
+      <input type="hidden" id="editRoomId"><input type="hidden" id="editRoomFrom">
+      <label>Title</label><input type="text" id="editRoomTitle">
+      <label>Location</label><input type="text" id="editRoomLocation">
+      <label>Address</label><input type="text" id="editRoomAddress">
+      <label>Amount (R)</label><input type="text" id="editRoomAmount">
+      <label>Deposit (R)</label><input type="text" id="editRoomDeposit">
+      <label>Landlord Name</label><input type="text" id="editRoomPosterName">
+      <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
+      <label>Notes</label><textarea id="editRoomNotes"></textarea>
+      <button type="submit" class="btn-save">💾 Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editTenantModal">
+  <div class="modal">
+    <button class="close" onclick="closeEditTenantModal()">✕</button>
+    <h3>✏️ Edit Tenant</h3>
+    <form id="editTenantForm">
+      <input type="hidden" id="editTenantId"><input type="hidden" id="editTenantFrom">
+      <label>Name</label><input type="text" id="editTenantName">
+      <label>Contact</label><input type="text" id="editTenantContact">
+      <label>Room Type</label><input type="text" id="editTenantRoomType">
+      <label>Budget Range</label><input type="text" id="editTenantBudget">
+      <label>Notes</label><textarea id="editTenantNotes"></textarea>
+      <button type="submit" class="btn-save">💾 Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<div class="media-viewer" id="mediaViewer">
+  <button class="close" onclick="closeMediaViewer()">✕</button>
+  <div id="mediaContent"></div>
+</div>
+
+<script>
+  const SESSION_KEY = "adminSession";
+  let currentRoomTab = 'pending';
+  let currentTransportTab = 'pending';
+  let currentTenantTab = 'pending';
+  let currentSection = 'rooms';
+  let allRooms = { pending: [], approved: [], taken: [], declined: [], removed: [] };
+  let allTransport = { pending: [], approved: [], declined: [], removed: [] };
+  let allTenants = { pending: [], approved: [], declined: [], removed: [] };
+  let allReceipts = [];
+  let allMatches = [];
+  let revenueChart = null;
+  let currentMediaList = [];
+  let currentMediaIndex = 0;
+
+  // =========================================================
+  // SAFE DOM HELPERS — never crashes if an element is missing
+  // =========================================================
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+  function setHtml(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+  }
+  function getEl(id) { return document.getElementById(id); }
+
+  const loginScreen = getEl('loginScreen');
+  const adminPanel = getEl('adminPanel');
+  const loginForm = getEl('loginForm');
+  const loginError = getEl('loginError');
+  const roomList = getEl('roomList');
+  const transportList = getEl('transportList');
+  const tenantList = getEl('tenantList');
+  const matchesList = getEl('matchesList');
+  const notice = getEl('notice');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.classList.remove('show');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: getEl('adminPassword').value })
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('adminToken', data.token);
+        sessionStorage.setItem(SESSION_KEY, 'yes');
+        setText('adminUser', '👤 Admin');
+        showAdminPanel();
+      } else {
+        loginError.textContent = data.error || 'Invalid password';
+        loginError.classList.add('show');
+      }
+    } catch (err) {
+      loginError.textContent = 'Server error';
+      loginError.classList.add('show');
+    }
+  });
+
+  function showAdminPanel() {
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (adminPanel) adminPanel.classList.add('show');
+    loadData();
+  }
+
+  async function loadData() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) { logout(); return; }
+    try {
+      const res = await fetch('/api/admin/data', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+
+      if (data.rooms) {
+        allRooms = {
+          pending: data.rooms.pending || [], approved: data.rooms.approved || [],
+          taken: data.rooms.taken || [], declined: data.rooms.declined || [], removed: data.rooms.removed || []
+        };
+      }
+      if (data.transports) {
+        allTransport = {
+          pending: data.transports.pending || [], approved: data.transports.approved || [],
+          declined: data.transports.declined || [], removed: data.transports.removed || []
+        };
+      }
+      if (data.tenantRequests) {
+        allTenants = {
+          pending: data.tenantRequests.pending || [], approved: data.tenantRequests.approved || [],
+          declined: data.tenantRequests.declined || [], removed: data.tenantRequests.removed || []
+        };
+      }
+      if (data.receipts) allReceipts = data.receipts || [];
+
+      updateAllCounts();
+      updateStats();
+      renderRoomTab(currentRoomTab);
+      renderTenantTab(currentTenantTab);
+      renderTransportTab(currentTransportTab);
+      renderChart();
+      await loadMatches();
+    } catch (err) {
+      showNotice('Failed to load data: ' + err.message, 'error');
+    }
+  }
+
+  function switchSection(section) {
+    currentSection = section;
+    document.querySelectorAll('.main-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.section === section);
+    });
+    document.querySelectorAll('.section-content').forEach(el => {
+      el.classList.toggle('active', el.id === section + 'Section');
+    });
+    if (section === 'rooms') renderRoomTab(currentRoomTab);
+    else if (section === 'tenants') renderTenantTab(currentTenantTab);
+    else if (section === 'matches') loadMatches();
+    else if (section === 'transport') renderTransportTab(currentTransportTab);
+  }
+
+  function fixMediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) return url;
+    return '/' + url;
+  }
+
+  // ===== ROOMS =====
+  function switchRoomTab(tab) {
+    currentRoomTab = tab;
+    document.querySelectorAll('#roomsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderRoomTab(tab);
+  }
+
+  function renderRoomTab(tab) {
+    const rooms = allRooms[tab] || [];
+    currentRoomTab = tab;
+    if (!roomList) return;
+    if (rooms.length === 0) { roomList.innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`; return; }
+    roomList.innerHTML = rooms.map(room => {
+      const images = room.images || [];
+      const allMedia = [...images, ...(room.video ? [room.video] : [])];
+      let mediaHtml = '';
+      if (allMedia.length > 0) {
+        const encoded = encodeURIComponent(JSON.stringify(allMedia));
+        mediaHtml = allMedia.slice(0, 4).map((m, i) => {
+          const safe = fixMediaUrl(m);
+          const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
+          return isVideo
+            ? `<video src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})" muted></video>`
+            : `<img src="${safe}" class="media-item" onclick="openMediaViewer('${encoded}',${i})">`;
+        }).join('');
+      } else mediaHtml = `<div class="no-media">📷 No media</div>`;
+      const landlord = room.posterName ? `👤 ${room.posterName} ${room.posterContact ? '📞 '+room.posterContact : ''}` : '';
+      const waNum = (room.posterContact || '').replace(/[^0-9]/g, '');
+      const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}` : '';
+      const onlineBadge = room.online !== false ? '🟢 Online' : '🔴 Offline';
+
+      return `
+        <div class="room-card">
+          <div class="media-grid">${mediaHtml}</div>
+          <div class="info">
+            <div class="title">${room.title || 'Untitled'}</div>
+            <div class="landlord">${landlord}</div>
+            <div class="detail">📍 ${room.location || 'No location'}${room.alexandraSuburb ? ' ('+room.alexandraSuburb+')' : ''} | 💰 ${room.amount || 'Ask'} | 🏠 ${room.roomType || room.type || 'Any'}</div>
+            <div class="detail"><span class="badge ${tab}">${tab}</span> ${room.address || ''}</div>
+            <div class="detail">👶 ${room.childFriendly || 'No'}${room.maxKids ? ' (max '+room.maxKids+')' : ''} | 🚗 ${room.parking || 'No'}${room.maxCars ? ' (max '+room.maxCars+')' : ''}</div>
+            <div class="actions">
+              ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="decline" onclick="moveRoom('${room.id}','approved','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="taken" onclick="markTaken('${room.id}')">📦 Mark Taken</button>` : ''}
+              ${tab === 'approved' ? `<button class="${room.online !== false ? 'approve' : 'delete'}" onclick="toggleOnline('${room.id}','approved')">${onlineBadge}</button>` : ''}
+              ${tab === 'approved' ? `<button class="delete" onclick="deleteRoom('${room.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'taken' ? `<button class="repost" onclick="moveRoom('${room.id}','taken','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'taken' ? `<button class="delete" onclick="deleteRoom('${room.id}','taken')">🗑️ Delete</button>` : ''}
+              ${tab === 'declined' ? `<button class="repost" onclick="moveRoom('${room.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'declined' ? `<button class="delete" onclick="deleteRoom('${room.id}','declined')">🗑️ Delete</button>` : ''}
+              ${tab === 'removed' ? `<button class="repost" onclick="moveRoom('${room.id}','removed','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'removed' ? `<button class="delete" onclick="deleteRoom('${room.id}','removed')">🗑️ Delete</button>` : ''}
+              ${tab !== 'taken' ? `<button class="edit" onclick="openEditRoomModal('${room.id}','${tab}')">✏️ Edit</button>` : ''}
+              ${waLink ? `<a class="wa" href="${waLink}" target="_blank">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function moveRoom(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Room moved to ${to}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  async function toggleOnline(id, from) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'toggle-online', section: 'rooms', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🔄 Online status updated', 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  function calculateServiceFee(rent) {
     if (rent >= 1000 && rent <= 1900) return 300;
     if (rent >= 2000 && rent <= 3000) return 350;
     if (rent >= 3100 && rent <= 3800) return 400;
@@ -63,379 +454,439 @@
     return 0;
   }
 
-  function moneyNumber(value) {
-    if (!value) return '';
-    const num = parseFloat(String(value).replace(/[^0-9.]/g, ''));
-    return isNaN(num) ? '' : num;
-  }
-
-  function cleanSection(section, fallback) {
-    const source = section && typeof section === "object" ? section : {};
-    return Object.fromEntries(
-      Object.keys(fallback).map((status) => [
-        status,
-        Array.isArray(source[status]) ? source[status] : []
-      ])
-    );
-  }
-
-  function normalizeClientDB(db) {
-    return {
-      rooms: cleanSection(db?.rooms, emptyDB.rooms),
-      reviews: cleanSection(db?.reviews, emptyDB.reviews),
-      reports: cleanSection(db?.reports, emptyDB.reports),
-      transports: cleanSection(db?.transports, emptyDB.transports),
-      receipts: Array.isArray(db?.receipts) ? db.receipts : []
-    };
-  }
-
-  window.getList = function (key) {
-    if (liveDB && storageMap[key]) {
-      const [section, status] = storageMap[key];
-      return liveDB[section]?.[status] || [];
-    }
-    if (liveDB && key === "alexandra-receipts") return liveDB.receipts || [];
-    return typeof storedGetList === "function" ? storedGetList(key) : [];
-  };
-
-  function token() {
-    return sessionStorage.getItem(TOKEN_KEY) || "";
-  }
-
-  async function loginWithPassword(password) {
-    const response = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password })
+  async function markTaken(id) {
+    const room = allRooms.approved.find(r => r.id === id);
+    if (!room) return;
+    const rentAmount = parseFloat(room.amount?.replace(/[^0-9.]/g, '') || 0);
+    const serviceFee = calculateServiceFee(rentAmount);
+    const tenantName = prompt('📋 Tenant name:', '') || 'Unknown tenant';
+    const tenantNumber = prompt('📞 Tenant phone:', '') || '';
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'mark-taken', section: 'rooms', id,
+        receipt: { tenantName, tenantNumber, rentAmount: String(rentAmount), serviceFee, date: new Date().toISOString().slice(0,10), paymentType: 'Cash', roomAddress: room.address }
+      })
     });
-    const text = await response.text();
-    let data = {};
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch {
-      data = {};
-    }
-    if (!response.ok) throw new Error(data.error || "Incorrect admin password.");
-    sessionStorage.setItem(TOKEN_KEY, data.token);
-    sessionStorage.setItem(SESSION_KEY, "yes");
-    return data.token;
+    const data = await res.json();
+    if (data.ok) { showNotice(`📦 Room TAKEN. Fee: R${serviceFee}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
   }
 
-  async function api(path, options = {}, retryOnLogin = true) {
-    const response = await fetch(path, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token() ? { Authorization: `Bearer ${token()}` } : {}),
-        ...(options.headers || {})
-      },
-      ...options
+  async function deleteRoom(id, from) {
+    if (!confirm('⚠️ Delete this room permanently?')) return;
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'rooms', from, id })
     });
-    const text = await response.text();
-    let data = {};
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch {
-      data = {};
-    }
-    
-    // SECURITY FIX: If session expires, force logout instead of auto-logging in with a hardcoded password
-    if (!response.ok) {
-      const message = data.error || "Request failed";
-      if (response.status === 401 && retryOnLogin && path !== "/api/admin/login") {
-        sessionStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(SESSION_KEY);
-        if (typeof renderAuth === "function") renderAuth();
-        throw new Error("Session expired. Please log in again.");
-      }
-      throw new Error(message);
-    }
-    return data;
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Room deleted', 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
   }
 
-  function syncLocalStorage(db) {
-    Object.entries(storageMap).forEach(([key, [section, status]]) => {
-      try {
-        localStorage.setItem(key, JSON.stringify(db[section][status] || []));
-      } catch {
-        localStorage.removeItem(key);
-      }
+  function openEditRoomModal(id, from) {
+    const room = allRooms[from]?.find(r => r.id === id);
+    if (!room) return;
+    getEl('editRoomId').value = id;
+    getEl('editRoomFrom').value = from;
+    getEl('editRoomTitle').value = room.title || '';
+    getEl('editRoomLocation').value = room.location || '';
+    getEl('editRoomAddress').value = room.address || '';
+    getEl('editRoomAmount').value = room.amount || '';
+    getEl('editRoomDeposit').value = room.deposit || '';
+    getEl('editRoomPosterName').value = room.posterName || '';
+    getEl('editRoomPosterContact').value = room.posterContact || '';
+    getEl('editRoomNotes').value = room.notes || '';
+    getEl('editRoomModal').classList.add('show');
+  }
+
+  function closeEditRoomModal() { getEl('editRoomModal').classList.remove('show'); }
+
+  getEl('editRoomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'edit', section: 'rooms',
+        from: getEl('editRoomFrom').value,
+        id: getEl('editRoomId').value,
+        data: {
+          title: getEl('editRoomTitle').value,
+          location: getEl('editRoomLocation').value,
+          address: getEl('editRoomAddress').value,
+          amount: getEl('editRoomAmount').value,
+          deposit: getEl('editRoomDeposit').value,
+          posterName: getEl('editRoomPosterName').value,
+          posterContact: getEl('editRoomPosterContact').value,
+          notes: getEl('editRoomNotes').value
+        }
+      })
     });
-    try {
-      localStorage.setItem("alexandra-receipts", JSON.stringify(db.receipts || []));
-    } catch {
-      localStorage.removeItem("alexandra-receipts");
-    }
-  }
-
-  async function refreshAdmin() {
-    try {
-      const db = normalizeClientDB(await api("/api/admin/data"));
-      liveDB = db;
-      window.adminLiveDB = db;
-      window.liveAdminBackendConnected = true;
-      syncLocalStorage(db);
-      
-      // Call render functions if they exist
-      if (typeof renderRooms === "function") renderRooms();
-      if (typeof renderTransportTab === "function") renderTransportTab(currentTransportTab || 'pending');
-      if (typeof renderMonthlyReport === "function") renderMonthlyReport();
-      if (typeof updateAllCounts === "function") updateAllCounts();
-      if (typeof updateStats === "function") updateStats();
-      if (typeof renderChart === "function") renderChart();
-      
-    } catch (error) {
-      window.liveAdminBackendConnected = false;
-      console.error('Refresh admin failed:', error);
-      throw error;
-    }
-  }
-
-  window.refreshAdminData = refreshAdmin;
-
-  async function adminAction(payload, message) {
-    try {
-      await api("/api/admin/action", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-      await refreshAdmin();
-      if (message && typeof showNotice === "function") showNotice(message);
-    } catch (error) {
-      window.liveAdminBackendConnected = false;
-      const messageText = error.message || "Admin action failed. Refresh and try again.";
-      if (typeof showNotice === "function") showNotice(messageText);
-      if (/admin login required/i.test(messageText)) {
-        sessionStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(SESSION_KEY);
-        if (typeof renderAuth === "function") renderAuth();
-      }
-    }
-  }
-
-  // ========================================
-  // SHOW NOTICE
-  // ========================================
-  function showNotice(message) {
-    const notice = document.getElementById('notice');
-    if (notice) {
-      notice.textContent = message;
-      notice.className = 'notice show success';
-      setTimeout(() => {
-        notice.classList.remove('show');
-      }, 4000);
-    }
-  }
-
-  // ========================================
-  // EVENT LISTENERS
-  // ========================================
-  
-  // Login form
-  const loginForm = document.querySelector("#loginForm");
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      try {
-        await loginWithPassword(document.querySelector("#adminPassword").value);
-        const loginError = document.querySelector("#loginError");
-        if (loginError) loginError.classList.remove("show");
-        if (typeof renderAuth === "function") renderAuth();
-        await refreshAdmin();
-      } catch (error) {
-        const loginError = document.querySelector("#loginError");
-        if (loginError) {
-          loginError.textContent = error.message || "Incorrect admin password.";
-          loginError.classList.add("show");
-        }
-      }
-    }, true);
-  }
-
-  // Logout button
-  const logoutButton = document.querySelector("#logoutButton");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      sessionStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(SESSION_KEY);
-      if (typeof renderAuth === "function") renderAuth();
-      location.reload();
-    }, true);
-  }
-
-  // Refresh button
-  const refreshButton = document.querySelector("#refreshAdminButton");
-  if (refreshButton) {
-    refreshButton.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      try {
-        await refreshAdmin();
-        const pendingCount = window.adminLiveDB?.rooms?.pending?.length || 0;
-        showNotice(`Admin posts refreshed from the live server. Pending rooms: ${pendingCount}.`);
-      } catch (error) {
-        window.liveAdminBackendConnected = false;
-        showNotice(error.message || "Could not refresh admin posts. Check the live server and try again.");
-      }
-    }, true);
-  }
-
-  // Room list click handler
-  const roomList = document.getElementById('roomList');
-  if (roomList) {
-    roomList.addEventListener("click", async (event) => {
-      const button = event.target.closest("[data-action]");
-      if (!button) return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-
-      const section = button.dataset.section || 'rooms';
-      const from = button.dataset.from || 'pending';
-      const id = button.dataset.id;
-      const action = button.dataset.action;
-
-      // Handle different actions
-      if (action === "approve") {
-        return adminAction({ action: "move", section, from, to: "approved", id }, "✅ Post approved and now visible on the public site.");
-      }
-      if (action === "decline") {
-        return adminAction({ action: "move", section, from, to: "declined", id }, "❌ Post declined.");
-      }
-      if (action === "delete") {
-        if (!confirm('⚠️ Delete this item permanently?')) return;
-        return adminAction({ action: "delete", section, from, id }, "🗑️ Item deleted.");
-      }
-      if (action === "repost") {
-        return adminAction({ action: "move", section, from, to: "pending", id }, "🔄 Item moved back to Pending.");
-      }
-      if (action === "mark-taken" || action === "issue-receipt") {
-        // Handle marking as taken with receipt
-        const room = window.adminLiveDB?.rooms?.approved?.find(r => r.id === id);
-        if (room && typeof fillReceiptForm === "function") {
-          fillReceiptForm(room);
-        }
-        return;
-      }
-      if (action === "download-receipt") {
-        const room = window.adminLiveDB?.rooms?.taken?.find(r => r.id === id);
-        if (room && typeof openReceiptWindow === "function") {
-          openReceiptWindow(room);
-        }
-        return;
-      }
-      if (action === "edit") {
-        // Handle edit - this will be handled by the edit modal in the main admin
-        if (typeof openEditRoomModal === "function") {
-          openEditRoomModal(id, from);
-        }
-        return;
-      }
-      if (action === "approve-transport") {
-        return adminAction({ action: "move", section: "transports", from, to: "approved", id }, "✅ Transport approved.");
-      }
-      if (action === "decline-transport") {
-        return adminAction({ action: "move", section: "transports", from, to: "declined", id }, "❌ Transport declined.");
-      }
-      if (action === "remove-transport") {
-        return adminAction({ action: "move", section: "transports", from, to: "removed", id }, "🗑️ Transport removed.");
-      }
-    }, true);
-  }
-
-  // ========================================
-  // RECEIPT FORM HANDLING
-  // ========================================
-  const receiptForm = document.querySelector("#receiptForm");
-  if (receiptForm) {
-    const receiptRentAmount = document.querySelector("#receiptRentAmount");
-    const receiptServiceFee = document.querySelector("#receiptServiceFee");
-    const serviceFeeHint = document.querySelector("#serviceFeeHint");
-
-    function updateReceiptFee() {
-      const fee = serviceFeeForRent(receiptRentAmount?.value || '');
-      if (receiptServiceFee) receiptServiceFee.value = fee ? `R${fee}` : "R0";
-      if (serviceFeeHint) {
-        serviceFeeHint.textContent = fee
-          ? `Calculated service fee: R${fee}.`
-          : "No service-fee band matched this rent amount.";
-      }
-    }
-
-    if (receiptRentAmount) {
-      receiptRentAmount.addEventListener("input", updateReceiptFee);
-    }
-
-    receiptForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      const id = document.querySelector("#receiptRoomId")?.value;
-      const receipt = {
-        date: document.querySelector("#receiptDate")?.value || new Date().toISOString().slice(0, 10),
-        tenantName: document.querySelector("#tenantName")?.value.trim() || 'Unknown tenant',
-        tenantNumber: document.querySelector("#tenantNumber")?.value.trim() || '',
-        paymentType: document.querySelector("#receiptPaymentType")?.value.trim() || 'Cash',
-        roomAddress: document.querySelector("#receiptRoomAddress")?.value.trim() || '',
-        rentAmount: document.querySelector("#receiptRentAmount")?.value.trim() || '0',
-        depositAmount: document.querySelector("#receiptDepositAmount")?.value.trim() || '0',
-        serviceFee: serviceFeeForRent(document.querySelector("#receiptRentAmount")?.value || '0')
-      };
-      try {
-        await api("/api/admin/action", {
-          method: "POST",
-          body: JSON.stringify(id
-            ? { action: "mark-taken", id, receipt }
-            : { action: "manual-receipt", receipt, title: "Manual receipt" })
-        });
-        await refreshAdmin();
-        const taken = window.adminLiveDB?.rooms?.taken || [];
-        const room = taken.find((item) => item.id === id) || taken[0];
-        if (room && typeof openReceiptWindow === "function") {
-          openReceiptWindow(room);
-        }
-        if (receiptForm) receiptForm.reset();
-        updateReceiptFee();
-        showNotice("✅ Receipt saved and opened for download.");
-      } catch (error) {
-        window.liveAdminBackendConnected = false;
-        showNotice(error.message || "Receipt could not be saved.");
-      }
-    }, true);
-  }
-
-  // ========================================
-  // INITIALIZATION
-  // ========================================
-  if (token()) {
-    sessionStorage.setItem(SESSION_KEY, "yes");
-    refreshAdmin().catch(() => {
-      window.liveAdminBackendConnected = false;
-      sessionStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(SESSION_KEY);
-      if (typeof renderAuth === "function") renderAuth();
-    });
-  } else {
-    sessionStorage.removeItem(SESSION_KEY);
-    window.adminLiveDB = null;
-    if (typeof renderAuth === "function") renderAuth();
-  }
-
-  window.addEventListener("focus", () => {
-    if (token() && sessionStorage.getItem(SESSION_KEY) === "yes") {
-      refreshAdmin().catch(() => {});
-    }
+    const result = await res.json();
+    if (result.ok) { showNotice('✅ Room updated', 'success'); closeEditRoomModal(); loadData(); }
+    else showNotice('Failed', 'error');
   });
 
-  // ========================================
-  // EXPOSE FUNCTIONS TO GLOBAL SCOPE
-  // ========================================
-  window.serviceFeeForRent = serviceFeeForRent;
-  window.adminAction = adminAction;
-  window.refreshAdmin = refreshAdmin;
-  window.loginWithPassword = loginWithPassword;
-  window.showNotice = showNotice;
-  window.liveDB = () => liveDB;
+  // ===== TENANTS =====
+  function switchTenantTab(tab) {
+    currentTenantTab = tab;
+    document.querySelectorAll('#tenantsSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderTenantTab(tab);
+  }
 
-})();
+  function renderTenantTab(tab) {
+    const tenants = allTenants[tab] || [];
+    currentTenantTab = tab;
+    if (!tenantList) return;
+    if (tenants.length === 0) { tenantList.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`; return; }
+    tenantList.innerHTML = tenants.map(t => {
+      const locations = Array.isArray(t.preferredLocations) && t.preferredLocations.length ? t.preferredLocations.join(', ') : '—';
+      const alex = t.alexandraSuburb ? `<div class="detail">🏘️ Suburb: <strong>${t.alexandraSuburb}</strong></div>` : '';
+      const kids = t.childFriendly === 'Yes' ? `👶 Kids: ${t.childrenCount || '?'} (ages ${t.childrenAges || '?'})` : '👶 No kids';
+      const cars = t.parking === 'Yes' ? `🚗 Cars: ${t.carsCount || '?'}` : '🚗 No parking';
+      const waNum = (t.contactNumber || '').replace(/[^0-9]/g, '');
+      const waMsg = encodeURIComponent(`Hi ${t.tenantName}, we have a room match for you at ${locations}.`);
+      const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${waMsg}` : '';
+
+      return `
+        <div class="room-card" style="grid-template-columns:1fr;">
+          <div class="info">
+            <div class="title">👤 ${t.tenantName || 'Unknown'}</div>
+            <div class="landlord">📞 ${t.contactNumber || 'No contact'}</div>
+            <div class="detail">📍 ${locations} | 🛏️ ${t.roomType || 'Any'} | 💰 ${t.budgetRange || t.budget || '—'}</div>
+            ${alex}
+            <div class="detail">📅 Move-in: ${t.moveInDate || 'Flexible'}</div>
+            <div class="detail">${kids} | ${cars}</div>
+            ${t.notes ? `<div class="detail">📝 ${t.notes}</div>` : ''}
+            <div class="actions">
+              ${tab === 'pending' ? `<button class="approve" onclick="moveTenant('${t.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${tab === 'pending' ? `<button class="decline" onclick="moveTenant('${t.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="decline" onclick="moveTenant('${t.id}','approved','declined')">❌ Decline</button>` : ''}
+              ${tab === 'approved' ? `<button class="delete" onclick="deleteTenant('${t.id}','approved')">🗑️ Delete</button>` : ''}
+              ${tab === 'declined' ? `<button class="repost" onclick="moveTenant('${t.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${tab === 'declined' ? `<button class="delete" onclick="deleteTenant('${t.id}','declined')">🗑️ Delete</button>` : ''}
+              ${tab === 'removed' ? `<button class="repost" onclick="moveTenant('${t.id}','removed','pending')">🔄 Repost</button>` : ''}
+              ${tab !== 'removed' ? `<button class="edit" onclick="openEditTenantModal('${t.id}','${tab}')">✏️ Edit</button>` : ''}
+              ${waLink ? `<a class="wa" href="${waLink}" target="_blank">💬 WhatsApp</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function moveTenant(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'tenantRequests', from, to, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice(`✅ Tenant moved to ${to}`, 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  async function deleteTenant(id, from) {
+    if (!confirm('Delete this tenant?')) return;
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'tenantRequests', from, id })
+    });
+    const data = await res.json();
+    if (data.ok) { showNotice('🗑️ Tenant deleted', 'success'); loadData(); }
+    else showNotice(data.error || 'Failed', 'error');
+  }
+
+  function openEditTenantModal(id, from) {
+    const t = allTenants[from]?.find(x => x.id === id);
+    if (!t) return;
+    getEl('editTenantId').value = id;
+    getEl('editTenantFrom').value = from;
+    getEl('editTenantName').value = t.tenantName || '';
+    getEl('editTenantContact').value = t.contactNumber || '';
+    getEl('editTenantRoomType').value = t.roomType || '';
+    getEl('editTenantBudget').value = t.budgetRange || t.budget || '';
+    getEl('editTenantNotes').value = t.notes || '';
+    getEl('editTenantModal').classList.add('show');
+  }
+
+  function closeEditTenantModal() { getEl('editTenantModal').classList.remove('show'); }
+
+  getEl('editTenantForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'edit', section: 'tenantRequests',
+        from: getEl('editTenantFrom').value,
+        id: getEl('editTenantId').value,
+        data: {
+          tenantName: getEl('editTenantName').value,
+          contactNumber: getEl('editTenantContact').value,
+          roomType: getEl('editTenantRoomType').value,
+          budgetRange: getEl('editTenantBudget').value,
+          budget: getEl('editTenantBudget').value,
+          notes: getEl('editTenantNotes').value
+        }
+      })
+    });
+    const result = await res.json();
+    if (result.ok) { showNotice('✅ Tenant updated', 'success'); closeEditTenantModal(); loadData(); }
+    else showNotice('Failed', 'error');
+  });
+
+  // ===== MATCHES =====
+  async function loadMatches() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/matches', { headers: { 'Authorization': 'Bearer ' + token } });
+      const data = await res.json();
+      allMatches = data.matches || [];
+      renderMatches(data.totalLandlordsOnline, data.totalTenantsApproved);
+      updateAllCounts();
+    } catch (err) {
+      if (matchesList) matchesList.innerHTML = '<div class="empty">⚠️ Could not load matches.</div>';
+    }
+  }
+
+  async function refreshMatches() {
+    showNotice('🔄 Refreshing matches...', 'success');
+    await loadMatches();
+    showNotice(`✅ Matches refreshed. Total: ${allMatches.length}`, 'success');
+  }
+
+  function renderMatches(onlineCount, tenantCount) {
+    if (!matchesList) return;
+    const onlineLandlords = onlineCount !== undefined
+      ? onlineCount
+      : [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+    const approvedTenants = tenantCount !== undefined ? tenantCount : (allTenants.approved || []).length;
+
+    if (allMatches.length === 0) {
+      matchesList.innerHTML = `
+        <div class="empty">
+          🔗 No matches found yet.<br><br>
+          <small>🟢 Online Landlords: <strong>${onlineLandlords}</strong> · ✅ Approved Tenants: <strong>${approvedTenants}</strong></small><br><br>
+          Approve rooms and tenants to see matches here.
+        </div>`;
+      return;
+    }
+
+    const summary = `
+      <div style="background:#0f7a5f;color:#fff;padding:14px 18px;border-radius:10px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;">
+        <div>🟢 Online Landlords: <strong>${onlineLandlords}</strong></div>
+        <div>✅ Approved Tenants: <strong>${approvedTenants}</strong></div>
+        <div>🔗 Total Matches: <strong>${allMatches.length}</strong></div>
+      </div>`;
+
+    const grouped = {};
+    allMatches.forEach(m => {
+      if (!grouped[m.landlordId]) grouped[m.landlordId] = { landlord: m, tenants: [] };
+      grouped[m.landlordId].tenants.push(m);
+    });
+
+    matchesList.innerHTML = summary + Object.values(grouped).map(g => {
+      const l = g.landlord;
+      const tenantsHtml = g.tenants.map(t => {
+        const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
+        const msg = encodeURIComponent(`Hi ${t.tenantName}, we have a room available at ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} for R${l.landlordRent}. Reply if interested.`);
+        const waLink = waNum ? `https://wa.me/27${waNum.replace(/^0/, '')}?text=${msg}` : '';
+        return `
+          <div style="border-top:1px solid #eef3ee;padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <strong>👤 ${t.tenantName}</strong> — 📞 ${t.tenantContact}<br>
+              <span style="font-size:12px;color:#637268;">📍 ${t.tenantLocations.join(', ')} | 💰 ${t.tenantBudgetRange || t.tenantBudget} | 🛏️ ${t.tenantRoomType}</span>
+            </div>
+            ${waLink ? `<a href="${waLink}" target="_blank" class="wa">💬 WhatsApp</a>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="room-card" style="grid-template-columns:1fr;">
+          <div class="info">
+            <div class="title">🏠 ${l.landlordTitle}</div>
+            <div class="landlord">👤 ${l.landlordName || ''} 📞 ${l.landlordContact || ''}</div>
+            <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} — Group: <strong>${l.landlordLocationGroup || 'N/A'}</strong> | 💰 R${l.landlordRent}</div>
+            <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'}</div>
+            <div style="margin-top:10px;">
+              <div style="font-weight:700;color:#0f7a5f;margin-bottom:6px;">🎯 Matched Tenants (${g.tenants.length})</div>
+              ${tenantsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== TRANSPORT =====
+  function switchTransportTab(tab) {
+    currentTransportTab = tab;
+    document.querySelectorAll('#transportSection .sub-tabs button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderTransportTab(tab);
+  }
+
+  function renderTransportTab(tab) {
+    const transports = allTransport[tab] || [];
+    if (!transportList) return;
+    if (transports.length === 0) { transportList.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`; return; }
+    transportList.innerHTML = transports.map(t => `
+      <div class="room-card" style="grid-template-columns:1fr;">
+        <div class="info">
+          <div class="title">🚗 ${t.firstName || ''} ${t.surname || ''}</div>
+          <div class="landlord">📞 ${t.phone || ''} | 📧 ${t.email || ''}</div>
+          <div class="detail">Local: R${t.localPrice || '?'} | Outside: R${t.outsidePrice || '?'}</div>
+          <div class="actions">
+            ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${t.id}','pending','approved')">✅ Approve</button>` : ''}
+            ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${t.id}','pending','declined')">❌ Decline</button>` : ''}
+            ${tab !== 'removed' ? `<button class="delete" onclick="deleteTransport('${t.id}','${tab}')">🗑️ Delete</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function moveTransport(id, from, to) {
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'move', section: 'transports', from, to, id })
+    });
+    showNotice('✅ Moved', 'success'); loadData();
+  }
+
+  async function deleteTransport(id, from) {
+    if (!confirm('Delete?')) return;
+    const token = localStorage.getItem('adminToken');
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'delete', section: 'transports', from, id })
+    });
+    showNotice('🗑️ Deleted', 'success'); loadData();
+  }
+
+  // ===== MEDIA =====
+  function openMediaViewer(encoded, idx) {
+    try {
+      currentMediaList = JSON.parse(decodeURIComponent(encoded));
+      currentMediaIndex = idx;
+      showMedia();
+      getEl('mediaViewer').classList.add('show');
+    } catch (e) {}
+  }
+  function showMedia() {
+    const m = currentMediaList[currentMediaIndex];
+    const safe = fixMediaUrl(m);
+    const isVideo = safe.match(/\.(mp4|webm|ogg|mov)$/i) || safe.includes('video');
+    getEl('mediaContent').innerHTML = isVideo
+      ? `<video src="${safe}" controls autoplay style="max-width:95vw;max-height:85vh;"></video>`
+      : `<img src="${safe}" style="max-width:95vw;max-height:85vh;">`;
+  }
+  function closeMediaViewer() {
+    getEl('mediaViewer').classList.remove('show');
+    getEl('mediaContent').innerHTML = '';
+  }
+
+  // ===== COUNTS & STATS (SAFE — uses setText helper) =====
+  function updateAllCounts() {
+    setText('countPending', (allRooms.pending || []).length);
+    setText('countApproved', (allRooms.approved || []).length);
+    setText('countTaken', (allRooms.taken || []).length);
+    setText('countDeclined', (allRooms.declined || []).length);
+    setText('countRemoved', (allRooms.removed || []).length);
+    setText('statRoomsPending', (allRooms.pending || []).length);
+    setText('statRoomsApproved', (allRooms.approved || []).length);
+    setText('statRoomsTaken', (allRooms.taken || []).length);
+    setText('mainRoomsCount',
+      (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length);
+
+    setText('countTenantPending', (allTenants.pending || []).length);
+    setText('countTenantApproved', (allTenants.approved || []).length);
+    setText('countTenantDeclined', (allTenants.declined || []).length);
+    setText('countTenantRemoved', (allTenants.removed || []).length);
+    setText('mainTenantCount',
+      (allTenants.pending || []).length + (allTenants.approved || []).length + (allTenants.declined || []).length + (allTenants.removed || []).length);
+    setText('statTenantsPending', (allTenants.pending || []).length);
+
+    setText('countTransportPending', (allTransport.pending || []).length);
+    setText('countTransportApproved', (allTransport.approved || []).length);
+    setText('countTransportDeclined', (allTransport.declined || []).length);
+    setText('countTransportRemoved', (allTransport.removed || []).length);
+    setText('mainTransportCount',
+      (allTransport.pending || []).length + (allTransport.approved || []).length + (allTransport.declined || []).length + (allTransport.removed || []).length);
+
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    setText('statServiceFeeRevenue', 'R' + totalFees.toFixed(2));
+
+    setText('mainMatchCount', (allMatches || []).length);
+    setText('statMatches', (allMatches || []).length);
+  }
+
+  function updateStats() {
+    const mEl = getEl('monthFilter');
+    const yEl = getEl('yearFilter');
+    if (!mEl || !yEl) return;
+    const month = mEl.value;
+    const year = parseInt(yEl.value);
+    let filtered = allReceipts;
+    if (month !== 'all') filtered = filtered.filter(r => new Date(r.date).getMonth() === parseInt(month));
+    if (year !== 'all' && !isNaN(year)) filtered = filtered.filter(r => new Date(r.date).getFullYear() === year);
+    const total = filtered.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    setText('monthlyCount', filtered.length);
+    setText('monthlyServiceFee', 'R' + total.toFixed(2));
+  }
+
+  function renderChart() {
+    const canvas = getEl('revenueChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (revenueChart) revenueChart.destroy();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
+    revenueChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } }
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('adminToken');
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
+  function showNotice(message, type) {
+    if (!notice) return;
+    notice.textContent = message;
+    notice.className = 'notice show ' + (type || 'success');
+    setTimeout(() => notice.classList.remove('show'), 4000);
+  }
+
+  (function populateYears() {
+    const ys = getEl('yearFilter');
+    if (!ys) return;
+    ys.innerHTML = '<option value="all">All Years</option>';
+    for (let y = 2035; y >= 2025; y--) ys.innerHTML += `<option value="${y}">${y}</option>`;
+  })();
+
+  (function init() {
+    const token = localStorage.getItem('adminToken');
+    if (token && sessionStorage.getItem(SESSION_KEY)) {
+      setText('adminUser', '👤 Admin');
+      showAdminPanel();
+    }
+  })();
+</script>
+</body>
+</html>
