@@ -13,8 +13,8 @@ const SESSION_KEY = process.env.SESSION_KEY || "mySuperSecretSessionKey12345";
 const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "database");
 const DB_FILE = path.join(DATA_DIR, "db.json");
-const sessions = new Map(); // Use Map for better session management
-const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
+const sessions = new Map();
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
 // ===== DEFAULT DATABASE STRUCTURE =====
 const defaultDB = {
@@ -22,6 +22,7 @@ const defaultDB = {
   reviews: { pending: [], approved: [], declined: [] },
   reports: { pending: [], approved: [], declined: [] },
   transports: { pending: [], approved: [], declined: [], removed: [] },
+  tenantRequests: { pending: [], approved: [], declined: [], removed: [] },
   receipts: [],
   contacts: []
 };
@@ -48,6 +49,7 @@ function normalizeDB(db) {
   db.reviews = normalizeSection(db.reviews, defaultDB.reviews);
   db.reports = normalizeSection(db.reports, defaultDB.reports);
   db.transports = normalizeSection(db.transports, defaultDB.transports);
+  db.tenantRequests = normalizeSection(db.tenantRequests, defaultDB.tenantRequests);
   db.receipts = Array.isArray(db.receipts) ? db.receipts : [];
   db.contacts = Array.isArray(db.contacts) ? db.contacts : [];
   return db;
@@ -73,26 +75,19 @@ function readDB() {
   } catch (error) {
     console.error('❌ Failed to read database:', error.message);
     const restored = restoreFromBackup();
-    if (restored) {
-      return readDB();
-    }
+    if (restored) return readDB();
     return defaultDB;
   }
 }
 
 function writeDB(db) {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     backupDB();
-    
     const tempFile = DB_FILE + '.tmp';
     const data = JSON.stringify(normalizeDB(db), null, 2);
     fs.writeFileSync(tempFile, data);
     fs.renameSync(tempFile, DB_FILE);
-    
     return true;
   } catch (error) {
     console.error('❌ Failed to write database:', error.message);
@@ -100,17 +95,14 @@ function writeDB(db) {
   }
 }
 
-// ===== DATABASE BACKUP FUNCTIONS =====
 function backupDB() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const backupFile = path.join(DATA_DIR, `db.backup.${Date.now()}.json`);
       fs.copyFileSync(DB_FILE, backupFile);
-      
       const backups = fs.readdirSync(DATA_DIR)
         .filter(f => f.startsWith('db.backup.'))
         .sort();
-      
       while (backups.length > 5) {
         const oldBackup = backups.shift();
         fs.unlinkSync(path.join(DATA_DIR, oldBackup));
@@ -126,14 +118,11 @@ function restoreFromBackup() {
     const backups = fs.readdirSync(DATA_DIR)
       .filter(f => f.startsWith('db.backup.'))
       .sort();
-    
     if (backups.length === 0) return false;
-    
     const latestBackup = backups[backups.length - 1];
     const backupPath = path.join(DATA_DIR, latestBackup);
     const data = fs.readFileSync(backupPath, 'utf8');
     const parsed = JSON.parse(data);
-    
     fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2));
     console.log(`✅ Restored from backup: ${latestBackup}`);
     return true;
@@ -191,7 +180,6 @@ function moneyNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-// FIXED: Synced perfectly with frontend logic
 function serviceFeeForRent(rent) {
   const amount = moneyNumber(rent);
   if (amount >= 1000 && amount <= 1900) return 300;
@@ -227,6 +215,22 @@ function cleanReceipt(details) {
   };
 }
 
+// ===== ALEXANDRA MIX HELPERS =====
+const ALEXANDRA_MIX_GROUP = [
+  '1st Avenue – 12th Avenue',
+  '1st Avenue - 12th Avenue',
+  '12th Avenue – 22nd Avenue',
+  '12th Avenue - 22nd Avenue',
+  'Tsutsumane'
+];
+
+function normalizeAlexandraSuburb(value) {
+  const v = cleanText(value, 80);
+  if (!v) return '';
+  if (ALEXANDRA_MIX_GROUP.includes(v)) return 'Alexandra Mix';
+  return v;
+}
+
 // ===== PUBLIC HELPERS =====
 function publicRoom(room) {
   return {
@@ -247,16 +251,12 @@ function publicTransport(driver) {
     status: driver.status
   };
 }
+
 // ===== ADMIN HELPERS =====
 function adminToken(req) {
   const auth = req.headers.authorization || "";
   const headerToken = auth.replace(/^Bearer\s+/i, "");
-  
-  // FIX: Also check for token in the URL query string (required for <img> tags to load securely)
-  if (req.query && req.query.token) {
-    return req.query.token;
-  }
-  
+  if (req.query && req.query.token) return req.query.token;
   return headerToken;
 }
 
@@ -307,6 +307,7 @@ function adminDB(db, token) {
     reviews: db.reviews,
     reports: db.reports,
     transports: adminSection("transports", db.transports, token),
+    tenantRequests: adminSection("tenantRequests", db.tenantRequests, token),
     receipts: db.receipts
   };
 }
@@ -325,14 +326,14 @@ function deleteItem(db, section, from, id) {
   db[section][from] = db[section][from].filter((entry) => entry.id !== id);
 }
 
-
 // ===== PUBLIC API ROUTES =====
 app.get('/api/public', (req, res) => {
   const db = readDB();
   res.json({
     rooms: db.rooms.approved.map(publicRoom),
     reviews: db.reviews.approved,
-    transports: db.transports.approved.map(publicTransport)
+    transports: db.transports.approved.map(publicTransport),
+    tenantRequests: db.tenantRequests.approved
   });
 });
 
@@ -344,11 +345,8 @@ app.get('/api/properties', (req, res) => {
 app.get('/api/properties/:id', (req, res) => {
   const db = readDB();
   const property = db.rooms.approved.find(p => p.id === req.params.id);
-  if (property) {
-    res.json(property);
-  } else {
-    res.status(404).json({ error: 'Property not found' });
-  }
+  if (property) res.json(property);
+  else res.status(404).json({ error: 'Property not found' });
 });
 
 app.get('/api/room-media/:id/:kind', (req, res) => {
@@ -377,6 +375,7 @@ app.get('/api/transport-media/:id/carPicture', (req, res) => {
   return sendMedia(res, driver?.carPicture);
 });
 
+// ===== POST ROOM (LANDLORD) =====
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const body = req.body;
@@ -384,24 +383,58 @@ app.post('/api/rooms', async (req, res) => {
     id: "post-" + Date.now(),
     title: cleanText(body.title, 120),
     location: cleanText(body.location, 80),
+    alexandraSuburb: normalizeAlexandraSuburb(body.alexandraSuburb),
     address: cleanText(body.address, 220),
     type: cleanText(body.type, 40),
     roomType: cleanText(body.roomType || "Any", 40),
     amount: cleanText(body.amount, 40),
     deposit: cleanText(body.deposit || "No deposit stated", 80),
     childFriendly: cleanText(body.childFriendly, 10),
+    maxKids: cleanText(body.maxKids, 10),
     parking: cleanText(body.parking, 10),
+    maxCars: cleanText(body.maxCars, 10),
     bath: cleanText(body.bath, 120),
     images: cleanImages(body.images),
     video: cleanVideo(body.video),
     posterName: cleanText(body.posterName, 100),
     posterContact: cleanText(body.posterContact, 160),
     notes: cleanText(body.notes, 800),
+    online: true,
     status: "pending",
     createdAt: new Date().toISOString()
   });
   writeDB(db);
   res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
+});
+
+// ===== POST TENANT REQUEST =====
+app.post('/api/tenant-requests', async (req, res) => {
+  const db = readDB();
+  const body = req.body;
+  const preferredLocations = Array.isArray(body.preferredLocations)
+    ? body.preferredLocations.map(l => cleanText(l, 60)).filter(Boolean)
+    : [];
+  db.tenantRequests.pending.unshift({
+    id: "request-" + Date.now(),
+    tenantName: cleanText(body.tenantName, 100),
+    contactNumber: cleanText(body.contactNumber, 80),
+    preferredLocations: preferredLocations,
+    alexandraSuburb: normalizeAlexandraSuburb(body.alexandraSuburb),
+    roomType: cleanText(body.roomType, 40),
+    budget: cleanText(body.budget, 40),
+    budgetRange: cleanText(body.budgetRange, 40),
+    moveInDate: cleanText(body.moveInDate, 40),
+    childFriendly: cleanText(body.childFriendly, 10),
+    childrenCount: cleanText(body.childrenCount, 10),
+    childrenAges: cleanText(body.childrenAges, 120),
+    parking: cleanText(body.parking, 10),
+    carsCount: cleanText(body.carsCount, 10),
+    notes: cleanText(body.notes, 800),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  });
+  writeDB(db);
+  res.status(201).json({ ok: true });
 });
 
 app.post('/api/reviews', async (req, res) => {
@@ -481,18 +514,13 @@ app.post('/api/admin/login', async (req, res) => {
     return res.status(401).json({ error: "Incorrect password" });
   }
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, {
-    created: Date.now(),
-    expires: Date.now() + SESSION_TIMEOUT
-  });
+  sessions.set(token, { created: Date.now(), expires: Date.now() + SESSION_TIMEOUT });
   res.json({ token: token, success: true });
 });
 
 app.post('/api/admin/logout', (req, res) => {
   const token = adminToken(req);
-  if (token && sessions.has(token)) {
-    sessions.delete(token);
-  }
+  if (token && sessions.has(token)) sessions.delete(token);
   res.json({ success: true });
 });
 
@@ -528,10 +556,11 @@ app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
   return sendMedia(res, item?.images?.[index]);
 });
 
+// ===== ADMIN ACTION =====
 app.post('/api/admin/action', async (req, res) => {
   const token = requireAdmin(req, res);
   if (!token) return;
-  
+
   const db = readDB();
   const body = req.body;
 
@@ -539,10 +568,6 @@ app.post('/api/admin/action', async (req, res) => {
     moveItem(db, body.section, body.from, body.to, body.id);
   }
 
-  // ========================================
-  // CRITICAL FIX: EDIT ACTION 
-  // Updates text and preserves original images
-  // ========================================
   if (body.action === "edit") {
     const section = db[body.section];
     if (section && Array.isArray(section[body.from])) {
@@ -550,8 +575,6 @@ app.post('/api/admin/action', async (req, res) => {
       if (itemIndex !== -1) {
         const currentItem = section[body.from][itemIndex];
         const updatedData = body.data || {};
-        
-        // Update only text fields, preserve original media (base64) and ID/metadata
         section[body.from][itemIndex] = {
           ...currentItem,
           title: cleanText(updatedData.title, 120),
@@ -632,6 +655,12 @@ app.post('/api/admin/action', async (req, res) => {
     if (room) room.video = "";
   }
 
+  if (body.action === "toggle-online") {
+    const list = db[body.section]?.[body.from] || [];
+    const item = list.find((entry) => entry.id === body.id);
+    if (item) item.online = item.online === false ? true : false;
+  }
+
   if (body.action === "clear-all-data") {
     clearAllData();
     return res.json({ ok: true });
@@ -641,22 +670,105 @@ app.post('/api/admin/action', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ===== MATCHING ENGINE =====
+function budgetInRange(amount, range) {
+  const num = moneyNumber(amount);
+  if (!num) return false;
+  if (range === 'R800-R1500') return num >= 800 && num <= 1500;
+  if (range === 'R1600-R2500') return num >= 1600 && num <= 2500;
+  if (range === 'R2600-R3500') return num >= 2600 && num <= 3500;
+  if (range === 'R3600-R4500') return num >= 3600 && num <= 4500;
+  if (range === 'R4600-R8000') return num >= 4600 && num <= 8000;
+  return true;
+}
+
+function locationMatch(landlordLoc, landlordSub, tenantLocs, tenantSub) {
+  if (!Array.isArray(tenantLocs) || tenantLocs.length === 0) return true;
+  const ln = String(landlordLoc || '').toLowerCase().trim();
+  const matched = tenantLocs.some(l => String(l || '').toLowerCase().trim() === ln);
+  if (!matched) return false;
+  // Alexandra suburb match (only if both are Alexandra)
+  if (ln === 'alexandra township') {
+    const ls = String(landlordSub || '').trim();
+    const ts = String(tenantSub || '').trim();
+    if (!ls && !ts) return true;
+    if (!ls || !ts) return true;
+    if (ls === ts) return true;
+    if (ls === 'Alexandra Mix' || ts === 'Alexandra Mix') return true;
+    return false;
+  }
+  return true;
+}
+
+function roomTypeMatch(landlordType, tenantType) {
+  const tt = String(tenantType || '').trim().toLowerCase();
+  if (!tt || tt === 'any' || tt === 'any / not sure') return true;
+  const lt = String(landlordType || '').trim().toLowerCase();
+  if (!lt) return false;
+  return lt === tt;
+}
+
+function matchOne(landlord, tenant) {
+  if (!roomTypeMatch(landlord.roomType, tenant.roomType)) return false;
+  if (tenant.budgetRange && !budgetInRange(landlord.amount, tenant.budgetRange)) return false;
+  if (!locationMatch(landlord.location, landlord.alexandraSuburb, tenant.preferredLocations, tenant.alexandraSuburb)) return false;
+  const lk = String(landlord.childFriendly || 'No').toLowerCase();
+  const tk = String(tenant.childFriendly || 'No').toLowerCase();
+  if (lk !== tk) return false;
+  const lp = String(landlord.parking || 'No').toLowerCase();
+  const tp = String(tenant.parking || 'No').toLowerCase();
+  if (lp !== tp) return false;
+  return true;
+}
+
+app.get('/api/admin/matches', (req, res) => {
+  const token = requireAdmin(req, res);
+  if (!token) return;
+  const db = readDB();
+  const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
+  const tenants = db.tenantRequests.approved;
+
+  const matches = [];
+  landlords.forEach(l => {
+    tenants.forEach(t => {
+      if (matchOne(l, t)) {
+        matches.push({
+          landlordId: l.id,
+          landlordTitle: l.title,
+          landlordLocation: l.location,
+          landlordSuburb: l.alexandraSuburb || '',
+          landlordRent: l.amount,
+          landlordContact: l.posterContact,
+          landlordName: l.posterName,
+          tenantId: t.id,
+          tenantName: t.tenantName,
+          tenantContact: t.contactNumber,
+          tenantLocations: t.preferredLocations || [],
+          tenantBudget: t.budget,
+          tenantBudgetRange: t.budgetRange || '',
+          tenantRoomType: t.roomType,
+          childFriendly: l.childFriendly,
+          parking: l.parking
+        });
+      }
+    });
+  });
+
+  // Also expose reverse view: tenant → landlords
+  const tenantMatches = {};
+  matches.forEach(m => {
+    if (!tenantMatches[m.tenantId]) tenantMatches[m.tenantId] = [];
+    tenantMatches[m.tenantId].push(m);
+  });
+
+  res.json({ matches, tenantMatches });
+});
+
 // ===== FRONTEND ROUTES =====
-app.get('/', (req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(ROOT, 'admin.html'));
-});
-
-app.get('/transport', (req, res) => {
-  res.sendFile(path.join(ROOT, 'transport.html'));
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
+app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
+app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
 // ===== START SERVER =====
 app.listen(PORT, '0.0.0.0', () => {
