@@ -301,6 +301,7 @@ function cleanReceipt(details) {
   };
 }
 
+// ============ LOCATION GROUPS ============
 const ALEXANDRA_EAST_GROUP = ['east bank','far east bank','ext 7','ext7','ext 8','ext8','ext 9','ext9','tsutsumane','river park','river park phase 3'];
 const ALEXANDRA_AVENUES_GROUP = ['1st avenue – 12th avenue','1st avenue - 12th avenue','12th avenue – 22nd avenue','12th avenue - 22nd avenue','13th avenue – 22nd avenue','13th avenue - 22nd avenue','1st avenue – 22nd avenue','1st avenue - 22nd avenue'];
 const NORTHERN_SUBURBS_GROUP = ['lombardy','bramley','kew','balfour','orange grove'];
@@ -406,7 +407,11 @@ function moveItem(db, section, from, to, id) {
   if (!item) return false;
   db[section][from] = db[section][from].filter((e) => e.id !== id);
   db[section][to] = db[section][to].filter((e) => e.id !== id);
-  db[section][to].unshift({ ...item, status: to, updatedAt: new Date().toISOString() });
+  db[section][to].unshift({ 
+    ...item, 
+    status: to, 
+    updatedAt: new Date().toISOString() 
+  });
   return true;
 }
 
@@ -417,20 +422,21 @@ function deleteItem(db, section, from, id) {
   return db[section][from].length !== before;
 }
 
+// ============ PUBLIC ROUTES ============
 app.get('/api/public', (req, res) => {
   const db = readDB();
   res.json({
-    rooms: db.rooms.approved.map(publicRoom),
+    rooms: db.rooms.approved.filter(r => r.online !== false).map(publicRoom),
     reviews: db.reviews.approved,
     transports: db.transports.approved.map(publicTransport),
     tenantRequests: db.tenantRequests.approved
   });
 });
 
-app.get('/api/properties', (req, res) => { res.json(readDB().rooms.approved || []); });
+app.get('/api/properties', (req, res) => { res.json((readDB().rooms.approved || []).filter(r => r.online !== false)); });
 
 app.get('/api/properties/:id', (req, res) => {
-  const p = readDB().rooms.approved.find(p => p.id === req.params.id);
+  const p = readDB().rooms.approved.find(p => p.id === req.params.id && p.online !== false);
   if (p) res.json(p); else res.status(404).json({ error: 'Property not found' });
 });
 
@@ -456,6 +462,7 @@ app.get('/api/transport-media/:id/carPicture', (req, res) => {
   return sendMedia(res, d?.carPicture);
 });
 
+// ============ PUBLIC SUBMISSIONS ============
 app.post('/api/rooms', async (req, res) => {
   const db = readDB();
   const b = req.body;
@@ -580,6 +587,7 @@ app.post('/api/contact', async (req, res) => {
   res.status(201).json({ success: true, message: 'Message sent successfully!' });
 });
 
+// ============ ADMIN AUTH ============
 app.post('/api/admin/login', async (req, res) => {
   const b = req.body;
   if (b.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
@@ -628,16 +636,19 @@ app.get('/api/admin/media/:section/:status/:id/images/:index', (req, res) => {
   return sendMedia(res, item?.images?.[i]);
 });
 
+// ============ ADMIN ACTIONS ============
 app.post('/api/admin/action', async (req, res) => {
   const token = requireAdmin(req, res); if (!token) return;
   const db = readDB(); const body = req.body;
 
   try {
+    // ===== MOVE =====
     if (body.action === "move") {
       const ok = moveItem(db, body.section, body.from, body.to, body.id);
       if (!ok) return res.status(400).json({ ok: false, error: "Item not found or invalid section" });
     }
 
+    // ===== EDIT =====
     if (body.action === "edit") {
       const section = db[body.section];
       if (section && Array.isArray(section[body.from])) {
@@ -647,29 +658,53 @@ app.post('/api/admin/action', async (req, res) => {
         const u = body.data || {};
         section[body.from][i] = {
           ...cur,
+          // Room/Title fields
           title: cleanText(u.title !== undefined ? u.title : cur.title, 120),
           location: cleanText(u.location !== undefined ? u.location : cur.location, 80),
+          alexandraSuburb: cleanText(u.alexandraSuburb !== undefined ? u.alexandraSuburb : cur.alexandraSuburb, 80),
           address: cleanText(u.address !== undefined ? u.address : cur.address, 220),
           amount: cleanText(u.amount !== undefined ? u.amount : cur.amount, 40),
           deposit: cleanText(u.deposit !== undefined ? u.deposit : cur.deposit, 80),
-          posterName: cleanText(u.posterName !== undefined ? u.posterName : cur.posterName, 100),
-          posterContact: cleanText(u.posterContact !== undefined ? u.posterContact : cur.posterContact, 160),
-          notes: cleanText(u.notes !== undefined ? u.notes : cur.notes, 800),
-          tenantName: cleanText(u.tenantName !== undefined ? u.tenantName : cur.tenantName, 100),
-          contactNumber: cleanText(u.contactNumber !== undefined ? u.contactNumber : cur.contactNumber, 80),
           roomType: cleanText(u.roomType !== undefined ? u.roomType : cur.roomType, 40),
           type: cleanText(u.roomType !== undefined ? u.roomType : cur.type, 40),
-          budgetRange: cleanText(u.budgetRange !== undefined ? u.budgetRange : cur.budgetRange, 40),
-          budget: cleanText(u.budget !== undefined ? u.budget : cur.budget, 40),
+          // Features (admin editable)
           tiles: cleanText(u.tiles !== undefined ? u.tiles : cur.tiles, 10),
           ceiling: cleanText(u.ceiling !== undefined ? u.ceiling : cur.ceiling, 10),
           childFriendly: cleanText(u.childFriendly !== undefined ? u.childFriendly : cur.childFriendly, 10),
+          maxKids: cleanText(u.maxKids !== undefined ? u.maxKids : cur.maxKids, 10),
           parking: cleanText(u.parking !== undefined ? u.parking : cur.parking, 10),
+          maxCars: cleanText(u.maxCars !== undefined ? u.maxCars : cur.maxCars, 10),
+          bath: cleanText(u.bath !== undefined ? u.bath : cur.bath, 120),
+          // Contact
+          posterName: cleanText(u.posterName !== undefined ? u.posterName : cur.posterName, 100),
+          posterContact: cleanText(u.posterContact !== undefined ? u.posterContact : cur.posterContact, 160),
+          notes: cleanText(u.notes !== undefined ? u.notes : cur.notes, 800),
+          // Tenant fields
+          tenantName: cleanText(u.tenantName !== undefined ? u.tenantName : cur.tenantName, 100),
+          contactNumber: cleanText(u.contactNumber !== undefined ? u.contactNumber : cur.contactNumber, 80),
+          budgetRange: cleanText(u.budgetRange !== undefined ? u.budgetRange : cur.budgetRange, 40),
+          budget: cleanText(u.budget !== undefined ? u.budget : cur.budget, 40),
+          moveInDate: cleanText(u.moveInDate !== undefined ? u.moveInDate : cur.moveInDate, 40),
+          childrenCount: cleanText(u.childrenCount !== undefined ? u.childrenCount : cur.childrenCount, 10),
+          childrenAges: cleanText(u.childrenAges !== undefined ? u.childrenAges : cur.childrenAges, 120),
+          carsCount: cleanText(u.carsCount !== undefined ? u.carsCount : cur.carsCount, 10),
+          // Online status
+          online: u.online !== undefined ? u.online : cur.online,
           updatedAt: new Date().toISOString()
         };
       }
     }
 
+    // ===== TOGGLE ONLINE =====
+    if (body.action === "toggle-online") {
+      const list = db[body.section]?.[body.from] || [];
+      const item = list.find((e) => e.id === body.id);
+      if (!item) return res.status(404).json({ ok: false, error: "Room not found" });
+      item.online = item.online === false ? true : false;
+      item.updatedAt = new Date().toISOString();
+    }
+
+    // ===== MARK TAKEN =====
     if (body.action === "mark-taken") {
       const room = db.rooms.approved.find((e) => e.id === body.id);
       if (!room) return res.status(404).json({ ok: false, error: "Room not found in approved" });
@@ -685,6 +720,7 @@ app.post('/api/admin/action', async (req, res) => {
       db.receipts.unshift({ ...receipt, roomId: room.id, manual: false });
     }
 
+    // ===== MANUAL RECEIPT =====
     if (body.action === "manual-receipt") {
       const receipt = cleanReceipt(body.receipt || {});
       const manualRoom = {
@@ -696,17 +732,20 @@ app.post('/api/admin/action', async (req, res) => {
         amount: receipt.rentAmount,
         deposit: receipt.depositAmount,
         images: [], video: "", status: "taken", receipt, manual: true,
+        online: true,
         takenAt: new Date().toISOString()
       };
       db.rooms.taken.unshift(manualRoom);
       db.receipts.unshift({ ...receipt, roomId: manualRoom.id, manual: true });
     }
 
+    // ===== DELETE =====
     if (body.action === "delete") {
       const ok = deleteItem(db, body.section, body.from, body.id);
       if (!ok) return res.status(400).json({ ok: false, error: "Item not found" });
     }
 
+    // ===== REPOST =====
     if (body.action === "repost") {
       const section = db[body.section];
       const fromList = section && Array.isArray(section[body.from]) ? section[body.from] : [];
@@ -714,29 +753,25 @@ app.post('/api/admin/action', async (req, res) => {
       if (!item) return res.status(404).json({ ok: false, error: "Item not found" });
       section[body.from] = section[body.from].filter((e) => e.id !== body.id);
       if (Array.isArray(section.pending)) {
-        section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending" });
+        section.pending.unshift({ ...item, id: "repost-" + Date.now(), status: "pending", online: true });
       }
     }
 
+    // ===== REMOVE IMAGE =====
     if (body.action === "remove-image") {
       const fromList = db[body.section]?.[body.from] || [];
       const room = fromList.find((e) => e.id === body.id);
       if (room) room.images = (room.images || []).filter((_, i) => i !== Number(body.index));
     }
 
+    // ===== REMOVE VIDEO =====
     if (body.action === "remove-video") {
       const fromList = db[body.section]?.[body.from] || [];
       const room = fromList.find((e) => e.id === body.id);
       if (room) room.video = "";
     }
 
-    if (body.action === "toggle-online") {
-      const list = db[body.section]?.[body.from] || [];
-      const item = list.find((e) => e.id === body.id);
-      if (!item) return res.status(404).json({ ok: false, error: "Room not found" });
-      item.online = item.online === false ? true : false;
-    }
-
+    // ===== CLEAR ALL DATA =====
     if (body.action === "clear-all-data") {
       clearAllData();
       return res.json({ ok: true });
@@ -750,51 +785,70 @@ app.post('/api/admin/action', async (req, res) => {
   }
 });
 
+// ============ MATCHING SYSTEM: 50% RENT + 50% LOCATION ============
+
 function budgetInRange(amount, range) {
   const n = moneyNumber(amount);
-  if (!n) return false;
-  if (range === 'R800-R1500') return n >= 800 && n <= 1500;
-  if (range === 'R1600-R2500') return n >= 1600 && n <= 2500;
-  if (range === 'R2600-R3500') return n >= 2600 && n <= 3500;
-  if (range === 'R3600-R4500') return n >= 3600 && n <= 4500;
-  if (range === 'R4600-R8000') return n >= 4600 && n <= 8000;
-  return true;
-}
-
-function locationMatch(landlordLoc, landlordSub, tenantLocations) {
-  if (!Array.isArray(tenantLocations) || tenantLocations.length === 0) return true;
-  const lg = locationGroup(landlordLoc, landlordSub);
-  for (const tLoc of tenantLocations) {
-    const tg = locationGroup(tLoc, '');
-    if (tg === lg) return true;
-    if (lg === 'Alexandra Township' && (tg === 'Alexandra East' || tg === 'Alexandra Avenues')) return true;
-    if (tg === 'Alexandra Township' && (lg === 'Alexandra East' || lg === 'Alexandra Avenues')) return true;
-    if (lg === 'Alexandra East' && tg === 'Alexandra Avenues') return true;
-    if (lg === 'Alexandra Avenues' && tg === 'Alexandra East') return true;
-  }
+  if (!n || !range) return false;
+  const r = String(range).replace(/\s/g, '').toUpperCase().replace(/^R/, 'R');
+  
+  if (r === 'R800-R1500' || r === '800-1500') return n >= 800 && n <= 1500;
+  if (r === 'R1600-R2500' || r === '1600-2500') return n >= 1600 && n <= 2500;
+  if (r === 'R2600-R3500' || r === '2600-3500') return n >= 2600 && n <= 3500;
+  if (r === 'R3600-R4500' || r === '3600-4500') return n >= 3600 && n <= 4500;
+  if (r === 'R4600-R10000' || r === 'R4600-R8000' || r === '4600-10000' || r === '4600-8000') return n >= 4600 && n <= 10000;
+  
   return false;
 }
 
-function roomTypeMatch(landlordType, tenantType) {
-  const tt = String(tenantType || '').trim().toLowerCase();
-  if (!tt || tt === 'any' || tt === 'any / not sure') return true;
-  const lt = String(landlordType || '').trim().toLowerCase();
-  if (!lt) return false;
-  return lt === tt;
+function rentMatch(landlordRent, tenantBudgetRange) {
+  // 50% of the match: landlord's rent must fall within tenant's budget range
+  return budgetInRange(landlordRent, tenantBudgetRange);
 }
 
-function matchOne(l, t) {
-  if (!roomTypeMatch(l.roomType, t.roomType)) return false;
-  if (t.budgetRange && !budgetInRange(l.amount, t.budgetRange)) return false;
-  if (!locationMatch(l.location, l.alexandraSuburb, t.preferredLocations)) return false;
-  if (String(l.childFriendly || 'No').toLowerCase() !== String(t.childFriendly || 'No').toLowerCase()) return false;
-  if (String(l.parking || 'No').toLowerCase() !== String(t.parking || 'No').toLowerCase()) return false;
-  return true;
+function locationMatch(landlordLoc, landlordSub, tenantLocations) {
+  // 50% of the match: landlord's location group must match one of tenant's preferred location groups
+  if (!Array.isArray(tenantLocations) || tenantLocations.length === 0) return false;
+  
+  const lg = locationGroup(landlordLoc, landlordSub);
+  if (lg === 'Unknown') return false;
+  
+  for (const tLoc of tenantLocations) {
+    const tg = locationGroup(tLoc, '');
+    if (tg === 'Unknown') continue;
+    
+    // Exact group match (e.g., Alexandra Township = Alexandra Township)
+    if (tg === lg) return true;
+    
+    // Alexandra Township matches with its sub-areas (East, Avenues)
+    if (lg === 'Alexandra Township' && (tg === 'Alexandra East' || tg === 'Alexandra Avenues')) return true;
+    if (tg === 'Alexandra Township' && (lg === 'Alexandra East' || lg === 'Alexandra Avenues')) return true;
+    
+    // Alexandra East and Avenues match each other (both fall under Alexandra)
+    if (lg === 'Alexandra East' && tg === 'Alexandra Avenues') return true;
+    if (lg === 'Alexandra Avenues' && tg === 'Alexandra East') return true;
+    
+    // Northern Suburbs group match
+    if (lg === 'Northern Suburbs' && tg === 'Northern Suburbs') return true;
+  }
+  
+  return false;
+}
+
+function matchOne(landlord, tenant) {
+  // A match requires BOTH:
+  // 1. Rent match (50%)
+  // 2. Location match (50%)
+  const rMatch = rentMatch(landlord.amount, tenant.budgetRange || tenant.budget);
+  const lMatch = locationMatch(landlord.location, landlord.alexandraSuburb, tenant.preferredLocations);
+  return rMatch && lMatch;
 }
 
 app.get('/api/admin/matches', (req, res) => {
   const token = requireAdmin(req, res); if (!token) return;
   const db = readDB();
+  
+  // ONLY include ONLINE landlords (online !== false)
   const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
   const tenants = db.tenantRequests.approved;
 
@@ -826,9 +880,7 @@ app.get('/api/admin/matches', (req, res) => {
           tenantLocationGroups: (t.preferredLocations || []).map(loc => locationGroup(loc, '')),
           tenantBudget: t.budget,
           tenantBudgetRange: t.budgetRange || '',
-          tenantRoomType: t.roomType,
-          childFriendly: l.childFriendly,
-          parking: l.parking
+          tenantRoomType: t.roomType
         };
         matches.push(m);
         if (!tenantMatches[m.tenantId]) tenantMatches[m.tenantId] = [];
@@ -845,9 +897,11 @@ app.get('/api/admin/matches', (req, res) => {
   });
 });
 
+// ============ STATIC PAGES ============
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
 app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
+app.get('/post', (req, res) => res.sendFile(path.join(ROOT, 'post.html')));
 app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
