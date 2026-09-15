@@ -790,7 +790,7 @@ app.post('/api/admin/action', async (req, res) => {
 function budgetInRange(amount, range) {
   const n = moneyNumber(amount);
   if (!n || !range) return false;
-  const r = String(range).replace(/\s/g, '').toUpperCase().replace(/^R/, 'R');
+  const r = String(range).replace(/\s/g, '').toUpperCase();
   
   if (r === 'R800-R1500' || r === '800-1500') return n >= 800 && n <= 1500;
   if (r === 'R1600-R2500' || r === '1600-2500') return n >= 1600 && n <= 2500;
@@ -848,8 +848,10 @@ app.get('/api/admin/matches', (req, res) => {
   const token = requireAdmin(req, res); if (!token) return;
   const db = readDB();
   
-  // ONLY include ONLINE landlords (online !== false)
-  const landlords = [...db.rooms.approved, ...db.rooms.taken].filter(r => r.online !== false);
+  // ONLY APPROVED + ONLINE rooms are matched (taken, declined, pending, removed excluded)
+  const landlords = db.rooms.approved.filter(r => r.online !== false);
+  
+  // ONLY APPROVED tenants are matched (pending, declined, removed excluded)
   const tenants = db.tenantRequests.approved;
 
   const matches = [];
@@ -861,6 +863,7 @@ app.get('/api/admin/matches', (req, res) => {
         const m = {
           landlordId: l.id,
           landlordTitle: l.title,
+          landlordAddress: l.address || '',
           landlordLocation: l.location,
           landlordSuburb: l.alexandraSuburb || '',
           landlordLocationGroup: locationGroup(l.location, l.alexandraSuburb),
@@ -902,6 +905,7 @@ app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(ROOT, 'admin.html')));
 app.get('/transport', (req, res) => res.sendFile(path.join(ROOT, 'transport.html')));
 app.get('/post', (req, res) => res.sendFile(path.join(ROOT, 'post.html')));
+app.get('/room/:id', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
