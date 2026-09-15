@@ -207,7 +207,7 @@
           <p style="color:#637268;font-size:13px;margin:0;">
             <strong>50% Rent Match</strong> (landlord rent must be in tenant's budget range) + 
             <strong>50% Location Match</strong> (Alexandra, Lombardy, Bramley, etc.)<br>
-            <span style="color:#b8493b;font-weight:600;">⚠️ Only ONLINE landlords appear in matches.</span>
+            <span style="color:#b8493b;font-weight:600;">⚠️ Only ONLINE + APPROVED rooms match with APPROVED tenants only.</span>
           </p>
         </div>
         <button class="refresh-btn" onclick="refreshMatches()">🔄 Refresh Matches</button>
@@ -944,25 +944,25 @@
     if (!matchesList) return;
     const onlineLandlords = onlineCount !== undefined
       ? onlineCount
-      : [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+      : (allRooms.approved || []).filter(r => r.online !== false).length;
     const approvedTenants = tenantCount !== undefined ? tenantCount : (allTenants.approved || []).length;
 
     if (allMatches.length === 0) {
       matchesList.innerHTML = `
         <div class="empty">
           🔗 No matches found yet.<br><br>
-          <small>🟢 Online Landlords: <strong>${onlineLandlords}</strong> · ✅ Approved Tenants: <strong>${approvedTenants}</strong></small><br><br>
+          <small>🟢 Online Approved Landlords: <strong>${onlineLandlords}</strong> · ✅ Approved Tenants: <strong>${approvedTenants}</strong></small><br><br>
           <strong>Matching rules:</strong><br>
           50% — Rent must be in tenant's budget range<br>
           50% — Location must match (Alexandra, Lombardy, Bramley, etc.)<br><br>
-          Approve rooms and tenants to see matches here.
+          Only APPROVED rooms and APPROVED tenants are matched.
         </div>`;
       return;
     }
 
     const summary = `
       <div style="background:#0f7a5f;color:#fff;padding:14px 18px;border-radius:10px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;">
-        <div>🟢 Online Landlords: <strong>${onlineLandlords}</strong></div>
+        <div>🟢 Online Approved Landlords: <strong>${onlineLandlords}</strong></div>
         <div>✅ Approved Tenants: <strong>${approvedTenants}</strong></div>
         <div>🔗 Total Matches: <strong>${allMatches.length}</strong></div>
       </div>`;
@@ -983,16 +983,28 @@
       const parkingLine = (l.landlordParking === 'Yes') ? '✅ Parking: Yes' : '❌ Parking: No';
       const childLine = (l.landlordChildFriendly === 'Yes') ? '✅ Child friendly: Yes' : '❌ Child friendly: No';
 
+      // Build full address for the WhatsApp message
+      const addressParts = [];
+      if (l.landlordAddress) addressParts.push(l.landlordAddress);
+      if (l.landlordSuburb) addressParts.push(l.landlordSuburb);
+      if (l.landlordLocation) addressParts.push(l.landlordLocation);
+      const fullAddress = addressParts.join(', ') || locationFull;
+
+      // Public viewing link (opens room page with pictures and video)
+      const viewLink = `${window.location.origin}/room/${encodeURIComponent(l.landlordId)}`;
+
       const tenantsHtml = g.tenants.map(t => {
         const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
         const msg = encodeURIComponent(
           `Hi ${t.tenantName},\n\n` +
           `We have a *${roomType}* available for *R${rentClean}* at *${locationFull}*.\n\n` +
+          `📍 *Address:* ${fullAddress}\n\n` +
           `Details:\n` +
           `${tilesLine}\n` +
           `${ceilingLine}\n` +
           `${parkingLine}\n` +
           `${childLine}\n\n` +
+          `📸 View pictures & video here:\n${viewLink}\n\n` +
           `When would you like to come and view it, and what time works for you?\n\n` +
           `– Vusani Ikhaya Properties`
         );
@@ -1014,6 +1026,7 @@
             <div class="title">🏠 ${l.landlordTitle} <span class="match-score full">100% Match</span></div>
             <div class="landlord">👤 ${l.landlordName || ''} 📞 ${l.landlordContact || ''}</div>
             <div class="detail">📍 ${l.landlordLocation}${l.landlordSuburb ? ' ('+l.landlordSuburb+')' : ''} — Group: <strong>${l.landlordLocationGroup || 'N/A'}</strong> | 💰 R${rentClean}</div>
+            <div class="detail">🏠 Address: <strong>${fullAddress}</strong></div>
             <div class="detail">👶 Kids: ${l.childFriendly || 'No'} | 🚗 Parking: ${l.parking || 'No'} | 🟫 Tiles: ${l.landlordTiles || 'No'} | ⬜ Ceiling: ${l.landlordCeiling || 'No'}</div>
             <div style="margin-top:10px;">
               <div style="font-weight:700;color:#0f7a5f;margin-bottom:6px;">🎯 Matched Tenants (${g.tenants.length})</div>
@@ -1237,7 +1250,7 @@
     const totalTenants = Object.values(allTenants).reduce((s, a) => s + a.length, 0);
     const totalTransports = Object.values(allTransport).reduce((s, a) => s + a.length, 0);
     const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
-    const onlineLandlords = [...allRooms.approved, ...allRooms.taken].filter(r => r.online !== false).length;
+    const onlineLandlords = (allRooms.approved || []).filter(r => r.online !== false).length;
 
     grid.innerHTML = `
       <div class="report-card"><div class="title">Total Rooms</div><div class="value">${totalRooms}</div><div class="sub">${onlineLandlords} online</div></div>
