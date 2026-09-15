@@ -381,6 +381,7 @@
 
 <script>
   const SESSION_KEY = "adminSession";
+  const WEBSITE_URL = "https://www.vusaniikhayaproperties.co.za";
   let currentRoomTab = 'pending';
   let currentTransportTab = 'pending';
   let currentTenantTab = 'pending';
@@ -990,8 +991,8 @@
       if (l.landlordLocation) addressParts.push(l.landlordLocation);
       const fullAddress = addressParts.join(', ') || locationFull;
 
-      // Public viewing link (opens room page with pictures and video)
-      const viewLink = `${window.location.origin}/room/${encodeURIComponent(l.landlordId)}`;
+      // Link to the website homepage
+      const viewLink = WEBSITE_URL;
 
       const tenantsHtml = g.tenants.map(t => {
         const waNum = (t.tenantContact || '').replace(/[^0-9]/g, '');
@@ -1004,7 +1005,7 @@
           `${ceilingLine}\n` +
           `${parkingLine}\n` +
           `${childLine}\n\n` +
-          `📸 View pictures & video here:\n${viewLink}\n\n` +
+          `🌐 View rooms & pictures on our website:\n${viewLink}\n\n` +
           `When would you like to come and view it, and what time works for you?\n\n` +
           `– Vusani Ikhaya Properties`
         );
