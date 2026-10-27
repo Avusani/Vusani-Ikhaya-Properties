@@ -699,8 +699,8 @@ function buildFlags(p){
 }
 
 function renderCard(p){
-  const mainImage = p.mainImage || (p.images && p.images[0]) || '';
-  const thumbs = (p.thumbs || (p.images || []).slice(1, 4) || []);
+  const mainImage = p.mainImage || (p.images && p.images.length > 0 ? p.images[0] : '');
+  const thumbs = (p.thumbs || (p.images ? p.images.slice(1, 4) : []));
   const thumbHTML = [0,1,2].map(i => {
     const u = thumbs[i];
     return u ? `<img src="${escapeHTML(u)}" alt="" loading="lazy">` : `<div class="no-img"></div>`;
@@ -717,7 +717,7 @@ function renderCard(p){
     <article class="pc-card" data-id="${escapeHTML(p.id)}" onclick="openProp('${escapeHTML(p.id)}')" tabindex="0" role="button">
       <div class="pc-gallery">
         <div class="pc-main">
-          ${mainImage ? `<img src="${escapeHTML(mainImage)}" alt="${escapeHTML(p.title || '')}" loading="lazy">` : `<div style="height:100%"></div>`}
+          ${mainImage ? `<img src="${escapeHTML(mainImage)}" alt="${escapeHTML(p.title || '')}" loading="lazy">` : `<div style="height:100%; background:#dfe4e8; display:flex; align-items:center; justify-content:center; color:#637268;">No Image</div>`}
           <span class="pc-badge">Available Now</span>
         </div>
         <div class="pc-thumbs">${thumbHTML}</div>
@@ -826,7 +826,7 @@ function openProp(id){
   const p = ALL.find(x => x.id === id);
   if (!p) return;
 
-  const images = (p.images || []).slice();
+  const images = (p.images || []);
   const mainImage = p.mainImage || images[0] || '';
   const thumbs = (p.thumbs || images.slice(1, 4) || []).slice(0,3);
 
@@ -845,7 +845,7 @@ function openProp(id){
       <div class="main">
         ${p.video ? `<video id="modalMainMedia" src="${escapeHTML(p.video)}" controls playsinline poster="${escapeHTML(mainImage)}"></video>`
           : mainImage ? `<img id="modalMainMedia" src="${escapeHTML(mainImage)}" alt="${escapeHTML(p.title || '')}">`
-          : `<div style="height:100%"></div>`}
+          : `<div style="height:100%; background:#dfe4e8;"></div>`}
         <span class="pc-badge" style="left:14px;bottom:14px;">Available Now</span>
       </div>
       <div class="thumbs">${thumbHTML}</div>
