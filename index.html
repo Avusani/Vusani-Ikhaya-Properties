@@ -903,7 +903,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ============================================================
-   IMAGE & VIDEO UPLOAD (CLOUDINARY)
+   FORM SUBMISSION (WITHOUT SERVER UPLOAD - BASE64)
    ============================================================ */
 let uploadedImageUrls = [];
 let uploadedVideoUrl = '';
@@ -913,25 +913,25 @@ async function handleImageSelect(e) {
   if (files.length > 8) { alert("You can only upload a maximum of 8 pictures."); e.target.value = ''; return; }
   
   const preview = $('#imagePreview');
-  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Uploading pictures, please wait...</div>';
+  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Processing pictures...</div>';
   
-  const formData = new FormData();
-  files.forEach(f => formData.append('media', f));
-  
-  try {
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success) {
-      uploadedImageUrls = data.urls;
-      preview.innerHTML = uploadedImageUrls.map(url => `<img src="${url}" alt="preview">`).join('');
-    } else {
-      alert('Upload failed: ' + (data.error || 'Unknown error'));
-      preview.innerHTML = '';
-    }
-  } catch (err) {
-    alert('Error uploading pictures. Please try again.');
-    preview.innerHTML = '';
-  }
+  uploadedImageUrls = [];
+  preview.innerHTML = '';
+
+  let processed = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      uploadedImageUrls.push(ev.target.result);
+      preview.innerHTML += `<img src="${ev.target.result}" alt="preview">`;
+      
+      processed++;
+      if(processed === files.length) {
+         // Done
+      }
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 async function handleVideoSelect(e) {
@@ -939,25 +939,14 @@ async function handleVideoSelect(e) {
   if (!file) return;
   
   const preview = $('#videoPreview');
-  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Uploading video, please wait...</div>';
+  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Processing video...</div>';
   
-  const formData = new FormData();
-  formData.append('media', file);
-  
-  try {
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success && data.urls.length > 0) {
-      uploadedVideoUrl = data.urls[0];
-      preview.innerHTML = `<video src="${uploadedVideoUrl}" controls></video>`;
-    } else {
-      alert('Video upload failed: ' + (data.error || 'Unknown error'));
-      preview.innerHTML = '';
-    }
-  } catch (err) {
-    alert('Error uploading video. Please try again.');
-    preview.innerHTML = '';
-  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    uploadedVideoUrl = ev.target.result;
+    preview.innerHTML = `<video src="${uploadedVideoUrl}" controls></video>`;
+  };
+  reader.readAsDataURL(file);
 }
 
 $('#postForm')?.addEventListener('submit', async (e) => {
@@ -969,15 +958,32 @@ $('#postForm')?.addEventListener('submit', async (e) => {
 
   if (uploadedImageUrls.length === 0) { notice.style.color = 'var(--red)'; notice.textContent = 'Please upload at least 1 picture.'; return; }
 
+  const rawPhone = $('#pOwnerPhone').value;
+  const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
+
   const payload = {
-    title: $('#pTitle').value, purpose: $('#pPurpose').value, type: $('#pType').value, address: $('#pAddress').value,
-    amount: $('#pPrice').value, availableDate: $('#pAvailableDate').value, notes: $('#pNotes').value,
-    childFriendly: $('#pChild').value, maxKids: $('#pChildCount').value || '0',
-    parking: $('#pParking').value, maxCars: $('#pCarCount').value || '0',
-    ceiling: $('#pCeiling').value, tiles: $('#pTiles').value,
-    toiletSharing: $('#pToilet').value, bathroomSharing: $('#pBathroom').value,
-    posterName: $('#pOwnerName').value, posterContact: $('#pOwnerPhone').value,
-    images: uploadedImageUrls, video: uploadedVideoUrl
+    title: $('#pTitle').value, 
+    purpose: $('#pPurpose').value, 
+    type: $('#pType').value, 
+    alexandraSuburb: $('#pTownship').value,
+    location: $('#pTownship').value, 
+    address: $('#pAddress').value,
+    amount: $('#pPrice').value, 
+    deposit: $('#pDeposit').value, 
+    availableDate: $('#pAvailableDate').value, 
+    notes: $('#pNotes').value,
+    childFriendly: $('#pChild').value, 
+    maxKids: $('#pChildCount').value || '0',
+    parking: $('#pParking').value, 
+    maxCars: $('#pCarCount').value || '0',
+    ceiling: $('#pCeiling').value, 
+    tiles: $('#pTiles').value,
+    toiletType: $('#pToilet').value, 
+    bathroomType: $('#pBathroom').value,
+    posterName: $('#pOwnerName').value, 
+    posterContact: cleanPhone,
+    images: uploadedImageUrls, 
+    video: uploadedVideoUrl
   };
 
   btn.disabled = true; btn.textContent = 'Submitting...';
