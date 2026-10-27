@@ -27,15 +27,15 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 80 
 app.use(cors());
 app.use(express.json({ limit: '80mb' }));
 
-// THIS LINE TELLS EXPRESS WHERE YOUR HTML/CSS/JS IS
-app.use(express.static(path.join(__dirname, 'public'))); 
+// 👇 THIS IS THE IMPORTANT LINE: Look in the root folder, NOT public
+app.use(express.static(__dirname)); 
 
 const sessions = new Map();
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
 async function initDB() {
-  const client = await pool.connect();
   try {
+    const client = await pool.connect();
     await client.query(`
       CREATE TABLE IF NOT EXISTS app_state (
         id VARCHAR(50) PRIMARY KEY,
@@ -52,11 +52,13 @@ async function initDB() {
       };
       await client.query('INSERT INTO app_state (id, data) VALUES ($1, $2)', ['main_db', defaultDB]);
     }
-  } finally {
     client.release();
+    console.log("✅ Database connected successfully");
+  } catch (err) {
+    console.error("❌ DB Connection Error:", err.message);
   }
 }
-initDB().catch(console.error);
+initDB();
 
 async function readDB() {
   const res = await pool.query('SELECT data FROM app_state WHERE id = $1', ['main_db']);
@@ -193,14 +195,12 @@ app.post('/api/admin/action', async (req, res) => {
   }
 });
 
-// THIS HANDLES ALL FRONTEND ROUTING (About Us, Post, etc.)
+// 👇 THIS IS THE IMPORTANT LINE: Send index.html from the root folder
 app.get('*', (req, res) => {
-  // If request is for an API route that doesn't exist, return 404 JSON
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API route not found' });
   }
-  // Otherwise, serve the index.html
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
