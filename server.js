@@ -46,6 +46,9 @@ async function initDB() {
         rooms: { pending: [], approved: [], taken: [], declined: [], removed: [] },
         reviews: { pending: [], approved: [], declined: [] },
         reports: { pending: [], approved: [], declined: [] },
+        transports: { pending: [], approved: [], declined: [], removed: [] },
+        tenantRequests: { pending: [], approved: [], declined: [], removed: [] },
+        receipts: [],
         contacts: []
       };
       await client.query('INSERT INTO app_state (id, data) VALUES ($1, $2)', ['main_db', defaultDB]);
@@ -162,6 +165,66 @@ app.post('/api/admin/action', async (req, res) => {
 // Serve Admin Page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// ============ DATABASE MIGRATION ROUTE ============
+app.post('/api/migrate-direct', async (req, res) => {
+  try {
+    const oldData = req.body;
+    const currentDB = await readDB();
+
+    // Merge rooms (approved, pending, etc.) from old database
+    if (oldData.rooms) {
+      ['pending', 'approved', 'taken', 'declined', 'removed'].forEach(key => {
+        if (Array.isArray(oldData.rooms[key])) {
+          // Prevent duplicates by filtering out old IDs
+          const existingIds = new Set(currentDB.rooms[key].map(r => r.id));
+          const newItems = oldData.rooms[key].filter(r => !existingIds.has(r.id));
+          currentDB.rooms[key] = [...newItems, ...currentDB.rooms[key]];
+        }
+      });
+    }
+
+    // Merge contacts
+    if (Array.isArray(oldData.contacts)) {
+      currentDB.contacts = [...oldData.contacts, ...(currentDB.contacts || [])];
+    }
+
+    // Merge tenant requests
+    if (oldData.tenantRequests) {
+      ['pending', 'approved', 'declined', 'removed'].forEach(key => {
+        if (Array.isArray(oldData.tenantRequests[key])) {
+          const existingIds = new Set(currentDB.tenantRequests[key].map(r => r.id));
+          const newItems = oldData.tenantRequests[key].filter(r => !existingIds.has(r.id));
+          currentDB.tenantRequests[key] = [...newItems, ...currentDB.tenantRequests[key]];
+        }
+      });
+    }
+
+    // Merge transports
+    if (oldData.transports) {
+      ['pending', 'approved', 'declined', 'removed'].forEach(key => {
+        if (Array.isArray(oldData.transports[key])) {
+          const existingIds = new Set(currentDB.transports[key].map(r => r.id));
+          const newItems = oldData.transports[key].filter(r => !existingIds.has(r.id));
+          currentDB.transports[key] = [...newItems, ...currentDB.transports[key]];
+        }
+      });
+    }
+
+    // Save back to PostgreSQL
+    await writeDB(currentDB);
+
+    res.json({ 
+      ok: true, 
+      roomsApproved: currentDB.rooms.approved.length,
+      roomsPending: currentDB.rooms.pending.length,
+      contactsRestored: currentDB.contacts.length,
+      tenantsRestored: currentDB.tenantRequests.approved.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve Frontend
