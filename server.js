@@ -14,6 +14,7 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
+// Increased limit for Base64 images
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(__dirname)); 
@@ -141,7 +142,12 @@ app.get('/api/public', async (req, res) => {
       images: room.images || [],
       notes: room.notes, posterName: room.posterName, posterContact: room.posterContact
     }));
-    res.json({ rooms, reviews: db.reviews.approved, transports: db.transports.approved, tenantRequests: db.tenantRequests.approved });
+    res.json({ 
+      rooms, 
+      reviews: db.reviews.approved, 
+      transports: db.transports.approved, 
+      tenantRequests: db.tenantRequests.approved 
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -233,7 +239,6 @@ app.get('/api/admin/data', async (req, res) => {
   if (!token || !sessions.has(token)) return res.status(401).json({ error: "Unauthorized" });
   try {
     const db = await readDB();
-    // We add a dummy traffic object so the admin panel doesn't crash looking for it
     res.json({ ...db, traffic: { today: 0, week: 0, month: 0, total: 0 } });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
