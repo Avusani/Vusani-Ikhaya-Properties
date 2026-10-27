@@ -39,7 +39,7 @@ input,select,textarea{font-family:inherit;}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
 .container{max-width:1240px;margin:0 auto;padding:0 20px;}
 
-/* ===================== TOP BAR (ADMIN LINK) ===================== */
+/* ===================== TOP BAR ===================== */
 .topbar{background:var(--green-dark);color:#dfe6f0;font-size:13px;padding:6px 0;}
 .topbar .container{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
 .topbar a{color:#dfe6f0;}
@@ -874,7 +874,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#propModal').classList.contains('show')) closeProp();
 });
 
-/* Form Logic for Posting Properties */
+/* ============================================================
+   IMAGE & VIDEO UPLOAD (CLOUDINARY)
+   ============================================================ */
 let uploadedImageUrls = [];
 let uploadedVideoUrl = '';
 
