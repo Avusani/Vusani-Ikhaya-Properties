@@ -39,6 +39,14 @@ input,select,textarea{font-family:inherit;}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
 .container{max-width:1240px;margin:0 auto;padding:0 20px;}
 
+/* ===================== TOP BAR (ADMIN LINK) ===================== */
+.topbar{background:var(--green-dark);color:#dfe6f0;font-size:13px;padding:6px 0;}
+.topbar .container{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.topbar a{color:#dfe6f0;}
+.topbar a:hover{color:var(--gold);text-decoration:none;}
+.topbar .tb-left,.topbar .tb-right{display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+.topbar .safety{color:var(--gold);font-weight:600;}
+
 /* ===================== HEADER ===================== */
 .header{background:var(--white);color:var(--green-dark);position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.08);}
 .header .container{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap;}
@@ -194,6 +202,17 @@ input,select,textarea{font-family:inherit;}
 </style>
 </head>
 <body>
+
+<!-- TOP BAR WITH ADMIN LINK -->
+<div class="topbar">
+  <div class="container">
+    <div class="tb-left"><span>🇿🇦 Alexandra, Johannesburg &amp; surrounding areas</span></div>
+    <div class="tb-right">
+      <span class="safety">⚠️ Never pay for a room you have not seen.</span>
+      <a href="/admin">Admin Portal</a>
+    </div>
+  </div>
+</div>
 
 <header class="header">
   <div class="container">
