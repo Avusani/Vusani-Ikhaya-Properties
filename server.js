@@ -54,10 +54,7 @@ async function initDB() {
       await client.query('INSERT INTO app_state (id, data) VALUES ($1, $2)', ['main_db', defaultDB]);
     }
     client.release();
-    console.log("✅ Database connected successfully");
-  } catch (err) {
-    console.error("❌ DB Connection Error:", err.message);
-  }
+  } catch (err) { console.error("DB Error:", err.message); }
 }
 initDB();
 
@@ -70,6 +67,22 @@ async function writeDB(db) {
   await pool.query('UPDATE app_state SET data = $1 WHERE id = $2', [db, 'main_db']);
 }
 
+app.get('/api/admin/reset-everything', async (req, res) => {
+  try {
+    const emptyDB = {
+      rooms: { pending: [], approved: [], taken: [], declined: [], removed: [] },
+      reviews: { pending: [], approved: [], declined: [] },
+      reports: { pending: [], approved: [], declined: [] },
+      transports: { pending: [], approved: [], declined: [], removed: [] },
+      tenantRequests: { pending: [], approved: [], declined: [], removed: [] },
+      receipts: [],
+      contacts: []
+    };
+    await writeDB(emptyDB);
+    res.json({ ok: true, message: "Database reset." });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.post('/api/upload', upload.array('media', 9), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: "No files uploaded" });
@@ -81,9 +94,7 @@ app.post('/api/upload', upload.array('media', 9), async (req, res) => {
       urls.push(result.secure_url);
     }
     res.json({ success: true, urls });
-  } catch (err) {
-    res.status(500).json({ error: "Upload failed" });
-  }
+  } catch (err) { res.status(500).json({ error: "Upload failed" }); }
 });
 
 app.get('/api/public', async (req, res) => {
@@ -91,13 +102,14 @@ app.get('/api/public', async (req, res) => {
     const db = await readDB();
     const rooms = db.rooms.approved.filter(r => r.online !== false).map(room => ({
       id: room.id, title: room.title, location: room.location, alexandraSuburb: room.alexandraSuburb || '',
-      purpose: room.purpose || 'rent', amount: room.amount, bedrooms: Number(room.bedrooms) || 1,
-      bathrooms: Number(room.bathrooms) || 1, parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
+      purpose: room.purpose || 'rent', amount: room.amount, deposit: room.deposit || 'No deposit',
+      bedrooms: Number(room.bedrooms) || 1, bathrooms: Number(room.bathrooms) || 1, 
+      parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
       childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
-      toiletSharing: room.toiletSharing || 'Private', bathroomSharing: room.bathroomSharing || 'Private',
+      toiletType: room.toiletType || 'Shared', bathroomType: room.bathroomType || 'Shared',
       tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', images: room.images || [],
       mainImage: room.images?.[0] || '', thumbs: room.images?.slice(1, 4) || [], video: room.video || "",
-      notes: room.notes
+      notes: room.notes, posterName: room.posterName, posterContact: room.posterContact
     }));
     res.json({ rooms });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -162,65 +174,10 @@ app.post('/api/admin/action', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
-});
-
-app.post('/api/migrate-direct', async (req, res) => {
-  try {
-    const oldData = req.body;
-    const currentDB = await readDB();
-
-    if (oldData.rooms) {
-      ['pending', 'approved', 'taken', 'declined', 'removed'].forEach(key => {
-        if (Array.isArray(oldData.rooms[key])) {
-          const existingIds = new Set(currentDB.rooms[key].map(r => r.id));
-          const newItems = oldData.rooms[key].filter(r => !existingIds.has(r.id));
-          currentDB.rooms[key] = [...newItems, ...currentDB.rooms[key]];
-        }
-      });
-    }
-    if (Array.isArray(oldData.contacts)) {
-      currentDB.contacts = [...oldData.contacts, ...(currentDB.contacts || [])];
-    }
-    if (oldData.tenantRequests) {
-      ['pending', 'approved', 'declined', 'removed'].forEach(key => {
-        if (Array.isArray(oldData.tenantRequests[key])) {
-          const existingIds = new Set(currentDB.tenantRequests[key].map(r => r.id));
-          const newItems = oldData.tenantRequests[key].filter(r => !existingIds.has(r.id));
-          currentDB.tenantRequests[key] = [...newItems, ...currentDB.tenantRequests[key]];
-        }
-      });
-    }
-    if (oldData.transports) {
-      ['pending', 'approved', 'declined', 'removed'].forEach(key => {
-        if (Array.isArray(oldData.transports[key])) {
-          const existingIds = new Set(currentDB.transports[key].map(r => r.id));
-          const newItems = oldData.transports[key].filter(r => !existingIds.has(r.id));
-          currentDB.transports[key] = [...newItems, ...currentDB.transports[key]];
-        }
-      });
-    }
-
-    await writeDB(currentDB);
-
-    res.json({ 
-      ok: true, 
-      roomsApproved: currentDB.rooms.approved.length,
-      roomsPending: currentDB.rooms.pending.length,
-      contactsRestored: currentDB.contacts.length,
-      tenantsRestored: currentDB.tenantRequests.approved.length
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
+app.get('/admin', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API route not found' });
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => { console.log(`🚀 Server running on port ${PORT}`); });
