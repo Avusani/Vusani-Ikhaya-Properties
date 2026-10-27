@@ -282,8 +282,14 @@
     <form id="editRoomForm">
       <input type="hidden" id="editRoomId"><input type="hidden" id="editRoomFrom">
       <label>Title</label><input type="text" id="editRoomTitle">
-      <label>Location</label><input type="text" id="editRoomLocation">
-      <label>Address</label><input type="text" id="editRoomAddress">
+      <label>Township / Area</label>
+      <select id="editRoomLocation">
+        <option value="Alexandra">Alexandra</option><option value="East Bank">East Bank</option><option value="Tsutsumane">Tsutsumane</option>
+        <option value="River Park">River Park</option><option value="Wynberg">Wynberg</option><option value="Marlboro">Marlboro</option>
+        <option value="Bramley">Bramley</option><option value="Lombardy East">Lombardy East</option><option value="Sandton">Sandton</option>
+        <option value="Kew">Kew</option><option value="Balfour">Balfour</option><option value="Other">Other</option>
+      </select>
+      <label>Street Address</label><input type="text" id="editRoomAddress">
       <label>Amount (R)</label><input type="text" id="editRoomAmount">
       <label>Deposit (R)</label><input type="text" id="editRoomDeposit">
       <label>Landlord Name</label><input type="text" id="editRoomPosterName">
@@ -302,6 +308,28 @@
         <div><label>Has Tiles?</label><select id="editRoomTiles"><option value="No">No</option><option value="Yes">Yes</option></select></div>
         <div><label>Has Ceiling?</label><select id="editRoomCeiling"><option value="No">No</option><option value="Yes">Yes</option></select></div>
       </div>
+      
+      <div class="feature-row">
+        <div>
+          <label>Toilet Options</label>
+          <select id="editRoomToilet">
+            <option value="Shared Toilet">Shared Toilet</option>
+            <option value="Own Toilet">Own Toilet</option>
+            <option value="Own Toilet & Shower">Own Toilet &amp; Shower</option>
+            <option value="Inside Toilet">Inside Toilet</option>
+          </select>
+        </div>
+        <div>
+          <label>Bathroom Options</label>
+          <select id="editRoomBathroom">
+            <option value="Shared Bathroom">Shared Bathroom</option>
+            <option value="Own Bathroom">Own Bathroom</option>
+            <option value="Own Bathroom & Shower">Own Bathroom &amp; Shower</option>
+            <option value="Inside Bathroom">Inside Bathroom</option>
+          </select>
+        </div>
+      </div>
+
       <div class="feature-row">
         <div><label>Max Kids</label><input type="text" id="editRoomMaxKids"></div>
         <div><label>Max Cars</label><input type="text" id="editRoomMaxCars"></div>
@@ -567,13 +595,15 @@
     const room = allRooms[from]?.find(r => r.id === id); if (!room) return;
     getEl('editRoomId').value = id; getEl('editRoomFrom').value = from;
     getEl('editRoomTitle').value = room.title || ''; getEl('editRoomLocation').value = room.location || ''; getEl('editRoomAddress').value = room.address || ''; getEl('editRoomAmount').value = room.amount || ''; getEl('editRoomDeposit').value = room.deposit || ''; getEl('editRoomPosterName').value = room.posterName || ''; getEl('editRoomPosterContact').value = room.posterContact || ''; getEl('editRoomNotes').value = room.notes || ''; getEl('editRoomRoomType').value = room.roomType || room.type || ''; getEl('editRoomChild').value = room.childFriendly || 'No'; getEl('editRoomParking').value = room.parking || 'No'; getEl('editRoomTiles').value = room.tiles || 'No'; getEl('editRoomCeiling').value = room.ceiling || 'No'; getEl('editRoomMaxKids').value = room.maxKids || ''; getEl('editRoomMaxCars').value = room.maxCars || '';
+    getEl('editRoomToilet').value = room.toiletType || 'Shared Toilet';
+    getEl('editRoomBathroom').value = room.bathroomType || 'Shared Bathroom';
     getEl('editRoomModal').classList.add('show');
   }
   function closeEditRoomModal() { getEl('editRoomModal').classList.remove('show'); }
 
   getEl('editRoomForm').addEventListener('submit', async (e) => {
     e.preventDefault(); const token = localStorage.getItem('adminToken'); const id = getEl('editRoomId').value;
-    await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'edit', section: 'rooms', from: getEl('editRoomFrom').value, id: id, data: { title: getEl('editRoomTitle').value, location: getEl('editRoomLocation').value, address: getEl('editRoomAddress').value, amount: getEl('editRoomAmount').value, deposit: getEl('editRoomDeposit').value, posterName: getEl('editRoomPosterName').value, posterContact: getEl('editRoomPosterContact').value, notes: getEl('editRoomNotes').value, roomType: getEl('editRoomRoomType').value, childFriendly: getEl('editRoomChild').value, parking: getEl('editRoomParking').value, tiles: getEl('editRoomTiles').value, ceiling: getEl('editRoomCeiling').value, maxKids: getEl('editRoomMaxKids').value, maxCars: getEl('editRoomMaxCars').value } }) });
+    await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'edit', section: 'rooms', from: getEl('editRoomFrom').value, id: id, data: { title: getEl('editRoomTitle').value, location: getEl('editRoomLocation').value, address: getEl('editRoomAddress').value, amount: getEl('editRoomAmount').value, deposit: getEl('editRoomDeposit').value, posterName: getEl('editRoomPosterName').value, posterContact: getEl('editRoomPosterContact').value, notes: getEl('editRoomNotes').value, roomType: getEl('editRoomRoomType').value, childFriendly: getEl('editRoomChild').value, parking: getEl('editRoomParking').value, tiles: getEl('editRoomTiles').value, ceiling: getEl('editRoomCeiling').value, maxKids: getEl('editRoomMaxKids').value, maxCars: getEl('editRoomMaxCars').value, toiletType: getEl('editRoomToilet').value, bathroomType: getEl('editRoomBathroom').value } }) });
     showNotice('✅ Room updated', 'success'); closeEditRoomModal(); await loadData();
   });
 
