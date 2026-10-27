@@ -131,17 +131,23 @@ app.get('/api/admin/reset-everything', async (req, res) => {
 app.get('/api/public', async (req, res) => {
   try {
     const db = await readDB();
-    const rooms = db.rooms.approved.filter(r => r.online !== false).map(room => ({
-      id: room.id, title: room.title, location: room.location, alexandraSuburb: room.alexandraSuburb || '',
-      purpose: room.purpose || 'rent', amount: room.amount, deposit: room.deposit || 'No deposit',
-      bedrooms: Number(room.bedrooms) || 1, bathrooms: Number(room.bathrooms) || 1, 
-      parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
-      childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
-      toiletType: room.toiletType || 'Shared', bathroomType: room.bathroomType || 'Shared',
-      tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', 
-      images: room.images || [],
-      notes: room.notes, posterName: room.posterName, posterContact: room.posterContact
-    }));
+    const rooms = db.rooms.approved.filter(r => r.online !== false).map(room => {
+      const imgs = Array.isArray(room.images) ? room.images : [];
+      return {
+        id: room.id, title: room.title, location: room.location, alexandraSuburb: room.alexandraSuburb || '',
+        purpose: room.purpose || 'rent', amount: room.amount, deposit: room.deposit || 'No deposit',
+        bedrooms: Number(room.bedrooms) || 1, bathrooms: Number(room.bathrooms) || 1, 
+        parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
+        childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
+        toiletType: room.toiletType || 'Shared', bathroomType: room.bathroomType || 'Shared',
+        tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', 
+        images: imgs,
+        mainImage: imgs[0] || '',
+        thumbs: imgs.slice(1, 4),
+        video: room.video || "",
+        notes: room.notes, posterName: room.posterName, posterContact: room.posterContact
+      };
+    });
     res.json({ 
       rooms, 
       reviews: db.reviews.approved, 
