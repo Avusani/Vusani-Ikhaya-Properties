@@ -26,8 +26,6 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 80 
 
 app.use(cors());
 app.use(express.json({ limit: '80mb' }));
-
-// 👇 THIS IS THE IMPORTANT LINE: Look in the root folder, NOT public
 app.use(express.static(__dirname)); 
 
 const sessions = new Map();
@@ -72,20 +70,15 @@ async function writeDB(db) {
 app.post('/api/upload', upload.array('media', 9), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: "No files uploaded" });
-    
     const urls = [];
     for (const file of req.files) {
       const b64 = Buffer.from(file.buffer).toString('base64');
       const dataURI = `data:${file.mimetype};base64,${b64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: 'vusani_properties',
-        resource_type: 'auto'
-      });
+      const result = await cloudinary.uploader.upload(dataURI, { folder: 'vusani_properties', resource_type: 'auto' });
       urls.push(result.secure_url);
     }
     res.json({ success: true, urls });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Upload failed" });
   }
 });
@@ -94,49 +87,27 @@ app.get('/api/public', async (req, res) => {
   try {
     const db = await readDB();
     const rooms = db.rooms.approved.filter(r => r.online !== false).map(room => ({
-      id: room.id,
-      title: room.title,
-      location: room.location,
-      alexandraSuburb: room.alexandraSuburb || '',
-      purpose: room.purpose || 'rent',
-      amount: room.amount,
-      bedrooms: Number(room.bedrooms) || 1,
-      bathrooms: Number(room.bathrooms) || 1,
-      parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
-      childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No',
-      maxKids: room.maxKids || '0',
-      toiletSharing: room.toiletSharing || 'Private',
-      bathroomSharing: room.bathroomSharing || 'Private',
-      tiles: room.tiles || 'No',
-      ceiling: room.ceiling || 'No',
-      images: room.images || [],
-      mainImage: room.images?.[0] || '',
-      thumbs: room.images?.slice(1, 4) || [],
-      video: room.video || "",
+      id: room.id, title: room.title, location: room.location, alexandraSuburb: room.alexandraSuburb || '',
+      purpose: room.purpose || 'rent', amount: room.amount, bedrooms: Number(room.bedrooms) || 1,
+      bathrooms: Number(room.bathrooms) || 1, parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
+      childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
+      toiletSharing: room.toiletSharing || 'Private', bathroomSharing: room.bathroomSharing || 'Private',
+      tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', images: room.images || [],
+      mainImage: room.images?.[0] || '', thumbs: room.images?.slice(1, 4) || [], video: room.video || "",
       notes: room.notes
     }));
     res.json({ rooms });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/rooms', async (req, res) => {
   try {
     const db = await readDB();
     const b = req.body;
-    db.rooms.pending.unshift({
-      id: "post-" + Date.now(),
-      ...b,
-      online: true,
-      status: "pending",
-      createdAt: new Date().toISOString()
-    });
+    db.rooms.pending.unshift({ id: "post-" + Date.now(), ...b, online: true, status: "pending", createdAt: new Date().toISOString() });
     await writeDB(db);
     res.status(201).json({ ok: true, id: db.rooms.pending[0].id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/admin/login', (req, res) => {
@@ -149,19 +120,15 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/data', async (req, res) => {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token || !sessions.has(token)) return res.status(401).json({ error: "Unauthorized" });
-  
   try {
     const db = await readDB();
     res.json({ ...db });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/admin/action', async (req, res) => {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token || !sessions.has(token)) return res.status(401).json({ error: "Unauthorized" });
-
   try {
     const db = await readDB();
     const { action, section, from, to, id, data } = req.body;
@@ -187,19 +154,19 @@ app.post('/api/admin/action', async (req, res) => {
         item.images.push(data.imageUrl);
       }
     }
-
     await writeDB(db);
     res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 👇 THIS IS THE IMPORTANT LINE: Send index.html from the root folder
+// Serve Admin Page
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Serve Frontend
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API route not found' });
-  }
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API route not found' });
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
