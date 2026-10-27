@@ -655,13 +655,101 @@
 
   function renderContacts() { const list = getEl('contactList'); if (!list) return; if (allContacts.length === 0) { list.innerHTML = '<div class="empty">📧 No contact messages yet.</div>'; return; } list.innerHTML = allContacts.slice().reverse().map(c => `<div class="room-card" style="grid-template-columns:1fr;"><div class="info"><div class="title">📧 ${c.name || 'Unknown'}</div><div class="landlord">📞 ${c.phone || ''} | ✉️ ${c.email || ''}</div><div class="detail">${c.message || ''}</div></div></div>`).join(''); }
 
-  function runTrace() { /* Omitted for brevity in this view, but included in final */ }
-  function renderAnalytics() { const grid = getEl('analyticsGrid'); if (!grid) return; const totalRooms = Object.values(allRooms).reduce((s, a) => s + a.length, 0); grid.innerHTML = `<div class="report-card"><div class="title">Total Rooms</div><div class="value">${totalRooms}</div></div>`; const canvas = getEl('analyticsChart'); if (!canvas) return; if (analyticsChart) analyticsChart.destroy(); analyticsChart = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: ['Jan','Feb','Mar'], datasets: [{ label: 'Revenue', data: [0,0,0], backgroundColor: '#0f7a5f' }] }, options: { responsive: true, maintainAspectRatio: false } }); }
-  function updateAllCounts() { setText('countPending', (allRooms.pending||[]).length); setText('countApproved', (allRooms.approved||[]).length); setText('countTaken', (allRooms.taken||[]).length); setText('countDeclined', (allRooms.declined||[]).length); setText('countRemoved', (allRooms.removed||[]).length); setText('mainRoomsCount', (allRooms.pending||[]).length + (allRooms.approved||[]).length); }
-  function updateStats() { /* Omitted for brevity in this view, but included in final */ }
-  function renderChart() { /* Omitted for brevity in this view, but included in final */ }
+  function runTrace() {
+    const q = (getEl('traceInput').value || '').toLowerCase().trim();
+    const results = getEl('traceResults');
+    if (!results) return;
+    if (!q) { results.innerHTML = '<div class="empty">Type something to search.</div>'; return; }
+    const found = [];
+    Object.keys(allRooms).forEach(status => { allRooms[status].forEach(r => { const hay = [r.title, r.location, r.address, r.posterName, r.posterContact, r.alexandraSuburb].join(' ').toLowerCase(); if (hay.includes(q)) found.push({ type: 'Room', status, item: r }); }); });
+    Object.keys(allTenants).forEach(status => { allTenants[status].forEach(t => { const hay = [t.tenantName, t.contactNumber, (t.preferredLocations||[]).join(' '), t.budgetRange, t.alexandraSuburb, t.notes].join(' ').toLowerCase(); if (hay.includes(q)) found.push({ type: 'Tenant', status, item: t }); }); });
+    Object.keys(allTransport).forEach(status => { allTransport[status].forEach(t => { const hay = [t.firstName, t.surname, t.phone, t.email].join(' ').toLowerCase(); if (hay.includes(q)) found.push({ type: 'Transport', status, item: t }); }); });
+    Object.keys(allReviews).forEach(status => { allReviews[status].forEach(r => { const hay = [r.name, r.roomTitle, r.comment].join(' ').toLowerCase(); if (hay.includes(q)) found.push({ type: 'Review', status, item: r }); }); });
+    if (found.length === 0) { results.innerHTML = `<div class="empty">🔍 No results for "${q}"</div>`; return; }
+    results.innerHTML = `<div style="margin-bottom:12px;color:#637268;font-size:13px;">Found <strong>${found.length}</strong> result(s)</div>` + found.map(f => { const i = f.item; const title = i.title || i.tenantName || (i.firstName ? i.firstName + ' ' + i.surname : '') || i.name || 'Unknown'; const contact = i.posterContact || i.contactNumber || i.phone || ''; const loc = i.location || (i.preferredLocations ? i.preferredLocations.join(', ') : ''); return `<div class="room-card" style="grid-template-columns:1fr;"><div class="info"><div class="title">${f.type} · ${title}</div><div class="detail">Status: <span class="badge ${f.status}">${f.status}</span></div>${contact ? `<div class="detail">📞 ${contact}</div>` : ''}${loc ? `<div class="detail">📍 ${loc}</div>` : ''}<div class="detail" style="font-size:12px;color:#637268;">ID: ${i.id}</div></div></div>`; }).join('');
+  }
+
+  function renderAnalytics() {
+    const grid = getEl('analyticsGrid');
+    if (!grid) return;
+    const totalRooms = Object.values(allRooms).reduce((s, a) => s + a.length, 0);
+    const totalTenants = Object.values(allTenants).reduce((s, a) => s + a.length, 0);
+    const totalTransports = Object.values(allTransport).reduce((s, a) => s + a.length, 0);
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    const onlineLandlords = (allRooms.approved || []).filter(r => r.online !== false).length;
+    grid.innerHTML = `<div class="report-card"><div class="title">Total Rooms</div><div class="value">${totalRooms}</div><div class="sub">${onlineLandlords} online</div></div><div class="report-card"><div class="title">Total Tenants</div><div class="value">${totalTenants}</div><div class="sub">${(allTenants.approved||[]).length} approved</div></div><div class="report-card"><div class="title">Total Matches</div><div class="value">${allMatches.length}</div></div><div class="report-card"><div class="title">Service Revenue</div><div class="value">R${totalFees.toFixed(2)}</div><div class="sub">${allReceipts.length} paid</div></div><div class="report-card"><div class="title">Transport Listings</div><div class="value">${totalTransports}</div></div><div class="report-card"><div class="title">Reviews</div><div class="value">${Object.values(allReviews).reduce((s,a)=>s+a.length,0)}</div></div><div class="report-card"><div class="title">Scam Reports</div><div class="value">${Object.values(allReports).reduce((s,a)=>s+a.length,0)}</div></div><div class="report-card"><div class="title">Contacts</div><div class="value">${allContacts.length}</div></div><div class="report-card"><div class="title">Total Visitors</div><div class="value">${allTraffic.total || 0}</div></div><div class="report-card"><div class="title">Admin Actions</div><div class="value">${allActivity.length}</div></div>`;
+    const canvas = getEl('analyticsChart'); if (!canvas) return;
+    if (analyticsChart) analyticsChart.destroy();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
+    analyticsChart = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } } });
+  }
+
+  function updateAllCounts() {
+    setText('countPending', (allRooms.pending || []).length);
+    setText('countApproved', (allRooms.approved || []).length);
+    setText('countTaken', (allRooms.taken || []).length);
+    setText('countDeclined', (allRooms.declined || []).length);
+    setText('countRemoved', (allRooms.removed || []).length);
+    setText('statRoomsPending', (allRooms.pending || []).length);
+    setText('statRoomsApproved', (allRooms.approved || []).length);
+    setText('statRoomsTaken', (allRooms.taken || []).length);
+    setText('mainRoomsCount', (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length + (allRooms.removed || []).length);
+    setText('countTenantPending', (allTenants.pending || []).length);
+    setText('countTenantApproved', (allTenants.approved || []).length);
+    setText('countTenantDeclined', (allTenants.declined || []).length);
+    setText('countTenantRemoved', (allTenants.removed || []).length);
+    setText('mainTenantCount', (allTenants.pending || []).length + (allTenants.approved || []).length + (allTenants.declined || []).length + (allTenants.removed || []).length);
+    setText('statTenantsPending', (allTenants.pending || []).length);
+    setText('countTransportPending', (allTransport.pending || []).length);
+    setText('countTransportApproved', (allTransport.approved || []).length);
+    setText('countTransportDeclined', (allTransport.declined || []).length);
+    setText('countTransportRemoved', (allTransport.removed || []).length);
+    setText('mainTransportCount', (allTransport.pending || []).length + (allTransport.approved || []).length + (allTransport.declined || []).length + (allTransport.removed || []).length);
+    setText('countReviewPending', (allReviews.pending || []).length);
+    setText('countReviewApproved', (allReviews.approved || []).length);
+    setText('countReviewDeclined', (allReviews.declined || []).length);
+    setText('mainReviewCount', (allReviews.pending || []).length + (allReviews.approved || []).length + (allReviews.declined || []).length);
+    setText('countReportPending', (allReports.pending || []).length);
+    setText('countReportApproved', (allReports.approved || []).length);
+    setText('countReportDeclined', (allReports.declined || []).length);
+    setText('mainReportCount', (allReports.pending || []).length + (allReports.approved || []).length + (allReports.declined || []).length);
+    setText('mainContactCount', allContacts.length);
+    const totalFees = allReceipts.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    setText('statServiceFeeRevenue', 'R' + totalFees.toFixed(2));
+    setText('mainMatchCount', (allMatches || []).length);
+    setText('statMatches', (allMatches || []).length);
+  }
+
+  function updateStats() {
+    const mEl = getEl('monthFilter'); const yEl = getEl('yearFilter');
+    if (!mEl || !yEl) return;
+    const month = mEl.value; const year = parseInt(yEl.value);
+    let filtered = allReceipts;
+    if (month !== 'all') filtered = filtered.filter(r => new Date(r.date).getMonth() === parseInt(month));
+    if (year !== 'all' && !isNaN(year)) filtered = filtered.filter(r => new Date(r.date).getFullYear() === year);
+    const total = filtered.reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0);
+    setText('monthlyCount', filtered.length);
+    setText('monthlyServiceFee', 'R' + total.toFixed(2));
+  }
+
+  function renderChart() {
+    const canvas = getEl('revenueChart');
+    if (!canvas) return;
+    if (revenueChart) revenueChart.destroy();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const data = months.map((_, i) => allReceipts.filter(r => new Date(r.date).getMonth() === i).reduce((s, r) => s + parseFloat(r.serviceFee || 0), 0));
+    revenueChart = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: months, datasets: [{ label: 'Service Fee (R)', data, backgroundColor: '#0f7a5f', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R' + v.toFixed(0) } } } } });
+  }
+
   function logout() { localStorage.removeItem('adminToken'); sessionStorage.removeItem(SESSION_KEY); location.reload(); }
   function showNotice(message, type) { if (!notice) return; notice.textContent = message; notice.className = 'notice show ' + (type || 'success'); setTimeout(() => notice.classList.remove('show'), 4000); }
+
+  (function populateYears() {
+    const ys = getEl('yearFilter'); if (!ys) return;
+    ys.innerHTML = '<option value="all">All Years</option>';
+    for (let y = 2035; y >= 2025; y--) ys.innerHTML += `<option value="${y}">${y}</option>`;
+  })();
 
   (function init() { const token = localStorage.getItem('adminToken'); if (token && sessionStorage.getItem(SESSION_KEY)) { setText('adminUser', '👤 Admin'); getEl('loginScreen').style.display = 'none'; getEl('adminPanel').classList.add('show'); loadActivity(); loadData(); } })();
 </script>
