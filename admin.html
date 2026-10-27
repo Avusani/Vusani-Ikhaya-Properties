@@ -578,17 +578,18 @@
   async function uploadAdminImage() {
     const fileInput = getEl('adminNewImage');
     if (!fileInput.files || fileInput.files.length === 0) { alert('Please select an image first.'); return; }
-    const formData = new FormData(); formData.append('media', fileInput.files[0]);
-    try {
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-      const uploadData = await uploadRes.json();
-      if (!uploadData.success || !uploadData.urls[0]) throw new Error('Upload failed');
-      
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64Str = e.target.result;
       const token = localStorage.getItem('adminToken'); const id = getEl('editRoomId').value; const from = getEl('editRoomFrom').value;
-      await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'add-image', section: 'rooms', from: from, id: id, data: { imageUrl: uploadData.urls[0] } }) });
       
-      showNotice('✅ Image uploaded successfully', 'success'); fileInput.value = ''; await loadData();
-    } catch (err) { showNotice('❌ Failed to upload image', 'error'); }
+      try {
+        await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'add-image', section: 'rooms', from: from, id: id, data: { imageUrl: base64Str } }) });
+        showNotice('✅ Image uploaded successfully', 'success'); fileInput.value = ''; await loadData();
+      } catch(err) { showNotice('❌ Failed to upload image', 'error'); }
+    };
+    reader.readAsDataURL(fileInput.files[0]);
   }
 
   function openEditRoomModal(id, from) {
