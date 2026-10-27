@@ -14,7 +14,6 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-// Increased limit for Base64 images
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(__dirname)); 
@@ -324,11 +323,28 @@ app.get('/api/admin/matches', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// SERVE FRONTEND
-app.get('/admin', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
+// ============ SERVE PAGES ============
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'), (err) => {
+    if (err) {
+      console.error("Admin file not found:", err);
+      res.status(404).send("<h1>Admin page not found.</h1><p>Make sure admin.html is in the same folder as server.js</p>");
+    }
+  });
+});
+
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API route not found' });
-  res.sendFile(path.join(__dirname, 'index.html'));
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  
+  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    if (err) {
+      console.error("Index file not found:", err);
+      res.status(404).send("<h1>Website not found.</h1><p>Make sure index.html is in the same folder as server.js</p>");
+    }
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => { console.log(`🚀 Server running on port ${PORT}`); });
