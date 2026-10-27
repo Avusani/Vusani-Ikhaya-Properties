@@ -447,8 +447,27 @@ input,select,textarea{font-family:inherit;}
           </div>
 
           <div class="form-field full">
-            <label>Address / Location *</label>
-            <input type="text" id="pAddress" required placeholder="e.g. 123 Main Street, Alexandra">
+            <label>Township / Area *</label>
+            <select id="pTownship" required>
+              <option value="">Select area...</option>
+              <option value="Alexandra">Alexandra</option>
+              <option value="East Bank">East Bank</option>
+              <option value="Tsutsumane">Tsutsumane</option>
+              <option value="River Park">River Park</option>
+              <option value="Wynberg">Wynberg</option>
+              <option value="Marlboro">Marlboro</option>
+              <option value="Bramley">Bramley</option>
+              <option value="Lombardy East">Lombardy East</option>
+              <option value="Sandton">Sandton</option>
+              <option value="Kew">Kew</option>
+              <option value="Balfour">Balfour</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-field full">
+            <label>Street Address / Location *</label>
+            <input type="text" id="pAddress" required placeholder="e.g. 123 Main Street">
           </div>
           
           <div class="form-field">
@@ -457,6 +476,11 @@ input,select,textarea{font-family:inherit;}
           </div>
           
           <div class="form-field">
+            <label>Deposit (R) *</label>
+            <input type="text" id="pDeposit" required placeholder="e.g. 2500 or No deposit">
+          </div>
+          
+          <div class="form-field full">
             <label>Available Date *</label>
             <input type="date" id="pAvailableDate" required>
           </div>
@@ -509,18 +533,22 @@ input,select,textarea{font-family:inherit;}
           </div>
           
           <div class="form-field">
-            <label>Toilet</label>
-            <select id="pToilet">
-              <option value="Private">Private</option>
-              <option value="Shared">Shared</option>
+            <label>Toilet Options *</label>
+            <select id="pToilet" required>
+              <option value="Shared Toilet">Shared Toilet</option>
+              <option value="Own Toilet">Own Toilet</option>
+              <option value="Own Toilet & Shower">Own Toilet &amp; Shower</option>
+              <option value="Inside Toilet">Inside Toilet</option>
             </select>
           </div>
 
           <div class="form-field">
-            <label>Bathroom / Shower</label>
-            <select id="pBathroom">
-              <option value="Private">Private</option>
-              <option value="Shared">Shared</option>
+            <label>Bathroom Options *</label>
+            <select id="pBathroom" required>
+              <option value="Shared Bathroom">Shared Bathroom</option>
+              <option value="Own Bathroom">Own Bathroom</option>
+              <option value="Own Bathroom & Shower">Own Bathroom &amp; Shower</option>
+              <option value="Inside Bathroom">Inside Bathroom</option>
             </select>
           </div>
 
