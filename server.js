@@ -11,13 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
 
-// PostgreSQL Setup (Railway provides DATABASE_URL automatically)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-// Cloudinary Setup (You must add these to Railway Variables)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -28,12 +26,13 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 80 
 
 app.use(cors());
 app.use(express.json({ limit: '80mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// THIS LINE TELLS EXPRESS WHERE YOUR HTML/CSS/JS IS
+app.use(express.static(path.join(__dirname, 'public'))); 
 
 const sessions = new Map();
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
-// Initialize Database Table
 async function initDB() {
   const client = await pool.connect();
   try {
@@ -59,7 +58,6 @@ async function initDB() {
 }
 initDB().catch(console.error);
 
-// DB Read/Write Helpers
 async function readDB() {
   const res = await pool.query('SELECT data FROM app_state WHERE id = $1', ['main_db']);
   return res.rows[0].data;
@@ -69,9 +67,6 @@ async function writeDB(db) {
   await pool.query('UPDATE app_state SET data = $1 WHERE id = $2', [db, 'main_db']);
 }
 
-// --- API ROUTES ---
-
-// Upload Media to Cloudinary
 app.post('/api/upload', upload.array('media', 9), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: "No files uploaded" });
@@ -93,7 +88,6 @@ app.post('/api/upload', upload.array('media', 9), async (req, res) => {
   }
 });
 
-// Public Data Endpoint
 app.get('/api/public', async (req, res) => {
   try {
     const db = await readDB();
@@ -125,7 +119,6 @@ app.get('/api/public', async (req, res) => {
   }
 });
 
-// Submit New Property (Public)
 app.post('/api/rooms', async (req, res) => {
   try {
     const db = await readDB();
@@ -144,7 +137,6 @@ app.post('/api/rooms', async (req, res) => {
   }
 });
 
-// Admin Login
 app.post('/api/admin/login', (req, res) => {
   if (req.body.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
   const token = crypto.randomBytes(32).toString('hex');
@@ -152,7 +144,6 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ token, success: true });
 });
 
-// Admin Data Fetch
 app.get('/api/admin/data', async (req, res) => {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token || !sessions.has(token)) return res.status(401).json({ error: "Unauthorized" });
@@ -165,7 +156,6 @@ app.get('/api/admin/data', async (req, res) => {
   }
 });
 
-// Admin Actions (Approve, Edit, Delete)
 app.post('/api/admin/action', async (req, res) => {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token || !sessions.has(token)) return res.status(401).json({ error: "Unauthorized" });
@@ -203,8 +193,13 @@ app.post('/api/admin/action', async (req, res) => {
   }
 });
 
-// Serve Frontend
+// THIS HANDLES ALL FRONTEND ROUTING (About Us, Post, etc.)
 app.get('*', (req, res) => {
+  // If request is for an API route that doesn't exist, return 404 JSON
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  // Otherwise, serve the index.html
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
