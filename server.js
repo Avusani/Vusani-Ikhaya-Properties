@@ -162,35 +162,27 @@ app.post('/api/admin/action', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Serve Admin Page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// ============ DATABASE MIGRATION ROUTE ============
 app.post('/api/migrate-direct', async (req, res) => {
   try {
     const oldData = req.body;
     const currentDB = await readDB();
 
-    // Merge rooms (approved, pending, etc.) from old database
     if (oldData.rooms) {
       ['pending', 'approved', 'taken', 'declined', 'removed'].forEach(key => {
         if (Array.isArray(oldData.rooms[key])) {
-          // Prevent duplicates by filtering out old IDs
           const existingIds = new Set(currentDB.rooms[key].map(r => r.id));
           const newItems = oldData.rooms[key].filter(r => !existingIds.has(r.id));
           currentDB.rooms[key] = [...newItems, ...currentDB.rooms[key]];
         }
       });
     }
-
-    // Merge contacts
     if (Array.isArray(oldData.contacts)) {
       currentDB.contacts = [...oldData.contacts, ...(currentDB.contacts || [])];
     }
-
-    // Merge tenant requests
     if (oldData.tenantRequests) {
       ['pending', 'approved', 'declined', 'removed'].forEach(key => {
         if (Array.isArray(oldData.tenantRequests[key])) {
@@ -200,8 +192,6 @@ app.post('/api/migrate-direct', async (req, res) => {
         }
       });
     }
-
-    // Merge transports
     if (oldData.transports) {
       ['pending', 'approved', 'declined', 'removed'].forEach(key => {
         if (Array.isArray(oldData.transports[key])) {
@@ -212,7 +202,6 @@ app.post('/api/migrate-direct', async (req, res) => {
       });
     }
 
-    // Save back to PostgreSQL
     await writeDB(currentDB);
 
     res.json({ 
@@ -227,7 +216,6 @@ app.post('/api/migrate-direct', async (req, res) => {
   }
 });
 
-// Serve Frontend
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API route not found' });
   res.sendFile(path.join(__dirname, 'index.html'));
