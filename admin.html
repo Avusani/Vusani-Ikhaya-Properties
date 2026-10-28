@@ -1,72 +1,75 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin | VUSANI IKHAYA PROPERTIES</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, sans-serif; background: #edf4ee; color: #17201b; }
-    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-    .topbar a { color: #fff; text-decoration: none; font-weight: bold; }
-    .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-    
-    .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .login-box input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-    .login-box button { width: 100%; padding: 10px; background: #0f7a5f; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
-    
-    .panel { display: none; }
-    .panel.show { display: block; }
-    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: #fff; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ccc; }
-    .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
-    .stat-card .label { font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase;}
-
-    .main-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .main-tabs button { padding: 10px 20px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-weight: bold; font-size: 14px; }
-    .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-    .sub-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;}
-    .sub-tabs button { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; font-weight: bold;}
-    .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-    .section-content { display: none; }
-    .section-content.active { display: block; }
-
-    .room-card { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-    .media-grid { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;}
-    .media-grid img, .media-grid video { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer; flex-shrink: 0;}
-    .room-info h3 { margin: 0 0 5px 0; font-size: 18px; }
-    .room-info p { margin: 0 0 4px 0; font-size: 14px; color: #555; }
-    .actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .actions button { padding: 6px 12px; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-approve { background: #0f7a5f; }
-    .btn-decline { background: #b8493b; }
-    .btn-delete { background: #333; }
-    .btn-taken { background: #1e40af; }
-    .btn-repost { background: #e5a638; }
-    .btn-edit { background: #6b7280; }
-    .empty { padding: 40px; text-align: center; color: #666; background: #fff; border-radius: 8px; border: 1px dashed #ccc;}
-
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
-    .modal .close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #637268; background: none; border: none; }
-    .modal label { display: block; font-weight: 600; margin-top: 10px; font-size: 13px; }
-    .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
-    .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
-    .modal .hr { margin:18px 0;border:none;border-top:2px solid #eef3ee; }
-    
-    .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-    .media-viewer.show { display: flex; }
-    .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
-    .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin | VUSANI IKHAYA PROPERTIES</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,sans-serif;background:#edf4ee;color:#17201b}
+  .topbar{background:#101713;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+  .topbar a{color:#fff;text-decoration:none;font-weight:bold}
+  .container{max-width:1200px;margin:20px auto;padding:0 20px}
+  .login-box{max-width:400px;margin:60px auto;background:#fff;padding:30px;border-radius:12px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+  .login-box input{width:100%;padding:10px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;font-size:16px}
+  .login-box button{width:100%;padding:10px;background:#0f7a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:16px}
+  .panel{display:none}.panel.show{display:block}
+  .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+  .stat-card{background:#fff;padding:15px;border-radius:8px;text-align:center;border:1px solid #ccc}
+  .stat-card .number{font-size:24px;font-weight:900;color:#0f7a5f}
+  .stat-card .label{font-size:11px;color:#666;font-weight:bold;text-transform:uppercase}
+  .stat-card.fee .number{color:#B5952F}
+  .main-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .main-tabs button{padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-weight:bold;font-size:14px}
+  .main-tabs button.active{background:#0f7a5f;color:#fff;border-color:#0f7a5f}
+  .sub-tabs{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
+  .sub-tabs button{padding:6px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;font-weight:bold}
+  .sub-tabs button.active{background:#0f7a5f;color:#fff;border-color:#0f7a5f}
+  .section-content{display:none}.section-content.active{display:block}
+  .room-card{background:#fff;padding:15px;margin-bottom:15px;border-radius:8px;border:1px solid #ddd}
+  .media-grid{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:5px}
+  .media-grid img,.media-grid video{width:100px;height:100px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0}
+  .room-info h3{margin:0 0 5px;font-size:18px}
+  .room-info p{margin:0 0 4px;font-size:14px;color:#555}
+  .fee-box{margin:8px 0;padding:10px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
+  .fee-box .fee-total{font-size:18px;font-weight:900;color:#8a6d0b}
+  .fee-box .fee-line{color:#6b5b1b;font-size:12px}
+  .fee-box .surcharge{color:#b8493b;font-weight:700}
+  .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .actions button{padding:6px 12px;border:none;border-radius:4px;color:#fff;cursor:pointer;font-weight:bold;font-size:13px}
+  .btn-approve{background:#0f7a5f}.btn-decline{background:#b8493b}.btn-delete{background:#333}
+  .btn-taken{background:#1e40af}.btn-repost{background:#e5a638}.btn-edit{background:#6b7280}
+  .empty{padding:40px;text-align:center;color:#666;background:#fff;border-radius:8px;border:1px dashed #ccc}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.show{display:flex}
+  .modal{background:#fff;border-radius:12px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;position:relative}
+  .modal .close{position:absolute;top:12px;right:16px;font-size:24px;cursor:pointer;color:#637268;background:none;border:none}
+  .modal label{display:block;font-weight:600;margin-top:10px;font-size:13px}
+  .modal input,.modal textarea,.modal select{width:100%;padding:10px;border:1px solid #cad8cf;border-radius:6px;font-size:14px}
+  .modal .btn-save{background:#0f7a5f;color:#fff;border:none;padding:12px;border-radius:6px;font-weight:700;cursor:pointer;width:100%;margin-top:16px}
+  .modal .hr{margin:18px 0;border:none;border-top:2px solid #eef3ee}
+  .fee-preview-modal{margin-top:10px;padding:10px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
+  .media-viewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;align-items:center;justify-content:center;padding:20px}
+  .media-viewer.show{display:flex}
+  .media-viewer img,.media-viewer video{max-width:95vw;max-height:90vh;border-radius:8px}
+  .media-viewer .close{position:fixed;top:20px;right:30px;font-size:40px;color:#fff;cursor:pointer;background:none;border:none}
+  .ledger-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  .ledger-table th,.ledger-table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+  .ledger-table th{background:#0f7a5f;color:#fff;font-size:12px;text-transform:uppercase}
+  .audit-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;border-left:4px solid #0f7a5f}
+  .audit-item strong{font-size:13px}
+  .audit-item small{color:#666;font-size:11px}
+  .filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:end}
+  .filter-bar label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:3px}
+  .filter-bar input,.filter-bar select{padding:8px;border:1px solid #ccc;border-radius:6px;font-size:13px}
+</style>
 </head>
 <body>
 
 <div class="topbar">
   <div>VUSANI IKHAYA PROPERTIES ADMIN</div>
   <div>
-    <a href="/" target="_blank">🌐 View Site</a> | 
+    <a href="/" target="_blank">🌐 View Site</a> |
     <a href="#" onclick="logout()">Logout</a>
   </div>
 </div>
@@ -81,18 +84,22 @@
   </div>
 
   <div id="adminPanel" class="panel">
-    <!-- STATS ADDED BACK -->
     <div class="stats-bar">
       <div class="stat-card"><div class="number" id="stat-pending">0</div><div class="label">Pending</div></div>
       <div class="stat-card"><div class="number" id="stat-approved">0</div><div class="label">Approved</div></div>
       <div class="stat-card"><div class="number" id="stat-taken">0</div><div class="label">Taken</div></div>
       <div class="stat-card"><div class="number" id="stat-tenants">0</div><div class="label">Tenants</div></div>
+      <div class="stat-card fee"><div class="number" id="stat-fee-rent">R0</div><div class="label">Rental Fees</div></div>
+      <div class="stat-card fee"><div class="number" id="stat-fee-sale">R0</div><div class="label">Sale Fees</div></div>
+      <div class="stat-card fee"><div class="number" id="stat-fee-surcharge">R0</div><div class="label">Surcharges</div></div>
+      <div class="stat-card fee"><div class="number" id="stat-fee-total">R0</div><div class="label">Total Fees</div></div>
     </div>
 
     <div class="main-tabs">
       <button class="active" onclick="switchTab('rooms')">🏠 Manage Rooms</button>
-      <button onclick="switchTab('activity')">📜 Activity Log</button>
-      <button onclick="switchTab('settings')" style="color: #b8493b;">⚙️ Danger Zone</button>
+      <button onclick="switchTab('ledger')">💰 Financial Ledger</button>
+      <button onclick="switchTab('audit')">📜 Audit Trail</button>
+      <button onclick="switchTab('settings')" style="color:#b8493b">⚙️ Danger Zone</button>
     </div>
 
     <div id="tab-rooms" class="section-content active">
@@ -105,22 +112,30 @@
       <div id="roomList"></div>
     </div>
 
-    <!-- ACTIVITY LOG ADDED BACK -->
-    <div id="tab-activity" class="section-content">
-      <div id="activityList"></div>
+    <div id="tab-ledger" class="section-content">
+      <div class="filter-bar">
+        <div><label>From</label><input type="date" id="ledgerFrom"></div>
+        <div><label>To</label><input type="date" id="ledgerTo"></div>
+        <button onclick="loadLedger()" style="background:#0f7a5f;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer">Filter</button>
+        <button onclick="downloadLedgerCSV()" style="background:#1e40af;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer">⬇️ Export CSV</button>
+      </div>
+      <div id="ledgerTableWrap"></div>
+    </div>
+
+    <div id="tab-audit" class="section-content">
+      <div id="auditList"></div>
     </div>
 
     <div id="tab-settings" class="section-content">
-      <div style="background:#fff; padding:20px; border-radius:8px; border: 1px solid red;">
-        <h2 style="color:red; margin-top:0;">⚠️ Danger Zone</h2>
-        <p>Clicking this button will delete all posts permanently.</p>
-        <button onclick="wipeDatabase()" style="background:red; color:#fff; padding:12px 24px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:16px;">🗑️ Clear All Data</button>
+      <div style="background:#fff;padding:20px;border-radius:8px;border:1px solid red">
+        <h2 style="color:red;margin-top:0">⚠️ Danger Zone</h2>
+        <p>Clicking this button will delete all posts and the financial ledger permanently.</p>
+        <button onclick="wipeDatabase()" style="background:red;color:#fff;padding:12px 24px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;font-size:16px">🗑️ Clear All Data</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- EDIT MODAL -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
     <button class="close" onclick="closeEditModal()">✕</button>
@@ -128,10 +143,15 @@
     <form id="editRoomForm">
       <input type="hidden" id="editRoomId">
       <input type="hidden" id="editRoomFrom">
-      
+
       <label>Title</label><input type="text" id="editRoomTitle">
-      
-      <!-- PROPERTY TYPE FIX -->
+
+      <label>Purpose</label>
+      <select id="editRoomPurpose" onchange="refreshFeePreview()">
+        <option value="rent">For Rent</option>
+        <option value="buy">For Sale</option>
+      </select>
+
       <label>Property Type</label>
       <select id="editRoomType">
         <option value="room">Room</option>
@@ -140,18 +160,23 @@
         <option value="house">House</option>
       </select>
 
-      <label>Location</label><input type="text" id="editRoomLocation">
+      <label>Location</label>
+      <input type="text" id="editRoomLocation" oninput="refreshFeePreview()">
+      <label>Alexandra Suburb</label>
+      <input type="text" id="editRoomSuburb" oninput="refreshFeePreview()">
       <label>Address</label><input type="text" id="editRoomAddress">
-      <label>Amount (R)</label><input type="text" id="editRoomAmount">
+      <label>Amount (R)</label><input type="text" id="editRoomAmount" oninput="refreshFeePreview()">
       <label>Deposit</label><input type="text" id="editRoomDeposit">
       <label>Landlord Name</label><input type="text" id="editRoomPosterName">
       <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
       <label>Notes</label><textarea id="editRoomNotes"></textarea>
 
+      <div class="fee-preview-modal" id="feePreviewModal">Fill amount, purpose and location to see the agent fee.</div>
+
       <hr class="hr">
-      <label style="color:#0f7a5f;font-size:15px;">📷 Add More Pictures</label>
-      <input type="file" id="adminNewImage" accept="image/*" style="padding:8px; margin-bottom:8px;">
-      <button type="button" onclick="uploadAdminImage()" style="background:#0f7a5f; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%;">Upload Image to this Post</button>
+      <label style="color:#0f7a5f;font-size:15px">📷 Add More Pictures</label>
+      <input type="file" id="adminNewImage" accept="image/*" style="padding:8px;margin-bottom:8px">
+      <button type="button" onclick="uploadAdminImage()" style="background:#0f7a5f;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;width:100%">Upload Image to this Post</button>
 
       <button type="submit" class="btn-save">💾 Save Changes</button>
     </form>
@@ -167,17 +192,20 @@
   let allData = {};
   let currentTab = 'pending';
 
+  const $ = (s) => document.querySelector(s);
+  const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA');
+
   function logAct(action) {
-    const entry = { time: new Date().toISOString(), action: action };
+    const entry = { time: new Date().toISOString(), action };
     let logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
     logs.unshift(entry);
     if (logs.length > 50) logs.pop();
     localStorage.setItem('adminLogs', JSON.stringify(logs));
   }
 
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pass = document.getElementById('adminPassword').value;
+    const pass = $('#adminPassword').value;
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
@@ -187,13 +215,13 @@
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('adminPanel').classList.add('show');
+        $('#loginScreen').style.display = 'none';
+        $('#adminPanel').classList.add('show');
         loadData();
       } else {
-        alert("Incorrect password");
+        alert('Incorrect password');
       }
-    } catch (err) { alert("Server error"); }
+    } catch (err) { alert('Server error'); }
   });
 
   function logout() {
@@ -205,42 +233,109 @@
     const token = localStorage.getItem('adminToken');
     if (!token) { logout(); return; }
     try {
-      const res = await fetch('/api/admin/data', { headers: { 'Authorization': 'Bearer ' + token } });
+      const res = await fetch('/api/admin/data', { headers: { Authorization: 'Bearer ' + token } });
       if (res.status === 401) { logout(); return; }
       allData = await res.json();
-      
-      document.getElementById('stat-pending').textContent = (allData.rooms.pending || []).length;
-      document.getElementById('stat-approved').textContent = (allData.rooms.approved || []).length;
-      document.getElementById('stat-taken').textContent = (allData.rooms.taken || []).length;
-      document.getElementById('stat-tenants').textContent = (allData.tenantRequests.approved || []).length;
-      
+
+      $('#stat-pending').textContent = (allData.rooms.pending || []).length;
+      $('#stat-approved').textContent = (allData.rooms.approved || []).length;
+      $('#stat-taken').textContent = (allData.rooms.taken || []).length;
+      $('#stat-tenants').textContent = (allData.tenantRequests.approved || []).length;
+
+      if (allData.feeTotals) {
+        $('#stat-fee-rent').textContent = money(allData.feeTotals.rent);
+        $('#stat-fee-sale').textContent = money(allData.feeTotals.sale);
+        $('#stat-fee-surcharge').textContent = money(allData.feeTotals.surcharges);
+        $('#stat-fee-total').textContent = money(allData.feeTotals.grand);
+      }
+
       loadTab(currentTab, null);
-      renderActivity();
-    } catch (err) { alert("Failed to load data"); }
+      renderAudit();
+      renderLedger(allData.ledger || []);
+    } catch (err) { alert('Failed to load data'); }
   }
 
   function switchTab(tab) {
     document.querySelectorAll('.main-tabs button').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
-    
+
     if (tab === 'rooms') {
       document.querySelectorAll('.main-tabs button')[0].classList.add('active');
-      document.getElementById('tab-rooms').classList.add('active');
-    } else if (tab === 'activity') {
+      $('#tab-rooms').classList.add('active');
+    } else if (tab === 'ledger') {
       document.querySelectorAll('.main-tabs button')[1].classList.add('active');
-      document.getElementById('tab-activity').classList.add('active');
-      renderActivity();
-    } else {
+      $('#tab-ledger').classList.add('active');
+      loadLedger();
+    } else if (tab === 'audit') {
       document.querySelectorAll('.main-tabs button')[2].classList.add('active');
-      document.getElementById('tab-settings').classList.add('active');
+      $('#tab-audit').classList.add('active');
+      renderAudit();
+    } else {
+      document.querySelectorAll('.main-tabs button')[3].classList.add('active');
+      $('#tab-settings').classList.add('active');
     }
   }
 
-  function renderActivity() {
-    const list = document.getElementById('activityList');
-    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    if (logs.length === 0) { list.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
-    list.innerHTML = logs.map(l => `<div style="background:#fff; padding:10px; margin-bottom:8px; border-radius:6px; border-left:4px solid #0f7a5f;"><strong>${l.action}</strong><br><small>${new Date(l.time).toLocaleString()}</small></div>`).join('');
+  function renderAudit() {
+    const list = $('#auditList');
+    const rows = allData.auditTrail || [];
+    if (!rows.length) { list.innerHTML = '<div class="empty">No audit records yet.</div>'; return; }
+    list.innerHTML = rows.map(l => `
+      <div class="audit-item">
+        <strong>${l.action}</strong><br>
+        <small>${new Date(l.created_at).toLocaleString()} · ${l.detail || ''}</small>
+      </div>`).join('');
+  }
+
+  function renderLedger(rows) {
+    const wrap = $('#ledgerTableWrap');
+    if (!rows.length) { wrap.innerHTML = '<div class="empty">No fee entries yet.</div>'; return; }
+    wrap.innerHTML = `<table class="ledger-table">
+      <thead>
+        <tr>
+          <th>Date</th><th>Room</th><th>Kind</th><th>Amount</th>
+          <th>Base Fee</th><th>Surcharge</th><th>Total</th><th>In Alex?</th><th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td>${new Date(r.created_at).toLocaleDateString()}</td>
+            <td>${r.room_id}</td>
+            <td>${r.kind}</td>
+            <td>${money(r.amount)}</td>
+            <td>${money(r.fee_base)}</td>
+            <td>${money(r.surcharge)}</td>
+            <td><b>${money(r.fee_total)}</b></td>
+            <td>${r.in_alexandra ? '✅' : '❌'}</td>
+            <td>${r.location}${r.suburb ? ' / ' + r.suburb : ''}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function loadLedger() {
+    const token = localStorage.getItem('adminToken');
+    const from = $('#ledgerFrom').value;
+    const to = $('#ledgerTo').value;
+    const qs = from && to ? `?from=${from}&to=${to}` : '';
+    try {
+      const res = await fetch('/api/admin/ledger' + qs, { headers: { Authorization: 'Bearer ' + token } });
+      const data = await res.json();
+      renderLedger(data.ledger || []);
+    } catch (e) { alert('Could not load ledger'); }
+  }
+
+  function downloadLedgerCSV() {
+    const token = localStorage.getItem('adminToken');
+    fetch('/api/admin/ledger.csv', { headers: { Authorization: 'Bearer ' + token } })
+      .then(r => r.blob())
+      .then(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ledger.csv';
+        a.click();
+      });
   }
 
   function loadTab(status, btn) {
@@ -249,10 +344,9 @@
       document.querySelectorAll('.sub-tabs button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
-    
     const rooms = allData.rooms[status] || [];
-    const list = document.getElementById('roomList');
-    
+    const list = $('#roomList');
+
     if (rooms.length === 0) {
       list.innerHTML = `<div class="empty">No rooms in "${status}"</div>`;
       return;
@@ -263,31 +357,42 @@
       if (room.images && room.images.length > 0) {
         mediaHtml = room.images.map(img => `<img src="${img}" onclick="viewMedia('image', '${img}')">`).join('');
       }
-      if (!mediaHtml) mediaHtml = `<div style="width:100px; height:100px; background:#eee; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px;">No Media</div>`;
+      if (!mediaHtml) mediaHtml = `<div style="width:100px;height:100px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px">No Media</div>`;
 
-      // Show the actual type clearly
       const displayType = room.type || room.roomType || 'room';
+      const f = room.agentFee || { base: 0, surcharge: 0, total: 0, kind: 'rent', breakdown: '' };
 
       return `
         <div class="room-card">
           <div class="media-grid">${mediaHtml}</div>
           <div class="room-info">
-            <h3>${room.title || 'Untitled'} <span style="font-size:12px; background:#e0e7ff; color:#1e40af; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${displayType}</span></h3>
-            <p>📍 ${room.location} | 💰 R${room.amount}</p>
-            <p>👤 ${room.posterName} | 📞 ${room.posterContact}</p>
+            <h3>${room.title || 'Untitled'}
+              <span style="font-size:12px;background:#e0e7ff;color:#1e40af;padding:2px 6px;border-radius:4px;text-transform:uppercase">${displayType}</span>
+              <span style="font-size:12px;background:${f.kind === 'sale' ? '#fde68a' : '#d1fae5'};color:#065f46;padding:2px 6px;border-radius:4px;text-transform:uppercase">${f.kind === 'sale' ? 'SALE' : 'RENT'}</span>
+            </h3>
+            <p>📍 ${room.location || ''} ${room.alexandraSuburb ? ' / ' + room.alexandraSuburb : ''} | 💰 R${room.amount}</p>
+            <p>👤 ${room.posterName || ''} | 📞 ${room.posterContact || ''}</p>
+
+            <div class="fee-box">
+              <div class="fee-total">Agent fee: ${money(f.total)}</div>
+              <div class="fee-line">${f.breakdown || ''}</div>
+              ${f.surcharge
+                ? `<div class="fee-line surcharge">+ R${f.surcharge} non-Alexandra surcharge</div>`
+                : `<div class="fee-line" style="color:#0f7a5f">✓ Alexandra Township — no surcharge</div>`}
+            </div>
+
             <div class="actions">
-              ${status === 'pending' ? `<button class="btn-approve" onclick="doAction('move', '${room.id}', 'pending', 'approved')">✅ Approve</button>` : ''}
-              ${status === 'pending' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'pending', 'declined')">❌ Decline</button>` : ''}
-              ${status === 'approved' ? `<button class="btn-taken" onclick="doAction('move', '${room.id}', 'approved', 'taken')">📦 Mark Taken</button>` : ''}
-              ${status === 'approved' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'approved', 'declined')">❌ Remove</button>` : ''}
-              ${status === 'taken' ? `<button class="btn-repost" onclick="doAction('move', '${room.id}', 'taken', 'pending')">🔄 Repost</button>` : ''}
-              ${status === 'declined' ? `<button class="btn-repost" onclick="doAction('move', '${room.id}', 'declined', 'pending')">🔄 Repost</button>` : ''}
-              ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete', '${room.id}', '${status}')">🗑️ Delete</button>` : ''}
-              <button class="btn-edit" onclick="openEditModal('${room.id}', '${status}')">✏️ Edit</button>
+              ${status === 'pending' ? `<button class="btn-approve" onclick="doAction('move','${room.id}','pending','approved')">✅ Approve</button>` : ''}
+              ${status === 'pending' ? `<button class="btn-decline" onclick="doAction('move','${room.id}','pending','declined')">❌ Decline</button>` : ''}
+              ${status === 'approved' ? `<button class="btn-taken" onclick="doAction('move','${room.id}','approved','taken')">📦 Mark Taken</button>` : ''}
+              ${status === 'approved' ? `<button class="btn-decline" onclick="doAction('move','${room.id}','approved','declined')">❌ Remove</button>` : ''}
+              ${status === 'taken' ? `<button class="btn-repost" onclick="doAction('move','${room.id}','taken','pending')">🔄 Repost</button>` : ''}
+              ${status === 'declined' ? `<button class="btn-repost" onclick="doAction('move','${room.id}','declined','pending')">🔄 Repost</button>` : ''}
+              ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete','${room.id}','${status}')">🗑️ Delete</button>` : ''}
+              <button class="btn-edit" onclick="openEditModal('${room.id}','${status}')">✏️ Edit</button>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   }
 
@@ -297,131 +402,149 @@
     try {
       await fetch('/api/admin/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ action: action, section: 'rooms', from: from, to: to, id: id })
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action, section: 'rooms', from, to, id })
       });
       logAct(`Moved room ${from} → ${to}`);
-      loadData(); 
-    } catch (e) { alert("Action failed"); }
+      loadData();
+    } catch (e) { alert('Action failed'); }
   }
 
   function openEditModal(id, from) {
     const room = allData.rooms[from].find(r => r.id === id);
     if (!room) return;
-    
-    document.getElementById('editRoomId').value = id;
-    document.getElementById('editRoomFrom').value = from;
-    document.getElementById('editRoomTitle').value = room.title || '';
-    
-    // Set the type dropdown correctly
-    const typeVal = (room.type || room.roomType || 'room').toLowerCase();
-    document.getElementById('editRoomType').value = typeVal;
-    
-    document.getElementById('editRoomLocation').value = room.location || '';
-    document.getElementById('editRoomAddress').value = room.address || '';
-    document.getElementById('editRoomAmount').value = room.amount || '';
-    document.getElementById('editRoomDeposit').value = room.deposit || '';
-    document.getElementById('editRoomPosterName').value = room.posterName || '';
-    document.getElementById('editRoomPosterContact').value = room.posterContact || '';
-    document.getElementById('editRoomNotes').value = room.notes || '';
-    
-    document.getElementById('editRoomModal').classList.add('show');
+
+    $('#editRoomId').value = id;
+    $('#editRoomFrom').value = from;
+    $('#editRoomTitle').value = room.title || '';
+    $('#editRoomPurpose').value = (room.purpose || 'rent');
+    $('#editRoomType').value = (room.type || room.roomType || 'room').toLowerCase();
+    $('#editRoomLocation').value = room.location || '';
+    $('#editRoomSuburb').value = room.alexandraSuburb || '';
+    $('#editRoomAddress').value = room.address || '';
+    $('#editRoomAmount').value = room.amount || '';
+    $('#editRoomDeposit').value = room.deposit || '';
+    $('#editRoomPosterName').value = room.posterName || '';
+    $('#editRoomPosterContact').value = room.posterContact || '';
+    $('#editRoomNotes').value = room.notes || '';
+
+    refreshFeePreview();
+    $('#editRoomModal').classList.add('show');
   }
 
-  function closeEditModal() {
-    document.getElementById('editRoomModal').classList.remove('show');
+  function closeEditModal() { $('#editRoomModal').classList.remove('show'); }
+
+  async function refreshFeePreview() {
+    const body = {
+      amount: $('#editRoomAmount').value,
+      purpose: $('#editRoomPurpose').value,
+      location: $('#editRoomLocation').value,
+      alexandraSuburb: $('#editRoomSuburb').value,
+    };
+    try {
+      const res = await fetch('/api/fee-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      const f = data.fee;
+      $('#feePreviewModal').innerHTML = `
+        <b>Live agent fee: ${money(f.total)}</b><br>
+        ${f.breakdown}<br>
+        ${f.surcharge
+          ? `<span style="color:#b8493b">+ R${f.surcharge} non-Alexandra surcharge</span>`
+          : `<span style="color:#0f7a5f">✓ Alexandra Township</span>`}
+      `;
+    } catch (_) {}
   }
 
-  document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
+  $('#editRoomForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('adminToken');
-    const id = document.getElementById('editRoomId').value;
-    const from = document.getElementById('editRoomFrom').value;
-    
+    const id = $('#editRoomId').value;
+    const from = $('#editRoomFrom').value;
+
     const data = {
-      title: document.getElementById('editRoomTitle').value,
-      type: document.getElementById('editRoomType').value, // Save the type
-      location: document.getElementById('editRoomLocation').value,
-      address: document.getElementById('editRoomAddress').value,
-      amount: document.getElementById('editRoomAmount').value,
-      deposit: document.getElementById('editRoomDeposit').value,
-      posterName: document.getElementById('editRoomPosterName').value,
-      posterContact: document.getElementById('editRoomPosterContact').value,
-      notes: document.getElementById('editRoomNotes').value
+      title: $('#editRoomTitle').value,
+      purpose: $('#editRoomPurpose').value,
+      type: $('#editRoomType').value,
+      location: $('#editRoomLocation').value,
+      alexandraSuburb: $('#editRoomSuburb').value,
+      address: $('#editRoomAddress').value,
+      amount: $('#editRoomAmount').value,
+      deposit: $('#editRoomDeposit').value,
+      posterName: $('#editRoomPosterName').value,
+      posterContact: $('#editRoomPosterContact').value,
+      notes: $('#editRoomNotes').value
     };
 
     try {
       await fetch('/api/admin/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ action: 'edit', section: 'rooms', from: from, id: id, data: data })
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action: 'edit', section: 'rooms', from, id, data })
       });
       logAct(`Edited room details (Type set to ${data.type})`);
       alert('✅ Room updated!');
       closeEditModal();
       loadData();
-    } catch (err) { alert("Failed to save changes"); }
+    } catch (err) { alert('Failed to save changes'); }
   });
 
   async function uploadAdminImage() {
-    const fileInput = document.getElementById('adminNewImage');
+    const fileInput = $('#adminNewImage');
     if (!fileInput.files || fileInput.files.length === 0) { alert('Select an image first.'); return; }
-    
     const formData = new FormData();
     formData.append('images', fileInput.files[0]);
 
     const token = localStorage.getItem('adminToken');
-    const id = document.getElementById('editRoomId').value;
-    const from = document.getElementById('editRoomFrom').value;
+    const id = $('#editRoomId').value;
+    const from = $('#editRoomFrom').value;
 
     try {
       const uploadRes = await fetch('/api/admin/upload', { method: 'POST', body: formData });
       const uploadData = await uploadRes.json();
-      
-      if (!uploadData.success) throw new Error("Upload failed");
-      
+      if (!uploadData.success) throw new Error('Upload failed');
       const newUrl = uploadData.urls[0];
 
       await fetch('/api/admin/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ action: 'add-images', section: 'rooms', from: from, id: id, data: { images: [newUrl] } })
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action: 'add-images', section: 'rooms', from, id, data: { images: [newUrl] } })
       });
-      
-      logAct(`Uploaded new image`);
+      logAct('Uploaded new image');
       alert('✅ Image uploaded to post!');
       fileInput.value = '';
       loadData();
-    } catch (err) {
-      alert("Failed to upload image.");
-    }
+    } catch (err) { alert('Failed to upload image.'); }
   }
 
   async function wipeDatabase() {
-    if (!confirm('⚠️ ARE YOU SURE? This will delete ALL posts.')) return;
+    if (!confirm('⚠️ ARE YOU SURE? This will delete ALL posts and the ledger.')) return;
+    const token = localStorage.getItem('adminToken');
     try {
-      await fetch('/api/admin/reset-everything');
+      await fetch('/api/admin/reset-everything', { headers: { Authorization: 'Bearer ' + token } });
       logAct('Wiped database');
       alert('✅ All data wiped.');
       loadData();
-    } catch(e) { alert('❌ Failed'); }
+    } catch (e) { alert('❌ Failed'); }
   }
 
   function viewMedia(type, src) {
-    const viewer = document.getElementById('mediaViewer');
-    const content = document.getElementById('mediaContent');
+    const viewer = $('#mediaViewer');
+    const content = $('#mediaContent');
     content.innerHTML = type === 'image' ? `<img src="${src}">` : `<video src="${src}" controls autoplay></video>`;
     viewer.classList.add('show');
   }
-
   function closeMediaViewer() {
-    document.getElementById('mediaViewer').classList.remove('show');
-    document.getElementById('mediaContent').innerHTML = '';
+    $('#mediaViewer').classList.remove('show');
+    $('#mediaContent').innerHTML = '';
   }
 
   if (localStorage.getItem('adminToken')) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminPanel').classList.add('show');
+    $('#loginScreen').style.display = 'none';
+    $('#adminPanel').classList.add('show');
     loadData();
   }
 </script>
