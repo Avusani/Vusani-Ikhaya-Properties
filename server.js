@@ -7,8 +7,6 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-
-// Fallback password if env is not set
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
 
 const pool = new Pool({
@@ -17,7 +15,6 @@ const pool = new Pool({
 });
 
 app.use(cors());
-// 50mb limit to hold Base64 images
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(__dirname)); 
 
