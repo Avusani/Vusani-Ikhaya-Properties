@@ -140,7 +140,7 @@ app.get('/api/public', async (req, res) => {
         childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
         toiletType: room.toiletType || 'Shared', bathroomType: room.bathroomType || 'Shared',
         tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', 
-        type: room.type || 'room', // Crucial for filters
+        type: room.type || 'room', 
         images: imgs,
         mainImage: imgs[0] || '',
         thumbs: imgs.slice(1, 4),
