@@ -118,11 +118,20 @@ input,select,textarea{font-family:inherit;}
 .pc-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .pc-slider::-webkit-scrollbar { display: none; }
 .pc-slide{flex:0 0 100%; scroll-snap-align:start; position:relative;}
-.pc-slide img, .pc-slide video{width:100%; height:100%; object-fit:cover; display:block;}
+.pc-slide img{width:100%; height:100%; object-fit:cover; display:block;}
+
+/* Video slide — poster + play button, opens large player */
+.pc-video-slide{position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;}
+.pc-video-slide video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.pc-video-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55));display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;}
+.pc-video-play{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.pc-video-play svg{width:28px;height:28px;fill:#0E382A;margin-left:4px;}
+.pc-video-badge{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.7);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:4px;z-index:4;text-transform:uppercase;}
+
 .pc-dots{position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:5;}
 .pc-dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.5);}
 .pc-dot.active{background:#fff; width:8px; height:8px;}
-.pc-badge{position:absolute;left:12px;top:12px;background:#2f6fb2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:4px;text-transform:uppercase;z-index:2;}
+.pc-badge{position:absolute;left:12px;top:12px;background:#2f6fb2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:4px;text-transform:uppercase;z-index:6;}
 .pc-body{padding:18px;flex:1;display:flex;flex-direction:column;position:relative;}
 .pc-sponsored{position:absolute;top:14px;right:16px;font-size:10.5px;color:#8a8f98;letter-spacing:.3px;font-weight:600;}
 .pc-price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-right:60px;margin-bottom:10px;}
@@ -171,7 +180,15 @@ input,select,textarea{font-family:inherit;}
 .modal-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .modal-slider::-webkit-scrollbar { display: none; }
 .modal-slide{flex:0 0 100%; scroll-snap-align:start; position:relative; display:flex; align-items:center; justify-content:center;}
-.modal-slide img, .modal-slide video{max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain;}
+.modal-slide img{max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain;}
+.modal-slide.video-slide{background:#000;padding:0;}
+
+.modal-video-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;}
+.modal-video-wrap video{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;background:#000;}
+.modal-video-fullscreen{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.7);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:6px;padding:8px 14px;font-size:12px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:6px;z-index:10;cursor:pointer;}
+.modal-video-fullscreen:hover{background:rgba(0,0,0,.9);}
+.modal-video-fullscreen svg{width:14px;height:14px;fill:#fff;}
+
 @media(max-width:700px){ .modal-gallery { height: 280px; } }
 .modal-body{padding:24px 28px 28px;}
 .modal-body h2{margin:0 0 6px;font-size:24px;color:var(--green-dark);}
@@ -184,6 +201,13 @@ input,select,textarea{font-family:inherit;}
 .modal-contact .actions a{padding:10px 18px;border-radius:var(--radius-sm);font-weight:700;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
 .modal-contact .actions .wa{background:#25D366;color:#fff;}
 .modal-contact .actions .call{background:var(--green-dark);color:#fff;}
+
+/* Fullscreen video overlay (public) */
+.fs-video-overlay{display:none;position:fixed;inset:0;background:#000;z-index:5000;align-items:center;justify-content:center;padding:20px;}
+.fs-video-overlay.show{display:flex;}
+.fs-video-overlay video{max-width:100%;max-height:100%;width:auto;height:auto;outline:none;}
+.fs-video-close{position:fixed;top:20px;right:26px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);font-size:22px;display:flex;align-items:center;justify-content:center;z-index:5001;cursor:pointer;}
+.fs-video-close:hover{background:rgba(255,255,255,.3);}
 
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green-dark);color:#fff;padding:13px 22px;border-radius:var(--radius-sm);font-weight:700;font-size:14px;box-shadow:var(--shadow-lg);z-index:2000;opacity:0;transition:all .2s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -381,10 +405,8 @@ input,select,textarea{font-family:inherit;}
         <p>Established in May 2026, Vusani Ikhaya Properties is a South African property business focused on connecting people with accommodation and property opportunities.</p>
         <p>We aim to make finding a room, renting a home, buying a property or marketing a property easier through accessible listings, reliable communication and a professional service.</p>
         <p>Our initial focus is Alexandra Township and surrounding Johannesburg communities, including East Bank, Tsutsumane, River Park, Wynberg, Marlboro, Bramley and Lombardy East, with plans to expand our reach.</p>
-        
         <h3 style="color:var(--green-dark); margin-top:24px;">Our Mission</h3>
         <p>To connect tenants, landlords, buyers and sellers through a convenient and transparent property platform.</p>
-        
         <h3 style="color:var(--green-dark); margin-top:24px;">Our Values</h3>
         <ul style="color:var(--ink-soft); line-height:1.7; font-size:15px;">
           <li>Trust and honest communication.</li>
@@ -403,11 +425,9 @@ input,select,textarea{font-family:inherit;}
             <p>View the accommodation in person, verify the landlord or authorised representative, confirm the rental terms and understand all charges before paying. Be cautious of anyone pressuring you to transfer money before you have verified the property.</p>
           </div>
         </div>
-        
         <div class="about-wrap" style="margin-top:24px; padding:24px; grid-template-columns:1fr;">
           <h3 style="margin-top:0; color:var(--green-dark);">Contact Us</h3>
           <p style="color:var(--ink-soft); font-size:14px; margin-bottom:16px;">Whether you are looking for a room, searching for a property to buy, renting out your property or interested in selling, we welcome your enquiry.</p>
-          
           <div style="display:flex; flex-direction:column; gap:12px; font-size:14.5px;">
             <div><strong>📞 Call:</strong> <a href="tel:0613642449">061 364 2449</a></div>
             <div><strong>💬 WhatsApp:</strong> <a href="https://wa.me/27685353186" target="_blank">068 535 3186</a></div>
@@ -428,7 +448,6 @@ input,select,textarea{font-family:inherit;}
     <div class="about-wrap" style="grid-template-columns:1fr; padding:30px;">
       <h2 style="margin-top:0; color:var(--green-dark);">List a Property</h2>
       <p style="color:var(--muted); margin-bottom:24px;">Submit your property for review. Once approved by our team, it will go live on the website.</p>
-      
       <form id="postForm">
         <div class="post-grid">
           <div class="form-field full">
@@ -628,6 +647,12 @@ input,select,textarea{font-family:inherit;}
   </div>
 </div>
 
+<!-- Fullscreen video player overlay -->
+<div class="fs-video-overlay" id="fsVideoOverlay" onclick="if(event.target===this)closeFsVideo()">
+  <button class="fs-video-close" onclick="closeFsVideo()" aria-label="Close fullscreen">✕</button>
+  <video id="fsVideoPlayer" controls playsinline></video>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -658,6 +683,7 @@ const ICON_BED = '<svg viewBox="0 0 24 24"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 
 const ICON_BATH = '<svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M5 12v4a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4v-4"/><path d="M7 12V6a2 2 0 0 1 2-2h2"/><circle cx="9" cy="4" r="1"/></svg>';
 const ICON_CAR  = '<svg viewBox="0 0 24 24"><path d="M5 17h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 17z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>';
 const ICON_HEART= '<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 
 function buildFlags(p){
   const out = [];
@@ -668,31 +694,48 @@ function buildFlags(p){
   }
   if ((p.toiletSharing || 'Private') === 'Shared') out.push('<span class="pc-flag no">🚻 Shared toilet</span>');
   else out.push('<span class="pc-flag yes">🚻 Private toilet</span>');
-  
   if ((p.bathroomSharing || 'Private') === 'Shared') out.push('<span class="pc-flag no">🛁 Shared bathroom</span>');
   else out.push('<span class="pc-flag yes">🛁 Private bathroom</span>');
   return out.join('');
 }
 
-function renderCard(p){
-  let mediaItems = [];
-  if (p.images && p.images.length > 0) {
-    mediaItems = p.images.map(url => ({ type: 'image', url: url }));
+/**
+ * Builds the ordered media list — VIDEO FIRST, then images.
+ * Returns array of { type:'video'|'image'|'empty', url }
+ */
+function buildMediaList(p){
+  const list = [];
+  if (p.video) list.push({ type: 'video', url: p.video });
+  if (Array.isArray(p.images) && p.images.length) {
+    p.images.forEach(url => list.push({ type: 'image', url }));
   }
-  if (p.video) {
-    mediaItems.unshift({ type: 'video', url: p.video });
-  }
-  if (mediaItems.length === 0) {
-    mediaItems.push({ type: 'empty', url: '' });
-  }
+  if (!list.length) list.push({ type: 'empty', url: '' });
+  return list;
+}
 
-  const slides = mediaItems.map((m) => {
-    if (m.type === 'video') return `<div class="pc-slide"><video src="${escapeHTML(m.url)}" controls muted playsinline></video></div>`;
-    if (m.type === 'empty') return `<div class="pc-slide" style="background:#dfe4e8;display:flex;align-items:center;justify-content:center;color:#637268;">No Image</div>`;
+function renderCard(p){
+  const mediaItems = buildMediaList(p);
+
+  const slides = mediaItems.map((m, idx) => {
+    if (m.type === 'video') {
+      // Poster + play button — click opens large player
+      return `<div class="pc-slide">
+        <div class="pc-video-slide" onclick="event.stopPropagation();openVideoFullscreen('${escapeHTML(m.url)}')" title="Play video">
+          <video src="${escapeHTML(m.url)}" preload="metadata" muted playsinline></video>
+          <div class="pc-video-overlay"><div class="pc-video-play">${ICON_PLAY}</div></div>
+          <span class="pc-video-badge">▶ Video</span>
+        </div>
+      </div>`;
+    }
+    if (m.type === 'empty') {
+      return `<div class="pc-slide" style="background:#dfe4e8;display:flex;align-items:center;justify-content:center;color:#637268;">No Image</div>`;
+    }
     return `<div class="pc-slide"><img src="${escapeHTML(m.url)}" loading="lazy"></div>`;
   }).join('');
 
-  const dots = mediaItems.length > 1 ? `<div class="pc-dots">${mediaItems.map((_, i) => `<div class="pc-dot ${i===0?'active':''}"></div>`).join('')}</div>` : '';
+  const dots = mediaItems.length > 1
+    ? `<div class="pc-dots">${mediaItems.map((m, i) => `<div class="pc-dot ${i===0?'active':''}" title="${m.type}"></div>`).join('')}</div>`
+    : '';
 
   const price = formatPrice(p.amount);
   const suburb = escapeHTML(p.alexandraSuburb || p.location || 'Johannesburg');
@@ -743,18 +786,10 @@ function toggleFav(btn, id){
 function renderListings(){
   const grid = $('#listingGrid');
   let list = ALL.slice();
-  
-  if (ACTIVE_PURPOSE !== 'all') {
-    list = list.filter(p => (p.purpose || 'rent') === ACTIVE_PURPOSE);
-  }
-  
+  if (ACTIVE_PURPOSE !== 'all') list = list.filter(p => (p.purpose || 'rent') === ACTIVE_PURPOSE);
   if (ACTIVE_TYPE !== 'all') {
-    list = list.filter(p => {
-      const pType = (p.type || p.roomType || '').toLowerCase();
-      return pType === ACTIVE_TYPE.toLowerCase();
-    });
+    list = list.filter(p => (p.type || p.roomType || '').toLowerCase() === ACTIVE_TYPE.toLowerCase());
   }
-
   if (!list.length){
     grid.innerHTML = `<div class="empty-state"><h3>📭 No properties found</h3><p>There are currently no approved listings matching your filter.</p></div>`;
     return;
@@ -767,11 +802,9 @@ function filterPurpose(purpose, ev){
   ACTIVE_PURPOSE = purpose;
   ACTIVE_TYPE = 'all';
   $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === purpose));
-  
   if (purpose === 'rent') { $('#listingsHeading').textContent = 'Properties for Rent'; $('#listingsSubtext').textContent = 'Browse all rental properties.'; }
   else if (purpose === 'buy') { $('#listingsHeading').textContent = 'Properties for Sale'; $('#listingsSubtext').textContent = 'Browse all properties available to buy.'; }
   else { $('#listingsHeading').textContent = 'Available properties'; $('#listingsSubtext').textContent = 'Approved listings across our service areas.'; }
-
   renderListings();
   document.getElementById('listings').scrollIntoView({behavior:'smooth'});
 }
@@ -780,11 +813,9 @@ function filterType(type, ev){
   if (ev) ev.preventDefault();
   ACTIVE_TYPE = type;
   ACTIVE_PURPOSE = 'all';
-  
   $('#listingsHeading').textContent = 'Browse ' + type.charAt(0).toUpperCase() + type.slice(1) + 's';
   $('#listingsSubtext').textContent = 'Showing all approved ' + type + ' listings.';
   $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === 'all'));
-  
   renderListings();
   document.getElementById('listings').scrollIntoView({behavior:'smooth'});
 }
@@ -834,19 +865,20 @@ function openProp(id){
   const p = ALL.find(x => x.id === id);
   if (!p) return;
 
-  let mediaItems = [];
-  if (p.images && p.images.length > 0) {
-    mediaItems = p.images.map(url => ({ type: 'image', url: url }));
-  }
-  if (p.video) {
-    mediaItems.unshift({ type: 'video', url: p.video });
-  }
-  if (mediaItems.length === 0) {
-    mediaItems.push({ type: 'empty', url: '' });
-  }
+  const mediaItems = buildMediaList(p);
 
   const slides = mediaItems.map(m => {
-    if (m.type === 'video') return `<div class="modal-slide"><video src="${escapeHTML(m.url)}" controls playsinline></video></div>`;
+    if (m.type === 'video') {
+      return `<div class="modal-slide video-slide">
+        <div class="modal-video-wrap">
+          <video src="${escapeHTML(m.url)}" controls playsinline preload="metadata"></video>
+          <button type="button" class="modal-video-fullscreen" onclick="openVideoFullscreen('${escapeHTML(m.url)}')">
+            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm0-4h2V7h3V5H5v5zm10 7h-3v2h5v-5h-2v3zm-3-12v2h3v3h2V5h-5z"/></svg>
+            Fullscreen
+          </button>
+        </div>
+      </div>`;
+    }
     if (m.type === 'empty') return `<div class="modal-slide" style="color:#fff;">No Image</div>`;
     return `<div class="modal-slide"><img src="${escapeHTML(m.url)}" loading="lazy"></div>`;
   }).join('');
@@ -903,8 +935,34 @@ function closeProp(){
   $('#propContent').innerHTML = '';
 }
 
+/* ============================================================
+   FULLSCREEN VIDEO PLAYER (public)
+   ============================================================ */
+function openVideoFullscreen(url){
+  const overlay = $('#fsVideoOverlay');
+  const player = $('#fsVideoPlayer');
+  player.src = url;
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  // Attempt autoplay after opening
+  const p = player.play();
+  if (p && p.catch) p.catch(() => { /* user must press play */ });
+}
+function closeFsVideo(){
+  const overlay = $('#fsVideoOverlay');
+  const player = $('#fsVideoPlayer');
+  player.pause();
+  player.removeAttribute('src');
+  player.load();
+  overlay.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('#propModal').classList.contains('show')) closeProp();
+  if (e.key === 'Escape') {
+    if ($('#fsVideoOverlay').classList.contains('show')) closeFsVideo();
+    else if ($('#propModal').classList.contains('show')) closeProp();
+  }
 });
 
 function handleImageSelect(ev){
@@ -941,7 +999,6 @@ $('#postForm')?.addEventListener('submit', async (e) => {
 
   const fileInput = document.getElementById('pImages');
   const files = Array.from(fileInput.files);
-  
   if (files.length === 0) { 
     notice.style.color = 'red'; 
     notice.textContent = 'Please upload at least 1 picture.'; 
@@ -957,9 +1014,20 @@ $('#postForm')?.addEventListener('submit', async (e) => {
 
     const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
     const uploadData = await uploadRes.json();
-    
     if (!uploadData.success) throw new Error("Image upload failed.");
     const uploadedImageUrls = uploadData.urls;
+
+    // Upload video if present
+    let uploadedVideoUrl = "";
+    const videoInput = document.getElementById('pVideo');
+    if (videoInput.files && videoInput.files.length > 0) {
+      btn.textContent = 'Uploading video...';
+      const vFormData = new FormData();
+      vFormData.append('images', videoInput.files[0]);
+      const vRes = await fetch('/api/upload', { method: 'POST', body: vFormData });
+      const vData = await vRes.json();
+      if (vData.success && vData.urls && vData.urls[0]) uploadedVideoUrl = vData.urls[0];
+    }
 
     btn.textContent = 'Saving property...';
 
@@ -988,7 +1056,7 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       posterName: $('#pOwnerName').value, 
       posterContact: cleanPhone,
       images: uploadedImageUrls, 
-      video: "" 
+      video: uploadedVideoUrl
     };
 
     const res = await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
