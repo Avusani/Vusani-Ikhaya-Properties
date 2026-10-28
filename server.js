@@ -129,51 +129,32 @@ app.get('/api/admin/reset-everything', async (req, res) => {
 
 app.get('/api/public', async (req, res) => {
   try {
-    // We force a fresh read from the database here to ensure we get the newly approved room
     const db = await readDB();
-    
-    // Make sure the rooms arrays exist before mapping
-    const approvedRooms = (db.rooms && db.rooms.approved) ? db.rooms.approved : [];
-    
-    const rooms = approvedRooms.filter(r => r.online !== false).map(room => {
+    const rooms = db.rooms.approved.filter(r => r.online !== false).map(room => {
       const imgs = Array.isArray(room.images) ? room.images : [];
       return {
-        id: room.id, 
-        title: room.title, 
-        location: room.location, 
-        alexandraSuburb: room.alexandraSuburb || '',
-        purpose: room.purpose || 'rent', 
-        amount: room.amount, 
-        deposit: room.deposit || 'No deposit',
-        bedrooms: Number(room.bedrooms) || 1, 
-        bathrooms: Number(room.bathrooms) || 1, 
+        id: room.id, title: room.title, location: room.location, alexandraSuburb: room.alexandraSuburb || '',
+        purpose: room.purpose || 'rent', amount: room.amount, deposit: room.deposit || 'No deposit',
+        bedrooms: Number(room.bedrooms) || 1, bathrooms: Number(room.bathrooms) || 1, 
         parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
-        childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', 
-        maxKids: room.maxKids || '0',
-        toiletType: room.toiletType || 'Shared', 
-        bathroomType: room.bathroomType || 'Shared',
-        tiles: room.tiles || 'No', 
-        ceiling: room.ceiling || 'No', 
+        childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
+        toiletType: room.toiletType || 'Shared', bathroomType: room.bathroomType || 'Shared',
+        tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', 
+        type: room.type || 'room', // Crucial for filters
         images: imgs,
         mainImage: imgs[0] || '',
         thumbs: imgs.slice(1, 4),
         video: room.video || "",
-        notes: room.notes, 
-        posterName: room.posterName, 
-        posterContact: room.posterContact
+        notes: room.notes, posterName: room.posterName, posterContact: room.posterContact
       };
     });
-    
     res.json({ 
       rooms, 
-      reviews: db.reviews ? db.reviews.approved : [], 
-      transports: db.transports ? db.transports.approved : [], 
-      tenantRequests: db.tenantRequests ? db.tenantRequests.approved : [] 
+      reviews: db.reviews.approved, 
+      transports: db.transports.approved, 
+      tenantRequests: db.tenantRequests.approved 
     });
-  } catch (err) { 
-    console.error("Public API Error:", err);
-    res.status(500).json({ error: err.message }); 
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/rooms', async (req, res) => {
