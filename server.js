@@ -4,6 +4,8 @@ const cors = require('cors');
 const path = require('path');
 const crypto = require('crypto');
 const { Pool } = require('pg');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -14,12 +16,19 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 80 * 1024 * 1024 } });
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(__dirname)); 
 
 const sessions = new Map();
-const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
 async function initDB() {
   try {
@@ -57,7 +66,7 @@ async function writeDB(db) {
   await pool.query('UPDATE app_state SET data = $1 WHERE id = $2', [db, 'main_db']);
 }
 
-// ============ LOCATION GROUPING FOR MATCHING ============
+// ============ LOCATION MATCHING ============
 const ALEXANDRA_EAST_GROUP = ['east bank','far east bank','ext 7','ext7','ext 8','ext8','ext 9','ext9','tsutsumane','river park','river park phase 3'];
 const ALEXANDRA_AVENUES_GROUP = ['1st avenue – 12th avenue','1st avenue - 12th avenue','12th avenue – 22nd avenue','12th avenue - 22nd avenue','13th avenue – 22nd avenue','13th avenue - 22nd avenue','1st avenue – 22nd avenue','1st avenue - 22nd avenue'];
 const NORTHERN_SUBURBS_GROUP = ['lombardy','bramley','kew','balfour','orange grove'];
@@ -109,7 +118,25 @@ function locationMatch(landlordLoc, landlordSub, tenantLocations) {
   return false;
 }
 
-// ============ ENDPOINTS ============
+// ============ UPLOAD ENDPOINT ============
+app.post('/api/upload', upload.array('media', 9), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) return res.status(400).json({ error: "No files uploaded" });
+    const urls = [];
+    for (const file of req.files) {
+      const b64 = Buffer.from(file.buffer).toString('base64');
+      const dataURI = `data:${file.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataURI, { folder: 'vusani_properties', resource_type: 'auto' });
+      urls.push(result.secure_url);
+    }
+    res.json({ success: true, urls });
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ error: "Upload failed: Make sure Cloudinary keys are in Railway variables." });
+  }
+});
+
+// ============ PUBLIC ENDPOINTS ============
 
 app.get('/api/admin/reset-everything', async (req, res) => {
   try {
@@ -140,7 +167,7 @@ app.get('/api/public', async (req, res) => {
         childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No', maxKids: room.maxKids || '0',
         toiletType: room.toiletType || 'Shared', bathroomType: room.bathroomType || 'Shared',
         tiles: room.tiles || 'No', ceiling: room.ceiling || 'No', 
-        type: room.type || 'room', 
+        type: room.type || 'room',
         images: imgs,
         mainImage: imgs[0] || '',
         thumbs: imgs.slice(1, 4),
@@ -231,7 +258,7 @@ app.post('/api/contact', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ============ ADMIN ROUTES ============
+// ============ ADMIN ENDPOINTS ============
 
 app.post('/api/admin/login', (req, res) => {
   if (req.body.password !== ADMIN_PASSWORD) return res.status(401).json({ error: "Incorrect password" });
