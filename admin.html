@@ -29,7 +29,12 @@
   .section-content{display:none}.section-content.active{display:block}
   .room-card{background:#fff;padding:15px;margin-bottom:15px;border-radius:8px;border:1px solid #ddd}
   .media-grid{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:5px}
-  .media-grid img,.media-grid video{width:100px;height:100px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0}
+  .media-thumb{position:relative;flex-shrink:0;width:140px;height:100px;border-radius:6px;overflow:hidden;background:#eee;cursor:pointer;border:1px solid #ddd}
+  .media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .media-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+  .media-thumb .play-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .media-thumb .play-overlay svg{width:32px;height:32px;fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+  .media-thumb .video-tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:3px;text-transform:uppercase}
   .room-info h3{margin:0 0 5px;font-size:18px}
   .room-info p{margin:0 0 4px;font-size:14px;color:#555}
   .fee-box{margin:8px 0;padding:10px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
@@ -71,8 +76,13 @@
   .fee-controls .clear{background:#6b7280;color:#fff}
   .media-viewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;align-items:center;justify-content:center;padding:20px}
   .media-viewer.show{display:flex}
-  .media-viewer img,.media-viewer video{max-width:95vw;max-height:90vh;border-radius:8px}
-  .media-viewer .close{position:fixed;top:20px;right:30px;font-size:40px;color:#fff;cursor:pointer;background:none;border:none}
+  .media-viewer img{max-width:95vw;max-height:90vh;border-radius:8px}
+  .media-viewer video{max-width:95vw;max-height:90vh;width:auto;height:auto;border-radius:8px;background:#000}
+  .media-viewer .close{position:fixed;top:20px;right:30px;font-size:40px;color:#fff;cursor:pointer;background:none;border:none;z-index:2001}
+  .media-viewer .fullscreen-btn{position:fixed;top:24px;right:110px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:8px 14px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;z-index:2001;display:none;align-items:center;gap:6px}
+  .media-viewer .fullscreen-btn.show{display:inline-flex}
+  .media-viewer .fullscreen-btn:hover{background:rgba(255,255,255,.3)}
+  .media-viewer .fullscreen-btn svg{width:14px;height:14px;fill:#fff}
   .ledger-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
   .ledger-table th,.ledger-table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
   .ledger-table th{background:#0f7a5f;color:#fff;font-size:12px;text-transform:uppercase}
@@ -216,15 +226,22 @@
 
 <div class="media-viewer" id="mediaViewer">
   <button class="close" onclick="closeMediaViewer()">✕</button>
+  <button class="fullscreen-btn" id="mediaFullscreenBtn" onclick="goFullscreen()">
+    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm0-4h2V7h3V5H5v5zm10 7h-3v2h5v-5h-2v3zm-3-12v2h3v3h2V5h-5z"/></svg>
+    Fullscreen
+  </button>
   <div id="mediaContent"></div>
 </div>
 
 <script>
   let allData = {};
   let currentTab = 'pending';
+  let currentMediaType = null;
 
   const $ = (s) => document.querySelector(s);
   const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA', { maximumFractionDigits: 2 });
+
+  const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 
   function logAct(action) {
     const entry = { time: new Date().toISOString(), action };
@@ -371,6 +388,15 @@
       });
   }
 
+  function buildAdminMediaList(room){
+    const list = [];
+    if (room.video) list.push({ type: 'video', url: room.video });
+    if (Array.isArray(room.images) && room.images.length) {
+      room.images.forEach(url => list.push({ type: 'image', url }));
+    }
+    return list;
+  }
+
   function loadTab(status, btn) {
     currentTab = status;
     if (btn) {
@@ -386,11 +412,24 @@
     }
 
     list.innerHTML = rooms.map(room => {
+      const media = buildAdminMediaList(room);
       let mediaHtml = '';
-      if (room.images && room.images.length > 0) {
-        mediaHtml = room.images.map(img => `<img src="${img}" onclick="viewMedia('image', '${img}')">`).join('');
+      if (media.length) {
+        mediaHtml = media.map(m => {
+          if (m.type === 'video') {
+            return `<div class="media-thumb" onclick="viewMedia('video', '${escapeAttr(m.url)}')" title="Play video">
+              <video src="${escapeAttr(m.url)}" preload="metadata" muted></video>
+              <div class="play-overlay">${ICON_PLAY}</div>
+              <span class="video-tag">▶ Video</span>
+            </div>`;
+          }
+          return `<div class="media-thumb" onclick="viewMedia('image', '${escapeAttr(m.url)}')">
+            <img src="${escapeAttr(m.url)}" loading="lazy">
+          </div>`;
+        }).join('');
+      } else {
+        mediaHtml = `<div style="width:140px;height:100px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">No Media</div>`;
       }
-      if (!mediaHtml) mediaHtml = `<div style="width:100px;height:100px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px">No Media</div>`;
 
       const displayType = room.type || room.roomType || 'room';
       const f = room.agentFee || { base: 0, surcharge: 0, total: 0, kind: 'rent', manual: false, breakdown: '' };
@@ -400,17 +439,17 @@
         <div class="room-card">
           <div class="media-grid">${mediaHtml}</div>
           <div class="room-info">
-            <h3>${room.title || 'Untitled'}
-              <span style="font-size:12px;background:#e0e7ff;color:#1e40af;padding:2px 6px;border-radius:4px;text-transform:uppercase">${displayType}</span>
+            <h3>${escapeHTML(room.title || 'Untitled')}
+              <span style="font-size:12px;background:#e0e7ff;color:#1e40af;padding:2px 6px;border-radius:4px;text-transform:uppercase">${escapeHTML(displayType)}</span>
               <span style="font-size:12px;background:${f.kind === 'sale' ? '#fde68a' : '#d1fae5'};color:#065f46;padding:2px 6px;border-radius:4px;text-transform:uppercase">${f.kind === 'sale' ? 'SALE' : 'RENT'}</span>
               ${manualBadge}
             </h3>
-            <p>📍 ${room.location || ''} ${room.alexandraSuburb ? ' / ' + room.alexandraSuburb : ''} | 💰 R${room.amount}</p>
-            <p>👤 ${room.posterName || ''} | 📞 ${room.posterContact || ''}</p>
+            <p>📍 ${escapeHTML(room.location || '')} ${room.alexandraSuburb ? ' / ' + escapeHTML(room.alexandraSuburb) : ''} | 💰 R${escapeHTML(String(room.amount || ''))}</p>
+            <p>👤 ${escapeHTML(room.posterName || '')} | 📞 ${escapeHTML(room.posterContact || '')}</p>
 
             <div class="fee-box ${f.manual ? 'manual' : ''}">
               <div class="fee-total">Agent fee: ${money(f.total)} ${manualBadge}</div>
-              <div class="fee-line">${f.breakdown || ''}</div>
+              <div class="fee-line">${escapeHTML(f.breakdown || '')}</div>
               ${!f.manual ? (f.surcharge
                 ? `<div class="fee-line surcharge">+ R${f.surcharge} non-Alexandra surcharge</div>`
                 : `<div class="fee-line" style="color:#0f7a5f">✓ Alexandra Township — no surcharge</div>`) : ''}
@@ -430,6 +469,13 @@
           </div>
         </div>`;
     }).join('');
+  }
+
+  function escapeHTML(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s){
+    return String(s ?? '').replace(/'/g, '%27').replace(/"/g, '%22');
   }
 
   async function doAction(action, id, from, to) {
@@ -492,7 +538,7 @@
       box.innerHTML = `
         <div class="label">${f.manual ? '🔧 MANUAL OVERRIDE' : 'System-calculated fee'}</div>
         <div class="total">${money(f.total)}</div>
-        <div class="sub">${f.breakdown || ''}</div>
+        <div class="sub">${escapeHTML(f.breakdown || '')}</div>
         ${!f.manual && f.surcharge ? `<div class="sub" style="color:#b8493b">+ R${f.surcharge} non-Alexandra surcharge</div>` : ''}
       `;
     } catch (_) {}
@@ -546,7 +592,7 @@
         : `System fee: R${room.agentFee ? room.agentFee.total : '?'}\n\nType a manual agent fee in Rands (e.g. 450):`,
       current ? String(current) : ''
     );
-    if (val === null) return; // cancel
+    if (val === null) return;
     const token = localStorage.getItem('adminToken');
     try {
       if (String(val).trim() === '') {
@@ -649,16 +695,53 @@
     } catch (e) { alert('❌ Failed'); }
   }
 
+  /* ============================================================
+     MEDIA VIEWER — supports images AND videos with fullscreen
+     ============================================================ */
   function viewMedia(type, src) {
     const viewer = $('#mediaViewer');
     const content = $('#mediaContent');
-    content.innerHTML = type === 'image' ? `<img src="${src}">` : `<video src="${src}" controls autoplay></video>`;
+    const fsBtn = $('#mediaFullscreenBtn');
+    currentMediaType = type;
+
+    if (type === 'video') {
+      content.innerHTML = `<video id="viewerVideo" src="${src}" controls autoplay playsinline></video>`;
+      fsBtn.classList.add('show');
+      // Attempt autoplay
+      const v = document.getElementById('viewerVideo');
+      if (v) { const p = v.play(); if (p && p.catch) p.catch(()=>{}); }
+    } else {
+      content.innerHTML = `<img src="${src}" alt="">`;
+      fsBtn.classList.remove('show');
+    }
     viewer.classList.add('show');
+    document.body.style.overflow = 'hidden';
   }
+
   function closeMediaViewer() {
-    $('#mediaViewer').classList.remove('show');
-    $('#mediaContent').innerHTML = '';
+    const viewer = $('#mediaViewer');
+    const content = $('#mediaContent');
+    const v = document.getElementById('viewerVideo');
+    if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+    content.innerHTML = '';
+    viewer.classList.remove('show');
+    document.body.style.overflow = '';
+    currentMediaType = null;
   }
+
+  function goFullscreen() {
+    if (currentMediaType !== 'video') return;
+    const v = document.getElementById('viewerVideo');
+    if (!v) return;
+    if (v.requestFullscreen) v.requestFullscreen();
+    else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen();
+    else if (v.msRequestFullscreen) v.msRequestFullscreen();
+    else v.play();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('#mediaViewer').classList.contains('show')) closeMediaViewer();
+  });
 
   if (localStorage.getItem('adminToken')) {
     $('#loginScreen').style.display = 'none';
