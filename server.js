@@ -7,12 +7,9 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; 
 
-if (!ADMIN_PASSWORD) {
-  console.error("❌ FATAL: ADMIN_PASSWORD environment variable is not set.");
-  process.exit(1);
-}
+// Fallback password if env is not set
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Av98012@12";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -20,7 +17,7 @@ const pool = new Pool({
 });
 
 app.use(cors());
-// 50mb limit to allow Base64 images
+// 50mb limit to hold Base64 images
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(__dirname)); 
 
