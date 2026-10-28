@@ -62,27 +62,41 @@ input,select,textarea{font-family:inherit;}
 .nav a.cta:hover{background:var(--gold-dark);}
 
 /* ===================== HERO ===================== */
-.hero{position:relative;background:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;color:#fff;padding:90px 0 70px;min-height:550px;display:flex;align-items:center;}
-.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(14,56,42,0.95) 0%,rgba(14,56,42,0.8) 45%,rgba(14,56,42,0.4) 100%);z-index:1;}
+.hero{
+  position:relative;
+  background:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;
+  color:#fff;
+  padding:120px 0 100px;
+  min-height:600px;
+  display:flex;
+  align-items:center;
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, rgba(14,56,42,0.95) 0%, rgba(14,56,42,0.85) 50%, rgba(14,56,42,0.6) 100%);
+  z-index:1;
+}
 .hero .container{position:relative;z-index:2;width:100%;}
 .hero .badge-top{display:inline-block;border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:20px;}
-.hero h1{margin:0 0 16px;font-size:clamp(36px,5vw,58px);font-weight:900;letter-spacing:-.5px;line-height:1.1;max-width:800px;}
-.hero .tagline{color:var(--gold);font-weight:800;letter-spacing:2px;font-size:14px;text-transform:uppercase;margin-bottom:16px;}
-.hero p.lead{margin:0 0 30px;color:rgba(255,255,255,.9);font-size:clamp(16px,1.8vw,18px);max-width:640px;line-height:1.6;}
+.hero h1{margin:0 0 16px;font-size:clamp(38px,5.5vw,64px);font-weight:900;letter-spacing:-.5px;line-height:1.1;max-width:800px;}
+.hero .tagline{color:var(--gold);font-weight:800;letter-spacing:2px;font-size:15px;text-transform:uppercase;margin-bottom:20px;}
+.hero p.lead{margin:0 0 35px;color:rgba(255,255,255,.9);font-size:clamp(16px,1.8vw,19px);max-width:640px;line-height:1.6;}
 .hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
-.hero-btn{padding:12px 28px;border-radius:var(--radius-sm);font-weight:700;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;}
+.hero-btn{padding:14px 32px;border-radius:var(--radius-sm);font-weight:700;font-size:16px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;}
 .hero-btn.primary{background:#0e7a5f;color:#fff;border:1px solid #0e7a5f;}
 .hero-btn.primary:hover{background:#0a5c47;}
 .hero-btn.secondary{background:transparent;color:#fff;border:1px solid #fff;}
 .hero-btn.secondary:hover{background:rgba(255,255,255,0.1);}
 
 /* ===================== SEARCH CARD ===================== */
-.search-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:-40px;position:relative;z-index:10;}
+.search-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:-50px;position:relative;z-index:10;}
 .search-card .field{display:flex;flex-direction:column;gap:5px;}
 .search-card label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
-.search-card input,.search-card select{padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);background:#fff;}
+.search-card input,.search-card select{padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);background:#fff;}
 .search-card input:focus,.search-card select:focus{border-color:var(--green-dark);outline:none;}
-.search-card .search-btn{background:var(--gold);color:var(--green-dark);border:none;padding:12px 22px;border-radius:var(--radius-sm);font-weight:800;font-size:14px;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;white-space:nowrap;}
+.search-card .search-btn{background:var(--gold);color:var(--green-dark);border:none;padding:13px 26px;border-radius:var(--radius-sm);font-weight:800;font-size:14px;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;white-space:nowrap;}
 .search-card .search-btn:hover{background:var(--gold-dark);}
 
 /* ===================== BROWSE ===================== */
@@ -94,54 +108,53 @@ input,select,textarea{font-family:inherit;}
 .browse-card small{color:var(--muted);font-size:11px;}
 
 /* ===================== LISTINGS ===================== */
-.section{padding:40px 0;}
+.section{padding:50px 0;}
 .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
-.section-head h2{margin:0 0 4px;font-size:clamp(22px,2.6vw,28px);font-weight:900;color:var(--green-dark);letter-spacing:-.3px;}
-.section-head p{margin:0;color:var(--muted);font-size:14px;}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-.chip{border:1px solid var(--line);background:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink-soft);text-decoration:none;transition:all .15s;}
+.section-head h2{margin:0 0 4px;font-size:clamp(24px,2.8vw,32px);font-weight:900;color:var(--green-dark);letter-spacing:-.3px;}
+.section-head p{margin:0;color:var(--muted);font-size:15px;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.chip{border:1px solid var(--line);background:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink-soft);text-decoration:none;transition:all .15s;}
 .chip:hover{border-color:var(--green-dark);text-decoration:none;}
 .chip.active{background:var(--green-dark);color:#fff;border-color:var(--green-dark);}
-.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:22px;}
+.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;}
 .empty-state{background:#fff;border:1px dashed var(--line);border-radius:var(--radius);padding:48px 24px;text-align:center;color:var(--muted);grid-column:1/-1;}
 
-/* ===================== PROPERTY CARD (SWIPEABLE) ===================== */
-.pc-card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;position:relative;}
-.pc-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+/* ===================== PROPERTY CARD ===================== */
+.pc-card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;position:relative;}
+.pc-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);}
 
-/* The Carousel Container */
 .pc-gallery{width:100%; height:240px; position:relative; overflow:hidden; background:#dfe4e8;}
 .pc-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .pc-slider::-webkit-scrollbar { display: none; }
 .pc-slide{flex:0 0 100%; scroll-snap-align:start; position:relative;}
 .pc-slide img, .pc-slide video{width:100%; height:100%; object-fit:cover; display:block;}
 
-/* Swipe Indicators */
 .pc-dots{position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:5;}
 .pc-dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.5);}
 .pc-dot.active{background:#fff; width:8px; height:8px;}
 
 .pc-badge{position:absolute;left:12px;top:12px;background:#2f6fb2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:4px;text-transform:uppercase;z-index:2;}
-.pc-body{padding:16px;flex:1;display:flex;flex-direction:column;position:relative;}
+.pc-body{padding:18px;flex:1;display:flex;flex-direction:column;position:relative;}
 .pc-sponsored{position:absolute;top:14px;right:16px;font-size:10.5px;color:#8a8f98;letter-spacing:.3px;font-weight:600;}
-.pc-price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-right:60px;margin-bottom:8px;}
-.pc-price{font-size:22px;font-weight:800;color:var(--green-dark);letter-spacing:-.4px;white-space:nowrap;}
-.pc-title{font-size:14px;color:var(--ink);font-weight:400;line-height:1.35;}
+.pc-price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-right:60px;margin-bottom:10px;}
+.pc-price{font-size:24px;font-weight:800;color:var(--green-dark);letter-spacing:-.4px;white-space:nowrap;}
+.pc-title{font-size:15px;color:var(--ink);font-weight:400;line-height:1.35;}
 .pc-title b{font-weight:800;color:#0d0d0d;}
-.pc-specs{display:flex;gap:18px;flex-wrap:wrap;color:var(--ink-soft);margin-bottom:12px;}
-.pc-spec{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;}
-.pc-spec svg{width:17px;height:17px;stroke:var(--ink-soft);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.pc-specs{display:flex;gap:18px;flex-wrap:wrap;color:var(--ink-soft);margin-bottom:14px;}
+.pc-spec{display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;}
+.pc-spec svg{width:18px;height:18px;stroke:var(--ink-soft);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 .pc-flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:6px;}
-.pc-flag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;}
+.pc-flag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;}
 .pc-flag.yes{background:#e6f5ec;color:#11733f;}
 .pc-flag.no{background:#fdecea;color:#a12a1e;}
-.pc-fav{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:transform .1s; z-index:10;}
+.pc-fav{position:absolute;right:16px;bottom:16px;width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:transform .1s; z-index:10;}
 .pc-fav:hover{transform:scale(1.08);}
-.pc-fav svg{width:20px;height:20px;stroke:var(--green-dark);fill:none;stroke-width:2;transition:fill .15s;}
+.pc-fav svg{width:22px;height:22px;stroke:var(--green-dark);fill:none;stroke-width:2;transition:fill .15s;}
 .pc-fav.active svg{fill:var(--green-dark);}
 
 @media(max-width:480px){
   .pc-gallery{height:220px;}
+  .listings{grid-template-columns:1fr;}
 }
 
 /* ===================== ABOUT / CONTACT ===================== */
@@ -169,7 +182,6 @@ input,select,textarea{font-family:inherit;}
 .modal-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:20;}
 .modal-close:hover{background:rgba(0,0,0,.8);}
 
-/* MODAL SWIPEABLE GALLERY */
 .modal-gallery{width:100%; height:400px; position:relative; background:#000;}
 .modal-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .modal-slider::-webkit-scrollbar { display: none; }
@@ -213,7 +225,7 @@ input,select,textarea{font-family:inherit;}
 @media(max-width:520px){
   .search-card{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr;}
-  .hero{padding:50px 0 50px;}
+  .hero{padding:60px 0 60px;}
   .hero-btn{width:100%;}
 }
 </style>
@@ -781,8 +793,17 @@ function toggleFav(btn, id){
 function renderListings(){
   const grid = $('#listingGrid');
   let list = ALL.slice();
-  if (ACTIVE_PURPOSE !== 'all') list = list.filter(p => (p.purpose || 'rent') === ACTIVE_PURPOSE);
-  if (ACTIVE_TYPE !== 'all') list = list.filter(p => String(p.type || p.roomType || '').toLowerCase().includes(ACTIVE_TYPE.toLowerCase()));
+  
+  if (ACTIVE_PURPOSE !== 'all') {
+    list = list.filter(p => (p.purpose || 'rent') === ACTIVE_PURPOSE);
+  }
+  
+  if (ACTIVE_TYPE !== 'all') {
+    list = list.filter(p => {
+      const pType = (p.type || p.roomType || '').toLowerCase();
+      return pType === ACTIVE_TYPE.toLowerCase();
+    });
+  }
 
   if (!list.length){
     grid.innerHTML = `<div class="empty-state"><h3>📭 No properties found</h3><p>There are currently no approved listings matching your filter.</p></div>`;
@@ -809,9 +830,11 @@ function filterType(type, ev){
   if (ev) ev.preventDefault();
   ACTIVE_TYPE = type;
   ACTIVE_PURPOSE = 'all';
+  
   $('#listingsHeading').textContent = 'Browse ' + type.charAt(0).toUpperCase() + type.slice(1) + 's';
   $('#listingsSubtext').textContent = 'Showing all approved ' + type + ' listings.';
   $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === 'all'));
+  
   renderListings();
   document.getElementById('listings').scrollIntoView({behavior:'smooth'});
 }
@@ -826,7 +849,7 @@ function doSearch(ev){
   let list = ALL.slice();
   if (purpose) list = list.filter(p => (p.purpose || 'rent') === purpose);
   if (loc) list = list.filter(p => ((p.location || '') + ' ' + (p.alexandraSuburb || '') + ' ' + (p.address || '')).toLowerCase().includes(loc.toLowerCase()));
-  if (type) list = list.filter(p => String(p.type || p.roomType || '').toLowerCase().includes(type.toLowerCase()));
+  if (type) list = list.filter(p => String(p.type || p.roomType || '').toLowerCase() === type.toLowerCase());
   if (max) {
     const m = Number(max);
     list = list.filter(p => Number(String(p.amount || '').replace(/[^\d.]/g,'')) <= m);
@@ -839,6 +862,7 @@ function doSearch(ev){
     grid.innerHTML = list.map(renderCard).join('');
   }
   ACTIVE_PURPOSE = purpose;
+  ACTIVE_TYPE = type || 'all';
   $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === purpose));
   $('#listings').scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -874,7 +898,7 @@ function openProp(id){
   const slides = mediaItems.map(m => {
     if (m.type === 'video') return `<div class="modal-slide"><video src="${escapeHTML(m.url)}" controls playsinline></video></div>`;
     if (m.type === 'empty') return `<div class="modal-slide" style="color:#fff;">No Image</div>`;
-    return `<div class="modal-slide"><img src="${escapeHTML(m.url)}"></div>`;
+    return `<div class="modal-slide"><img src="${escapeHTML(m.url)}" loading="lazy"></div>`;
   }).join('');
 
   const price = formatPrice(p.amount);
@@ -934,52 +958,8 @@ document.addEventListener('keydown', e => {
 });
 
 /* ============================================================
-   FORM SUBMISSION (BASE64)
+   FORM SUBMISSION (FILE UPLOAD)
    ============================================================ */
-let uploadedImageUrls = [];
-let uploadedVideoUrl = '';
-
-async function handleImageSelect(e) {
-  const files = Array.from(e.target.files);
-  if (files.length > 8) { alert("You can only upload a maximum of 8 pictures."); e.target.value = ''; return; }
-  
-  const preview = $('#imagePreview');
-  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Processing pictures...</div>';
-  
-  uploadedImageUrls = [];
-  preview.innerHTML = '';
-
-  let processed = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      uploadedImageUrls.push(ev.target.result);
-      preview.innerHTML += `<img src="${ev.target.result}" alt="preview">`;
-      
-      processed++;
-      if(processed === files.length) {
-         // Done
-      }
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function handleVideoSelect(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  const preview = $('#videoPreview');
-  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Processing video...</div>';
-  
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    uploadedVideoUrl = ev.target.result;
-    preview.innerHTML = `<video src="${uploadedVideoUrl}" controls></video>`;
-  };
-  reader.readAsDataURL(file);
-}
-
 $('#postForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('#postSubmitBtn');
@@ -987,47 +967,76 @@ $('#postForm')?.addEventListener('submit', async (e) => {
   notice.className = 'form-notice';
   notice.textContent = '';
 
-  if (uploadedImageUrls.length === 0) { notice.style.color = 'var(--red)'; notice.textContent = 'Please upload at least 1 picture.'; return; }
+  const fileInput = document.getElementById('pImages');
+  const files = Array.from(fileInput.files);
+  
+  if (files.length === 0) { 
+    notice.style.color = 'red'; 
+    notice.textContent = 'Please upload at least 1 picture.'; 
+    return; 
+  }
 
-  const rawPhone = $('#pOwnerPhone').value;
-  const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
+  btn.disabled = true; 
+  btn.textContent = 'Uploading pictures...';
 
-  const payload = {
-    title: $('#pTitle').value, 
-    purpose: $('#pPurpose').value, 
-    type: $('#pType').value, 
-    alexandraSuburb: $('#pTownship').value,
-    location: $('#pTownship').value, 
-    address: $('#pAddress').value,
-    amount: $('#pPrice').value, 
-    deposit: $('#pDeposit').value, 
-    availableDate: $('#pAvailableDate').value, 
-    notes: $('#pNotes').value,
-    childFriendly: $('#pChild').value, 
-    maxKids: $('#pChildCount').value || '0',
-    parking: $('#pParking').value, 
-    maxCars: $('#pCarCount').value || '0',
-    ceiling: $('#pCeiling').value, 
-    tiles: $('#pTiles').value,
-    toiletType: $('#pToilet').value, 
-    bathroomType: $('#pBathroom').value,
-    posterName: $('#pOwnerName').value, 
-    posterContact: cleanPhone,
-    images: uploadedImageUrls, 
-    video: uploadedVideoUrl
-  };
-
-  btn.disabled = true; btn.textContent = 'Submitting...';
   try {
+    const formData = new FormData();
+    files.forEach(f => formData.append('images', f));
+
+    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+    const uploadData = await uploadRes.json();
+    
+    if (!uploadData.success) throw new Error("Image upload failed.");
+    const uploadedImageUrls = uploadData.urls;
+
+    btn.textContent = 'Saving property...';
+
+    const rawPhone = $('#pOwnerPhone').value;
+    const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
+
+    const payload = {
+      title: $('#pTitle').value, 
+      purpose: $('#pPurpose').value, 
+      type: $('#pType').value, 
+      alexandraSuburb: $('#pTownship').value,
+      location: $('#pTownship').value, 
+      address: $('#pAddress').value,
+      amount: $('#pPrice').value, 
+      deposit: $('#pDeposit').value, 
+      availableDate: $('#pAvailableDate').value, 
+      notes: $('#pNotes').value,
+      childFriendly: $('#pChild').value, 
+      maxKids: $('#pChildCount').value || '0',
+      parking: $('#pParking').value, 
+      maxCars: $('#pCarCount').value || '0',
+      ceiling: $('#pCeiling').value, 
+      tiles: $('#pTiles').value,
+      toiletType: $('#pToilet').value, 
+      bathroomType: $('#pBathroom').value,
+      posterName: $('#pOwnerName').value, 
+      posterContact: cleanPhone,
+      images: uploadedImageUrls, 
+      video: "" 
+    };
+
     const res = await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json().catch(() => ({}));
+    
     if (res.ok && (data.ok || data.success || data.id)) {
-      notice.style.color = 'var(--green-dark)'; notice.textContent = '✅ Property submitted successfully! It will appear once approved.';
-      e.target.reset(); uploadedImageUrls = []; uploadedVideoUrl = ''; $('#imagePreview').innerHTML = ''; $('#videoPreview').innerHTML = '';
-    } else throw new Error(data.error || 'Could not submit property.');
+      notice.style.color = 'var(--green-dark)'; 
+      notice.textContent = '✅ Property submitted successfully! It will appear once approved.';
+      e.target.reset(); 
+      $('#imagePreview').innerHTML = '';
+    } else {
+      throw new Error(data.error || 'Could not submit property.');
+    }
   } catch (err) {
-    notice.style.color = 'var(--red)'; notice.textContent = '⚠️ ' + (err.message || 'Failed to submit. Please try again.');
-  } finally { btn.disabled = false; btn.textContent = 'Submit Property for Approval'; }
+    notice.style.color = 'var(--red)'; 
+    notice.textContent = '⚠️ ' + (err.message || 'Failed to submit.');
+  } finally { 
+    btn.disabled = false; 
+    btn.textContent = 'Submit Property for Approval'; 
+  }
 });
 
 function showPage(page, ev){
