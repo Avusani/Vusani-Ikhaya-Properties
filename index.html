@@ -7,7 +7,6 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230E382A'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='%23D4AF37' font-family='system-ui'>V</text></svg>">
 
 <style>
-/* ===================== DESIGN TOKENS ===================== */
 :root{
   --green-dark:#0E382A; 
   --green-mid:#155540;
@@ -38,7 +37,6 @@ input,select,textarea{font-family:inherit;}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
 .container{max-width:1240px;margin:0 auto;padding:0 20px;}
 
-/* ===================== TOP BAR ===================== */
 .topbar{background:var(--green-dark);color:#dfe6f0;font-size:13px;padding:6px 0;}
 .topbar .container{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
 .topbar a{color:#dfe6f0;}
@@ -46,7 +44,6 @@ input,select,textarea{font-family:inherit;}
 .topbar .tb-left,.topbar .tb-right{display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
 .topbar .safety{color:var(--gold);font-weight:600;}
 
-/* ===================== HEADER ===================== */
 .header{background:var(--white);color:var(--green-dark);position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.08);}
 .header .container{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap;}
 .brand{display:flex;align-items:center;gap:12px;color:var(--green-dark);text-decoration:none;}
@@ -61,7 +58,6 @@ input,select,textarea{font-family:inherit;}
 .nav a.cta{background:var(--gold);color:var(--green-dark);}
 .nav a.cta:hover{background:var(--gold-dark);}
 
-/* ===================== HERO ===================== */
 .hero{
   position:relative;
   background:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover no-repeat;
@@ -90,7 +86,6 @@ input,select,textarea{font-family:inherit;}
 .hero-btn.secondary{background:transparent;color:#fff;border:1px solid #fff;}
 .hero-btn.secondary:hover{background:rgba(255,255,255,0.1);}
 
-/* ===================== SEARCH CARD ===================== */
 .search-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:-50px;position:relative;z-index:10;}
 .search-card .field{display:flex;flex-direction:column;gap:5px;}
 .search-card label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
@@ -99,7 +94,6 @@ input,select,textarea{font-family:inherit;}
 .search-card .search-btn{background:var(--gold);color:var(--green-dark);border:none;padding:13px 26px;border-radius:var(--radius-sm);font-weight:800;font-size:14px;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;white-space:nowrap;}
 .search-card .search-btn:hover{background:var(--gold-dark);}
 
-/* ===================== BROWSE ===================== */
 .browse-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:30px;}
 .browse-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px 12px;text-align:center;text-decoration:none;color:var(--ink);transition:box-shadow .15s,transform .15s;}
 .browse-card:hover{box-shadow:var(--shadow-sm);transform:translateY(-2px);text-decoration:none;border-color:var(--green-dark);}
@@ -107,7 +101,6 @@ input,select,textarea{font-family:inherit;}
 .browse-card strong{display:block;font-size:13px;color:var(--green-dark);margin-bottom:2px;}
 .browse-card small{color:var(--muted);font-size:11px;}
 
-/* ===================== LISTINGS ===================== */
 .section{padding:50px 0;}
 .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
 .section-head h2{margin:0 0 4px;font-size:clamp(24px,2.8vw,32px);font-weight:900;color:var(--green-dark);letter-spacing:-.3px;}
@@ -119,20 +112,16 @@ input,select,textarea{font-family:inherit;}
 .listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;}
 .empty-state{background:#fff;border:1px dashed var(--line);border-radius:var(--radius);padding:48px 24px;text-align:center;color:var(--muted);grid-column:1/-1;}
 
-/* ===================== PROPERTY CARD ===================== */
 .pc-card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;position:relative;}
 .pc-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);}
-
 .pc-gallery{width:100%; height:240px; position:relative; overflow:hidden; background:#dfe4e8;}
 .pc-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .pc-slider::-webkit-scrollbar { display: none; }
 .pc-slide{flex:0 0 100%; scroll-snap-align:start; position:relative;}
 .pc-slide img, .pc-slide video{width:100%; height:100%; object-fit:cover; display:block;}
-
 .pc-dots{position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:5;}
 .pc-dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.5);}
 .pc-dot.active{background:#fff; width:8px; height:8px;}
-
 .pc-badge{position:absolute;left:12px;top:12px;background:#2f6fb2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:4px;text-transform:uppercase;z-index:2;}
 .pc-body{padding:18px;flex:1;display:flex;flex-direction:column;position:relative;}
 .pc-sponsored{position:absolute;top:14px;right:16px;font-size:10.5px;color:#8a8f98;letter-spacing:.3px;font-weight:600;}
@@ -157,7 +146,6 @@ input,select,textarea{font-family:inherit;}
   .listings{grid-template-columns:1fr;}
 }
 
-/* ===================== ABOUT / CONTACT ===================== */
 .about-wrap{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;background:#fff;border-radius:var(--radius);padding:40px;box-shadow:var(--shadow-sm);border:1px solid var(--line);}
 .about-wrap h2{color:var(--green-dark);font-size:28px;margin-top:0;}
 .about-wrap p{color:var(--ink-soft);line-height:1.7;font-size:15px;}
@@ -166,7 +154,6 @@ input,select,textarea{font-family:inherit;}
 .safety-banner strong{display:block;color:#92400e;font-size:15px;letter-spacing:.5px;margin-bottom:4px;}
 .safety-banner p{margin:0;color:#5c3f0a;font-size:13.5px;line-height:1.5;}
 
-/* ===================== FOOTER ===================== */
 .footer{background:var(--green-dark);color:#cdd6e2;padding:48px 0 20px;margin-top:20px;}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:32px;margin-bottom:34px;}
 .footer h4{color:#fff;font-size:14px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin:0 0 14px;}
@@ -175,21 +162,17 @@ input,select,textarea{font-family:inherit;}
 .footer a:hover{color:var(--gold);text-decoration:none;}
 .footer .cipc{font-size:12px;color:#8a97a8;margin-top:12px;line-height:1.6;}
 
-/* ===================== MODAL & TOAST ===================== */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
 .modal-overlay.show{display:flex;}
 .modal-box{background:#fff;border-radius:var(--radius);max-width:980px;width:100%;position:relative;box-shadow:var(--shadow-lg);overflow:hidden;}
 .modal-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:20;}
 .modal-close:hover{background:rgba(0,0,0,.8);}
-
 .modal-gallery{width:100%; height:400px; position:relative; background:#000;}
 .modal-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .modal-slider::-webkit-scrollbar { display: none; }
 .modal-slide{flex:0 0 100%; scroll-snap-align:start; position:relative; display:flex; align-items:center; justify-content:center;}
 .modal-slide img, .modal-slide video{max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain;}
-
 @media(max-width:700px){ .modal-gallery { height: 280px; } }
-
 .modal-body{padding:24px 28px 28px;}
 .modal-body h2{margin:0 0 6px;font-size:24px;color:var(--green-dark);}
 .modal-body .price{font-size:28px;font-weight:900;color:var(--green-dark);margin-bottom:4px;}
@@ -205,7 +188,6 @@ input,select,textarea{font-family:inherit;}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green-dark);color:#fff;padding:13px 22px;border-radius:var(--radius-sm);font-weight:700;font-size:14px;box-shadow:var(--shadow-lg);z-index:2000;opacity:0;transition:all .2s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ===================== POST FORM ===================== */
 .post-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .post-grid .full{grid-column:1/-1;}
 .form-field label{display:block;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
@@ -453,7 +435,6 @@ input,select,textarea{font-family:inherit;}
             <label>Property Title *</label>
             <input type="text" id="pTitle" required placeholder="e.g. Spacious Bachelor Room in East Bank">
           </div>
-          
           <div class="form-field">
             <label>Purpose *</label>
             <select id="pPurpose" required>
@@ -461,7 +442,6 @@ input,select,textarea{font-family:inherit;}
               <option value="buy">For Sale</option>
             </select>
           </div>
-          
           <div class="form-field">
             <label>Property Type *</label>
             <select id="pType" required>
@@ -471,7 +451,6 @@ input,select,textarea{font-family:inherit;}
               <option value="house">House</option>
             </select>
           </div>
-
           <div class="form-field full">
             <label>Township / Area *</label>
             <select id="pTownship" required>
@@ -490,32 +469,26 @@ input,select,textarea{font-family:inherit;}
               <option value="Other">Other</option>
             </select>
           </div>
-
           <div class="form-field full">
             <label>Street Address / Location *</label>
             <input type="text" id="pAddress" required placeholder="e.g. 123 Main Street">
           </div>
-          
           <div class="form-field">
             <label>Price (R) *</label>
             <input type="number" id="pPrice" required placeholder="e.g. 2500">
           </div>
-          
           <div class="form-field">
             <label>Deposit (R) *</label>
             <input type="text" id="pDeposit" required placeholder="e.g. 2500 or No deposit">
           </div>
-          
           <div class="form-field full">
             <label>Available Date *</label>
             <input type="date" id="pAvailableDate" required>
           </div>
-
           <div class="form-field full">
             <label>Description / Notes</label>
             <textarea id="pNotes" placeholder="Describe the property, rules, nearby amenities..."></textarea>
           </div>
-          
           <div class="form-field">
             <label>Child Friendly? *</label>
             <select id="pChild" required onchange="document.getElementById('childCountBox').style.display = this.value === 'Yes' ? 'block' : 'none';">
@@ -523,12 +496,10 @@ input,select,textarea{font-family:inherit;}
               <option value="Yes">Yes</option>
             </select>
           </div>
-          
           <div class="form-field" id="childCountBox" style="display:none;">
             <label>How many children allowed? *</label>
             <input type="number" id="pChildCount" min="1" placeholder="e.g. 2">
           </div>
-
           <div class="form-field">
             <label>Parking Available?</label>
             <select id="pParking" onchange="document.getElementById('carCountBox').style.display = this.value === 'Yes' ? 'block' : 'none';">
@@ -536,28 +507,18 @@ input,select,textarea{font-family:inherit;}
               <option value="Yes">Yes</option>
             </select>
           </div>
-
           <div class="form-field" id="carCountBox" style="display:none;">
             <label>How many cars?</label>
             <input type="number" id="pCarCount" min="1" placeholder="e.g. 2">
           </div>
-
           <div class="form-field">
             <label>Has Ceiling?</label>
-            <select id="pCeiling">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
+            <select id="pCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
           </div>
-
           <div class="form-field">
             <label>Has Tiles?</label>
-            <select id="pTiles">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
+            <select id="pTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
           </div>
-          
           <div class="form-field">
             <label>Toilet Options *</label>
             <select id="pToilet" required>
@@ -567,7 +528,6 @@ input,select,textarea{font-family:inherit;}
               <option value="Inside Toilet">Inside Toilet</option>
             </select>
           </div>
-
           <div class="form-field">
             <label>Bathroom Options *</label>
             <select id="pBathroom" required>
@@ -577,17 +537,14 @@ input,select,textarea{font-family:inherit;}
               <option value="Inside Bathroom">Inside Bathroom</option>
             </select>
           </div>
-
           <div class="form-field">
             <label>Your Name *</label>
             <input type="text" id="pOwnerName" required placeholder="Your full name">
           </div>
-
           <div class="form-field">
             <label>Your Phone / WhatsApp *</label>
             <input type="tel" id="pOwnerPhone" required placeholder="e.g. 071 234 5678">
           </div>
-
           <div class="form-field full">
             <label>Upload Pictures (Max 8) *</label>
             <label class="upload-box">
@@ -598,7 +555,6 @@ input,select,textarea{font-family:inherit;}
             </label>
             <div class="media-preview" id="imagePreview"></div>
           </div>
-
           <div class="form-field full">
             <label>Upload Video (Optional - Max 1)</label>
             <label class="upload-box">
@@ -609,9 +565,7 @@ input,select,textarea{font-family:inherit;}
             </label>
             <div class="media-preview" id="videoPreview"></div>
           </div>
-
         </div>
-        
         <button type="submit" class="search-btn" id="postSubmitBtn" style="margin-top:24px; width:100%;">Submit Property for Approval</button>
         <div class="form-notice" id="postNotice" style="margin-top:16px; font-weight:600; text-align:center;"></div>
       </form>
@@ -639,7 +593,6 @@ input,select,textarea{font-family:inherit;}
           Established May 2026
         </div>
       </div>
-
       <div>
         <h4>Explore</h4>
         <a href="#" onclick="filterPurpose('rent', event);showPage('home', event);">Rent a property</a>
@@ -647,14 +600,12 @@ input,select,textarea{font-family:inherit;}
         <a href="#" onclick="showPage('post', event)">List a property</a>
         <a href="#" onclick="showPage('about', event)">About Us</a>
       </div>
-
       <div>
         <h4>Company</h4>
         <a href="#" onclick="showPage('about', event)">Contact us</a>
         <a href="#" onclick="showPage('about', event)">Privacy policy</a>
         <a href="#" onclick="showPage('about', event)">Terms &amp; conditions</a>
       </div>
-
       <div>
         <h4>Get in touch</h4>
         <p style="font-size:13.5px;">Alexandra, Johannesburg, Gauteng, South Africa</p>
@@ -663,7 +614,6 @@ input,select,textarea{font-family:inherit;}
         <a href="tel:0613642449">📞 061 364 2449 (Call)</a>
       </div>
     </div>
-
     <div class="footer-bottom" style="border-top:1px solid rgba(255,255,255,.1); padding-top:18px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; color:#8a97a8;">
       <span>© <span id="year"></span> Vusani Ikhaya Properties (Pty) Ltd. All rights reserved.</span>
       <span>Trusted Rooms. Real People. Real Value.</span>
@@ -696,10 +646,6 @@ function formatPrice(amount){
   return 'R ' + n.toLocaleString('en-ZA');
 }
 
-function formatFee(n){
-  return 'R ' + Number(n || 0).toLocaleString('en-ZA');
-}
-
 function showToast(msg, type='success'){
   const t = $('#toast');
   t.textContent = msg;
@@ -726,15 +672,6 @@ function buildFlags(p){
   if ((p.bathroomSharing || 'Private') === 'Shared') out.push('<span class="pc-flag no">🛁 Shared bathroom</span>');
   else out.push('<span class="pc-flag yes">🛁 Private bathroom</span>');
   return out.join('');
-}
-
-function buildFeeBadge(p){
-  if (!p.agentFee) return '';
-  const f = p.agentFee;
-  const surchargeLine = f.surcharge
-    ? `<span style="color:#b8493b"> (+ R${f.surcharge} location surcharge)</span>`
-    : `<span style="color:#0f7a5f"> (Alexandra — no surcharge)</span>`;
-  return `<div style="margin-top:8px;font-size:12px;color:#8a6d0b;font-weight:700;">Agent fee: ${formatFee(f.total)}${surchargeLine}</div>`;
 }
 
 function renderCard(p){
@@ -785,25 +722,9 @@ function renderCard(p){
           <span class="pc-spec">${ICON_CAR}${parking}</span>
         </div>
         <div class="pc-flags">${buildFlags(p)}</div>
-        ${buildFeeBadge(p)}
         <button class="pc-fav ${localStorage.getItem('fav_'+p.id) ? 'active' : ''}" aria-label="Save" onclick="event.stopPropagation();toggleFav(this,'${escapeHTML(p.id)}')">${ICON_HEART}</button>
       </div>
     </article>`;
-}
-
-function buildFeeBox(p){
-  if (!p.agentFee) return '';
-  const f = p.agentFee;
-  const surchargeLine = f.surcharge
-    ? `<div style="font-size:12px;color:#b8493b;font-weight:700;margin-top:4px;">+ R${f.surcharge} non-Alexandra location surcharge</div>`
-    : `<div style="font-size:12px;color:#0f7a5f;font-weight:700;margin-top:4px;">✓ Alexandra Township — no surcharge</div>`;
-  return `
-    <div style="background:#fef9e7;border:1px solid #e5d18a;border-radius:8px;padding:14px;margin:14px 0;">
-      <div style="font-size:12px;font-weight:800;color:#8a6d0b;text-transform:uppercase;letter-spacing:.5px;">Agent Fee</div>
-      <div style="font-size:24px;font-weight:900;color:#8a6d0b;">${formatFee(f.total)}</div>
-      <div style="font-size:13px;color:#6b5b1b;margin-top:4px;">${escapeHTML(f.breakdown || '')}</div>
-      ${surchargeLine}
-    </div>`;
 }
 
 function updateDots(slider) {
@@ -952,8 +873,6 @@ function openProp(id){
 
       <div class="modal-flags">${buildFlags(p)}</div>
 
-      ${buildFeeBox(p)}
-
       <h3>Description</h3>
       <p>${escapeHTML(p.notes || p.description || 'No description provided. Please contact us for more information.')}</p>
 
@@ -988,9 +907,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#propModal').classList.contains('show')) closeProp();
 });
 
-/* ============================================================
-   IMAGE / VIDEO PREVIEW
-   ============================================================ */
 function handleImageSelect(ev){
   const files = Array.from(ev.target.files || []).slice(0, 8);
   const preview = document.getElementById('imagePreview');
@@ -1016,9 +932,6 @@ function handleVideoSelect(ev){
   });
 }
 
-/* ============================================================
-   FORM SUBMISSION (FILE UPLOAD)
-   ============================================================ */
 $('#postForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('#postSubmitBtn');
