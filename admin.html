@@ -6,38 +6,41 @@
   <title>Admin | VUSANI IKHAYA PROPERTIES</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, sans-serif; background: #edf4ee; color: #17201b; }
-    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #edf4ee; color: #17201b; }
+    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .topbar a { color: #fff; text-decoration: none; font-weight: bold; }
     .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
     
+    /* LOGIN */
     .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .login-box input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
     .login-box button { width: 100%; padding: 10px; background: #0f7a5f; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
     .error { color: red; display: none; margin-bottom: 10px; font-weight: bold; }
     
+    /* DASHBOARD */
     .panel { display: none; }
     .panel.show { display: block; }
-
     .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .stat-card { background: #fff; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ccc; }
-    .stat-card .number { font-size: 24px; font-weight: bold; color: #0f7a5f; }
-    .stat-card .label { font-size: 12px; color: #666; }
-
-    .main-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
+    .stat-card .label { font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase;}
+    
+    /* TABS */
+    .main-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .main-tabs button { padding: 10px 20px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-weight: bold; font-size: 14px; }
     .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-
-    .sub-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+    .sub-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;}
     .sub-tabs button { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; font-weight: bold;}
     .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-
     .section-content { display: none; }
     .section-content.active { display: block; }
 
-    .room-card { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; display: flex; gap: 15px; border: 1px solid #ddd; }
-    .room-card img { width: 120px; height: 120px; object-fit: cover; border-radius: 6px; }
-    .room-info { flex: 1; }
+    /* CARDS */
+    .room-card { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    .media-grid { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;}
+    .media-grid img, .media-grid video { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer; flex-shrink: 0;}
+    .media-grid .no-media { width: 100px; height: 100px; background: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #666; flex-shrink: 0;}
+    
     .room-info h3 { margin: 0 0 5px 0; font-size: 18px; }
     .room-info p { margin: 0 0 4px 0; font-size: 14px; color: #555; }
     .actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -48,8 +51,10 @@
     .btn-taken { background: #1e40af; }
     .empty { padding: 40px; text-align: center; color: #666; background: #fff; border-radius: 8px; border: 1px dashed #ccc;}
 
-    .match-card { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-    .match-card h4 { margin: 0 0 10px 0; color: #0f7a5f; }
+    /* ACTIVITY LOG */
+    .log-row { background: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #0f7a5f; }
+    .log-row .time { font-size: 12px; color: #637268; }
+    .log-row .who { font-size: 14px; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -63,7 +68,7 @@
 </div>
 
 <div class="container">
-  <!-- LOGIN -->
+  <!-- LOGIN SCREEN -->
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
     <div id="loginError" class="error">Incorrect password</div>
@@ -76,56 +81,65 @@
   <!-- ADMIN PANEL -->
   <div id="adminPanel" class="panel">
     
-    <!-- STATS BAR -->
+    <!-- STATS -->
     <div class="stats-bar">
-      <div class="stat-card"><div class="number" id="stat-pending">0</div><div class="label">Pending Rooms</div></div>
-      <div class="stat-card"><div class="number" id="stat-approved">0</div><div class="label">Approved Rooms</div></div>
-      <div class="stat-card"><div class="number" id="stat-taken">0</div><div class="label">Taken Rooms</div></div>
-      <div class="stat-card"><div class="number" id="stat-tenants">0</div><div class="label">Approved Tenants</div></div>
-      <div class="stat-card"><div class="number" id="stat-matches">0</div><div class="label">Matches Found</div></div>
+      <div class="stat-card"><div class="number" id="stat-pending">0</div><div class="label">Pending</div></div>
+      <div class="stat-card"><div class="number" id="stat-approved">0</div><div class="label">Approved</div></div>
+      <div class="stat-card"><div class="number" id="stat-taken">0</div><div class="label">Taken</div></div>
     </div>
 
-    <!-- TABS -->
+    <!-- MAIN TABS -->
     <div class="main-tabs">
       <button class="active" onclick="switchTab('rooms')">🏠 Manage Rooms</button>
-      <button onclick="switchTab('matches')">🔗 View Matches</button>
-      <button onclick="switchTab('settings')" style="color: red;">⚙️ Danger Zone</button>
+      <button onclick="switchTab('activity')">📜 Activity Log</button>
+      <button onclick="switchTab('settings')" style="color: #b8493b;">⚙️ Danger Zone</button>
     </div>
 
-    <!-- ROOMS SECTION -->
+    <!-- ROOMS TAB -->
     <div id="tab-rooms" class="section-content active">
       <div class="sub-tabs">
-        <button class="active" id="tab-btn-pending" onclick="loadRooms('pending', this)">⏳ Pending</button>
-        <button id="tab-btn-approved" onclick="loadRooms('approved', this)">✅ Approved</button>
-        <button id="tab-btn-taken" onclick="loadRooms('taken', this)">📦 Taken</button>
+        <button class="active" onclick="loadTab('pending', this)">⏳ Pending</button>
+        <button onclick="loadTab('approved', this)">✅ Approved</button>
+        <button onclick="loadTab('taken', this)">📦 Taken</button>
       </div>
       <div id="roomList"></div>
     </div>
 
-    <!-- MATCHES SECTION -->
-    <div id="tab-matches" class="section-content">
-      <div style="background:#fff; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #ccc;">
-        <h3 style="margin:0;">🔗 Landlord ↔ Tenant Matches</h3>
-        <p style="margin:5px 0 0 0; font-size:13px; color:#666;">50% Rent Match + 50% Location Match</p>
-      </div>
-      <div id="matchesList"></div>
+    <!-- ACTIVITY TAB -->
+    <div id="tab-activity" class="section-content">
+      <div id="activityList"></div>
     </div>
 
-    <!-- SETTINGS SECTION -->
+    <!-- SETTINGS TAB -->
     <div id="tab-settings" class="section-content">
       <div style="background:#fff; padding:20px; border-radius:8px; border: 1px solid red;">
         <h2 style="color:red; margin-top:0;">⚠️ Danger Zone</h2>
-        <p>Clicking this button will delete all posts (pending, approved, taken) permanently. This is useful if you want to start fresh and clear out old broken posts.</p>
-        <button onclick="wipeDatabase()" style="background:red; color:#fff; padding:12px 24px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:16px;">🗑️ Clear All Database Data</button>
+        <p>Clicking this button will delete all posts permanently. This is useful if you want to start fresh.</p>
+        <button onclick="wipeDatabase()" style="background:red; color:#fff; padding:12px 24px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:16px;">🗑️ Clear All Data</button>
       </div>
     </div>
 
   </div>
 </div>
 
+<!-- MEDIA VIEWER MODAL -->
+<div id="mediaViewer" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center;">
+  <button onclick="closeViewer()" style="position:absolute; top:20px; right:30px; font-size:40px; color:#fff; background:none; border:none; cursor:pointer;">✕</button>
+  <div id="viewerContent" style="max-width:90%; max-height:90%;"></div>
+</div>
+
 <script>
   let allData = {};
-  let currentRoomsTab = 'pending';
+  let currentTab = 'pending';
+
+  // Helper: Log Activity
+  function logAct(action, id) {
+    const entry = { time: new Date().toISOString(), action: action, id: id };
+    let logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    logs.unshift(entry);
+    if (logs.length > 50) logs.pop();
+    localStorage.setItem('adminLogs', JSON.stringify(logs));
+  }
 
   // 1. LOGIN
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -140,20 +154,14 @@
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
-        showAdmin();
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').classList.add('show');
+        loadData();
       } else {
         document.getElementById('loginError').style.display = 'block';
       }
-    } catch (err) {
-      alert("Server error");
-    }
+    } catch (err) { alert("Server error"); }
   });
-
-  function showAdmin() {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminPanel').classList.add('show');
-    loadData();
-  }
 
   function logout() {
     localStorage.removeItem('adminToken');
@@ -163,7 +171,7 @@
   // 2. LOAD DATA
   async function loadData() {
     const token = localStorage.getItem('adminToken');
-    if (!token) return;
+    if (!token) { logout(); return; }
 
     try {
       const res = await fetch('/api/admin/data', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -175,13 +183,9 @@
       document.getElementById('stat-pending').textContent = (allData.rooms.pending || []).length;
       document.getElementById('stat-approved').textContent = (allData.rooms.approved || []).length;
       document.getElementById('stat-taken').textContent = (allData.rooms.taken || []).length;
-      document.getElementById('stat-tenants').textContent = (allData.tenantRequests.approved || []).length;
       
-      // Load rooms based on current tab
-      loadRooms(currentRoomsTab, null);
-      
-      // Fetch matches
-      loadMatches();
+      loadTab(currentTab, null);
+      renderActivity();
       
     } catch (err) {
       alert("Failed to load admin data");
@@ -196,9 +200,10 @@
     if (tab === 'rooms') {
       document.querySelectorAll('.main-tabs button')[0].classList.add('active');
       document.getElementById('tab-rooms').classList.add('active');
-    } else if (tab === 'matches') {
+    } else if (tab === 'activity') {
       document.querySelectorAll('.main-tabs button')[1].classList.add('active');
-      document.getElementById('tab-matches').classList.add('active');
+      document.getElementById('tab-activity').classList.add('active');
+      renderActivity();
     } else if (tab === 'settings') {
       document.querySelectorAll('.main-tabs button')[2].classList.add('active');
       document.getElementById('tab-settings').classList.add('active');
@@ -206,8 +211,8 @@
   }
 
   // 4. ROOMS LIST
-  function loadRooms(status, btn) {
-    currentRoomsTab = status;
+  function loadTab(status, btn) {
+    currentTab = status;
     if (btn) {
       document.querySelectorAll('.sub-tabs button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -221,23 +226,34 @@
       return;
     }
 
-    list.innerHTML = rooms.map(room => `
-      <div class="room-card">
-        ${room.images && room.images[0] ? `<img src="${room.images[0]}">` : `<div style="width:120px;height:120px;background:#eee;border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; color:#999;">No Image</div>`}
-        <div class="room-info">
-          <h3>${room.title || 'Untitled'} <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:4px;">${room.type}</span></h3>
-          <p>📍 ${room.location} | 💰 R${room.amount}</p>
-          <p>👤 ${room.posterName} | 📞 ${room.posterContact}</p>
-          <div class="actions">
-            ${status === 'pending' ? `<button class="btn-approve" onclick="doAction('move', '${room.id}', 'pending', 'approved')">✅ Approve</button>` : ''}
-            ${status === 'pending' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'pending', 'declined')">❌ Decline</button>` : ''}
-            ${status === 'approved' ? `<button class="btn-taken" onclick="doAction('move', '${room.id}', 'approved', 'taken')">📦 Mark Taken</button>` : ''}
-            ${status === 'approved' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'approved', 'declined')">❌ Remove</button>` : ''}
-            ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete', '${room.id}', '${status}')">🗑️ Delete</button>` : ''}
+    list.innerHTML = rooms.map(room => {
+      let mediaHtml = '';
+      if (room.images && room.images.length > 0) {
+        mediaHtml = room.images.map(img => `<img src="${img}" onclick="viewMedia('image', '${img}')">`).join('');
+      }
+      if (room.video) {
+        mediaHtml += `<video src="${room.video}" onclick="viewMedia('video', '${room.video}')"></video>`;
+      }
+      if (!mediaHtml) mediaHtml = `<div class="no-media">No Media</div>`;
+
+      return `
+        <div class="room-card">
+          <div class="media-grid">${mediaHtml}</div>
+          <div class="room-info">
+            <h3>${room.title || 'Untitled'} <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:4px;">${room.type}</span></h3>
+            <p>📍 ${room.location} | 💰 R${room.amount}</p>
+            <p>👤 ${room.posterName} | 📞 ${room.posterContact}</p>
+            <div class="actions">
+              ${status === 'pending' ? `<button class="btn-approve" onclick="doAction('move', '${room.id}', 'pending', 'approved')">✅ Approve</button>` : ''}
+              ${status === 'pending' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'pending', 'declined')">❌ Decline</button>` : ''}
+              ${status === 'approved' ? `<button class="btn-taken" onclick="doAction('move', '${room.id}', 'approved', 'taken')">📦 Mark Taken</button>` : ''}
+              ${status === 'approved' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'approved', 'declined')">❌ Remove</button>` : ''}
+              ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete', '${room.id}', '${status}')">🗑️ Delete</button>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   // 5. ACTIONS
@@ -251,41 +267,30 @@
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ action: action, section: 'rooms', from: from, to: to, id: id })
       });
-      loadData(); // Refresh everything
+      
+      logAct(`Moved room ${from} → ${to}`, id);
+      loadData(); 
     } catch (e) {
       alert("Action failed");
     }
   }
 
-  // 6. MATCHES
-  async function loadMatches() {
-    const token = localStorage.getItem('adminToken');
-    try {
-      const res = await fetch('/api/admin/matches', { headers: { 'Authorization': 'Bearer ' + token } });
-      const data = await res.json();
-      const matches = data.matches || [];
-      
-      document.getElementById('stat-matches').textContent = matches.length;
-      
-      const list = document.getElementById('matchesList');
-      if (matches.length === 0) {
-        list.innerHTML = `<div class="empty">No matches found between approved rooms and tenants.</div>`;
-        return;
-      }
-      
-      list.innerHTML = matches.map(m => `
-        <div class="match-card">
-          <h4>🏠 Room: ${m.landlordTitle} (R${m.landlordRent}) in ${m.landlordLocation}</h4>
-          <p style="margin:0 0 10px 0; font-size:13px; color:#666;">📍 Group: ${m.landlordLocationGroup} | 🟫 Tiles: ${m.landlordTiles} | ⬜ Ceiling: ${m.landlordCeiling}</p>
-          <div style="border-top:1px solid #eee; padding-top:10px;">
-            <strong style="color:#0f7a5f;">🎯 Matched Tenant: ${m.tenantName}</strong>
-            <p style="margin:5px 0 0 0; font-size:13px;">📞 ${m.tenantContact} | 💰 ${m.tenantBudgetRange}</p>
-          </div>
-        </div>
-      `).join('');
-    } catch (e) {
-      console.log("Matches failed to load");
+  // 6. ACTIVITY LOG
+  function renderActivity() {
+    const list = document.getElementById('activityList');
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    
+    if (logs.length === 0) {
+      list.innerHTML = `<div class="empty">No activity yet.</div>`;
+      return;
     }
+    
+    list.innerHTML = logs.map(l => `
+      <div class="log-row">
+        <div class="who">${l.action} (ID: ${l.id})</div>
+        <div class="time">${new Date(l.time).toLocaleString()}</div>
+      </div>
+    `).join('');
   }
 
   // 7. WIPE DB
@@ -293,16 +298,37 @@
     if (!confirm('⚠️ ARE YOU SURE? This will delete ALL posts permanently.')) return;
     try {
       await fetch('/api/admin/reset-everything');
-      alert('✅ All data has been wiped. You can now start fresh.');
+      logAct('Wiped entire database', 'ALL');
+      alert('✅ All data has been wiped.');
       loadData();
     } catch(e) {
       alert('❌ Failed to wipe database');
     }
   }
 
+  // 8. MEDIA VIEWER
+  function viewMedia(type, src) {
+    const viewer = document.getElementById('mediaViewer');
+    const content = document.getElementById('viewerContent');
+    
+    if (type === 'image') {
+      content.innerHTML = `<img src="${src}" style="max-width:100%; max-height:90vh; border-radius:8px;">`;
+    } else {
+      content.innerHTML = `<video src="${src}" controls autoplay style="max-width:100%; max-height:90vh; border-radius:8px;"></video>`;
+    }
+    viewer.style.display = 'flex';
+  }
+
+  function closeViewer() {
+    document.getElementById('mediaViewer').style.display = 'none';
+    document.getElementById('viewerContent').innerHTML = '';
+  }
+
   // INIT
   if (localStorage.getItem('adminToken')) {
-    showAdmin();
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('show');
+    loadData();
   }
 </script>
 </body>
