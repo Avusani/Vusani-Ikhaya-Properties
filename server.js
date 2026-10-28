@@ -18,7 +18,6 @@ $('#postForm')?.addEventListener('submit', async (e) => {
   btn.textContent = 'Uploading pictures...';
 
   try {
-    // 1. Send images to server
     const formData = new FormData();
     files.forEach(f => formData.append('images', f));
 
@@ -30,7 +29,6 @@ $('#postForm')?.addEventListener('submit', async (e) => {
 
     btn.textContent = 'Saving property...';
 
-    // 2. Send post data
     const rawPhone = $('#pOwnerPhone').value;
     const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
 
