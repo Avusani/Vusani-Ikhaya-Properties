@@ -16,9 +16,10 @@
   .panel{display:none}.panel.show{display:block}
   .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
   .stat-card{background:#fff;padding:15px;border-radius:8px;text-align:center;border:1px solid #ccc}
-  .stat-card .number{font-size:24px;font-weight:900;color:#0f7a5f}
+  .stat-card .number{font-size:22px;font-weight:900;color:#0f7a5f}
   .stat-card .label{font-size:11px;color:#666;font-weight:bold;text-transform:uppercase}
   .stat-card.fee .number{color:#B5952F}
+  .stat-card.manual .number{color:#b8493b}
   .main-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
   .main-tabs button{padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-weight:bold;font-size:14px}
   .main-tabs button.active{background:#0f7a5f;color:#fff;border-color:#0f7a5f}
@@ -32,13 +33,18 @@
   .room-info h3{margin:0 0 5px;font-size:18px}
   .room-info p{margin:0 0 4px;font-size:14px;color:#555}
   .fee-box{margin:8px 0;padding:10px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
+  .fee-box.manual{background:#fdecea;border-color:#f5a69c}
   .fee-box .fee-total{font-size:18px;font-weight:900;color:#8a6d0b}
+  .fee-box.manual .fee-total{color:#a12a1e}
   .fee-box .fee-line{color:#6b5b1b;font-size:12px}
+  .fee-box.manual .fee-line{color:#7a2a1e}
   .fee-box .surcharge{color:#b8493b;font-weight:700}
+  .manual-badge{display:inline-block;background:#b8493b;color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-left:6px}
   .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
   .actions button{padding:6px 12px;border:none;border-radius:4px;color:#fff;cursor:pointer;font-weight:bold;font-size:13px}
   .btn-approve{background:#0f7a5f}.btn-decline{background:#b8493b}.btn-delete{background:#333}
   .btn-taken{background:#1e40af}.btn-repost{background:#e5a638}.btn-edit{background:#6b7280}
+  .btn-fee{background:#8a6d0b}
   .empty{padding:40px;text-align:center;color:#666;background:#fff;border-radius:8px;border:1px dashed #ccc}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px}
   .modal-overlay.show{display:flex}
@@ -48,7 +54,21 @@
   .modal input,.modal textarea,.modal select{width:100%;padding:10px;border:1px solid #cad8cf;border-radius:6px;font-size:14px}
   .modal .btn-save{background:#0f7a5f;color:#fff;border:none;padding:12px;border-radius:6px;font-weight:700;cursor:pointer;width:100%;margin-top:16px}
   .modal .hr{margin:18px 0;border:none;border-top:2px solid #eef3ee}
-  .fee-preview-modal{margin-top:10px;padding:10px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
+  .fee-preview-modal{margin-top:10px;padding:12px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
+  .fee-preview-modal.manual{background:#fdecea;border-color:#f5a69c}
+  .fee-preview-modal .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#8a6d0b;margin-bottom:4px}
+  .fee-preview-modal.manual .label{color:#a12a1e}
+  .fee-preview-modal .total{font-size:22px;font-weight:900;color:#8a6d0b}
+  .fee-preview-modal.manual .total{color:#a12a1e}
+  .fee-preview-modal .sub{font-size:12px;color:#6b5b1b;margin-top:4px}
+  .fee-preview-modal.manual .sub{color:#7a2a1e}
+  .fee-controls{margin-top:12px;padding:12px;background:#f8f9fa;border:1px dashed #b6c2b9;border-radius:6px}
+  .fee-controls label{font-size:12px;color:#444}
+  .fee-controls .row{display:flex;gap:8px;align-items:end;margin-top:6px}
+  .fee-controls .row input{flex:1}
+  .fee-controls button{padding:8px 12px;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px}
+  .fee-controls .apply{background:#b8493b;color:#fff}
+  .fee-controls .clear{background:#6b7280;color:#fff}
   .media-viewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;align-items:center;justify-content:center;padding:20px}
   .media-viewer.show{display:flex}
   .media-viewer img,.media-viewer video{max-width:95vw;max-height:90vh;border-radius:8px}
@@ -92,6 +112,7 @@
       <div class="stat-card fee"><div class="number" id="stat-fee-rent">R0</div><div class="label">Rental Fees</div></div>
       <div class="stat-card fee"><div class="number" id="stat-fee-sale">R0</div><div class="label">Sale Fees</div></div>
       <div class="stat-card fee"><div class="number" id="stat-fee-surcharge">R0</div><div class="label">Surcharges</div></div>
+      <div class="stat-card manual"><div class="number" id="stat-fee-manual">R0</div><div class="label">Manual Fees</div></div>
       <div class="stat-card fee"><div class="number" id="stat-fee-total">R0</div><div class="label">Total Fees</div></div>
     </div>
 
@@ -173,6 +194,16 @@
 
       <div class="fee-preview-modal" id="feePreviewModal">Fill amount, purpose and location to see the agent fee.</div>
 
+      <div class="fee-controls">
+        <label>🔧 Manual agent fee override</label>
+        <div style="font-size:11px;color:#666;margin-top:2px;">Leave blank and click Apply to clear the override and return to the system-calculated fee.</div>
+        <div class="row">
+          <input type="number" id="editFeeOverride" placeholder="e.g. 450" min="0" step="0.01">
+          <button type="button" class="apply" onclick="applyFeeOverride()">Apply</button>
+          <button type="button" class="clear" onclick="clearFeeOverride()">Clear</button>
+        </div>
+      </div>
+
       <hr class="hr">
       <label style="color:#0f7a5f;font-size:15px">📷 Add More Pictures</label>
       <input type="file" id="adminNewImage" accept="image/*" style="padding:8px;margin-bottom:8px">
@@ -193,7 +224,7 @@
   let currentTab = 'pending';
 
   const $ = (s) => document.querySelector(s);
-  const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA');
+  const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA', { maximumFractionDigits: 2 });
 
   function logAct(action) {
     const entry = { time: new Date().toISOString(), action };
@@ -246,6 +277,7 @@
         $('#stat-fee-rent').textContent = money(allData.feeTotals.rent);
         $('#stat-fee-sale').textContent = money(allData.feeTotals.sale);
         $('#stat-fee-surcharge').textContent = money(allData.feeTotals.surcharges);
+        $('#stat-fee-manual').textContent = money(allData.feeTotals.manual);
         $('#stat-fee-total').textContent = money(allData.feeTotals.grand);
       }
 
@@ -294,7 +326,7 @@
       <thead>
         <tr>
           <th>Date</th><th>Room</th><th>Kind</th><th>Amount</th>
-          <th>Base Fee</th><th>Surcharge</th><th>Total</th><th>In Alex?</th><th>Location</th>
+          <th>Base Fee</th><th>Surcharge</th><th>Total</th><th>Manual</th><th>In Alex?</th><th>Location</th>
         </tr>
       </thead>
       <tbody>
@@ -307,6 +339,7 @@
             <td>${money(r.fee_base)}</td>
             <td>${money(r.surcharge)}</td>
             <td><b>${money(r.fee_total)}</b></td>
+            <td>${r.manual ? '🔧 YES' : '—'}</td>
             <td>${r.in_alexandra ? '✅' : '❌'}</td>
             <td>${r.location}${r.suburb ? ' / ' + r.suburb : ''}</td>
           </tr>`).join('')}
@@ -360,7 +393,8 @@
       if (!mediaHtml) mediaHtml = `<div style="width:100px;height:100px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px">No Media</div>`;
 
       const displayType = room.type || room.roomType || 'room';
-      const f = room.agentFee || { base: 0, surcharge: 0, total: 0, kind: 'rent', breakdown: '' };
+      const f = room.agentFee || { base: 0, surcharge: 0, total: 0, kind: 'rent', manual: false, breakdown: '' };
+      const manualBadge = f.manual ? `<span class="manual-badge">MANUAL</span>` : '';
 
       return `
         <div class="room-card">
@@ -369,16 +403,17 @@
             <h3>${room.title || 'Untitled'}
               <span style="font-size:12px;background:#e0e7ff;color:#1e40af;padding:2px 6px;border-radius:4px;text-transform:uppercase">${displayType}</span>
               <span style="font-size:12px;background:${f.kind === 'sale' ? '#fde68a' : '#d1fae5'};color:#065f46;padding:2px 6px;border-radius:4px;text-transform:uppercase">${f.kind === 'sale' ? 'SALE' : 'RENT'}</span>
+              ${manualBadge}
             </h3>
             <p>📍 ${room.location || ''} ${room.alexandraSuburb ? ' / ' + room.alexandraSuburb : ''} | 💰 R${room.amount}</p>
             <p>👤 ${room.posterName || ''} | 📞 ${room.posterContact || ''}</p>
 
-            <div class="fee-box">
-              <div class="fee-total">Agent fee: ${money(f.total)}</div>
+            <div class="fee-box ${f.manual ? 'manual' : ''}">
+              <div class="fee-total">Agent fee: ${money(f.total)} ${manualBadge}</div>
               <div class="fee-line">${f.breakdown || ''}</div>
-              ${f.surcharge
+              ${!f.manual ? (f.surcharge
                 ? `<div class="fee-line surcharge">+ R${f.surcharge} non-Alexandra surcharge</div>`
-                : `<div class="fee-line" style="color:#0f7a5f">✓ Alexandra Township — no surcharge</div>`}
+                : `<div class="fee-line" style="color:#0f7a5f">✓ Alexandra Township — no surcharge</div>`) : ''}
             </div>
 
             <div class="actions">
@@ -390,6 +425,7 @@
               ${status === 'declined' ? `<button class="btn-repost" onclick="doAction('move','${room.id}','declined','pending')">🔄 Repost</button>` : ''}
               ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete','${room.id}','${status}')">🗑️ Delete</button>` : ''}
               <button class="btn-edit" onclick="openEditModal('${room.id}','${status}')">✏️ Edit</button>
+              <button class="btn-fee" onclick="openFeeOverrideModal('${room.id}','${status}')">🔧 Fee</button>
             </div>
           </div>
         </div>`;
@@ -427,6 +463,7 @@
     $('#editRoomPosterName').value = room.posterName || '';
     $('#editRoomPosterContact').value = room.posterContact || '';
     $('#editRoomNotes').value = room.notes || '';
+    $('#editFeeOverride').value = room.agentFeeOverride || '';
 
     refreshFeePreview();
     $('#editRoomModal').classList.add('show');
@@ -440,6 +477,7 @@
       purpose: $('#editRoomPurpose').value,
       location: $('#editRoomLocation').value,
       alexandraSuburb: $('#editRoomSuburb').value,
+      agentFeeOverride: $('#editFeeOverride').value
     };
     try {
       const res = await fetch('/api/fee-preview', {
@@ -449,14 +487,87 @@
       });
       const data = await res.json();
       const f = data.fee;
-      $('#feePreviewModal').innerHTML = `
-        <b>Live agent fee: ${money(f.total)}</b><br>
-        ${f.breakdown}<br>
-        ${f.surcharge
-          ? `<span style="color:#b8493b">+ R${f.surcharge} non-Alexandra surcharge</span>`
-          : `<span style="color:#0f7a5f">✓ Alexandra Township</span>`}
+      const box = $('#feePreviewModal');
+      box.className = 'fee-preview-modal' + (f.manual ? ' manual' : '');
+      box.innerHTML = `
+        <div class="label">${f.manual ? '🔧 MANUAL OVERRIDE' : 'System-calculated fee'}</div>
+        <div class="total">${money(f.total)}</div>
+        <div class="sub">${f.breakdown || ''}</div>
+        ${!f.manual && f.surcharge ? `<div class="sub" style="color:#b8493b">+ R${f.surcharge} non-Alexandra surcharge</div>` : ''}
       `;
     } catch (_) {}
+  }
+
+  async function applyFeeOverride() {
+    const token = localStorage.getItem('adminToken');
+    const id = $('#editRoomId').value;
+    const from = $('#editRoomFrom').value;
+    const val = $('#editFeeOverride').value;
+    const n = Number(val);
+    if (!Number.isFinite(n) || n <= 0) { alert('Enter a positive amount, or click Clear to remove the override.'); return; }
+    try {
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action: 'set-fee-override', section: 'rooms', from, id, data: { agentFeeOverride: n } })
+      });
+      logAct(`Manual fee override set to R${n}`);
+      alert(`✅ Manual agent fee set to R${n}`);
+      await loadData();
+      openEditModal(id, from);
+    } catch (e) { alert('Failed to apply override'); }
+  }
+
+  async function clearFeeOverride() {
+    const token = localStorage.getItem('adminToken');
+    const id = $('#editRoomId').value;
+    const from = $('#editRoomFrom').value;
+    try {
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action: 'clear-fee-override', section: 'rooms', from, id })
+      });
+      logAct('Manual fee override cleared');
+      alert('✅ Override cleared — back to system-calculated fee');
+      $('#editFeeOverride').value = '';
+      await loadData();
+      openEditModal(id, from);
+    } catch (e) { alert('Failed to clear override'); }
+  }
+
+  async function openFeeOverrideModal(id, from) {
+    const room = allData.rooms[from].find(r => r.id === id);
+    if (!room) return;
+    const current = room.agentFeeOverride;
+    const val = prompt(
+      current
+        ? `Current manual override: R${current}\n\nType a new amount in Rands, or leave empty and press OK to clear the override:`
+        : `System fee: R${room.agentFee ? room.agentFee.total : '?'}\n\nType a manual agent fee in Rands (e.g. 450):`,
+      current ? String(current) : ''
+    );
+    if (val === null) return; // cancel
+    const token = localStorage.getItem('adminToken');
+    try {
+      if (String(val).trim() === '') {
+        await fetch('/api/admin/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ action: 'clear-fee-override', section: 'rooms', from, id })
+        });
+        logAct('Cleared fee override');
+      } else {
+        const n = Number(val);
+        if (!Number.isFinite(n) || n <= 0) { alert('Invalid amount'); return; }
+        await fetch('/api/admin/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ action: 'set-fee-override', section: 'rooms', from, id, data: { agentFeeOverride: n } })
+        });
+        logAct(`Set fee override R${n}`);
+      }
+      loadData();
+    } catch (e) { alert('Failed to update override'); }
   }
 
   $('#editRoomForm').addEventListener('submit', async (e) => {
@@ -479,13 +590,20 @@
       notes: $('#editRoomNotes').value
     };
 
+    const overrideVal = $('#editFeeOverride').value.trim();
+    if (overrideVal !== '') {
+      const n = Number(overrideVal);
+      if (Number.isFinite(n) && n > 0) data.agentFeeOverride = n;
+      else data.agentFeeOverride = '';
+    }
+
     try {
       await fetch('/api/admin/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ action: 'edit', section: 'rooms', from, id, data })
       });
-      logAct(`Edited room details (Type set to ${data.type})`);
+      logAct(`Edited room details`);
       alert('✅ Room updated!');
       closeEditModal();
       loadData();
