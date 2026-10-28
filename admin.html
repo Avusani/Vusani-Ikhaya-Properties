@@ -46,7 +46,6 @@
     .btn-edit { background: #6b7280; }
     .empty { padding: 40px; text-align: center; color: #666; background: #fff; border-radius: 8px; border: 1px dashed #ccc;}
 
-    /* MODALS */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
@@ -55,7 +54,6 @@
     .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
     .modal .hr { margin:18px 0;border:none;border-top:2px solid #eef3ee; }
-    .modal .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     
     .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .media-viewer.show { display: flex; }
@@ -83,14 +81,17 @@
   </div>
 
   <div id="adminPanel" class="panel">
+    <!-- STATS ADDED BACK -->
     <div class="stats-bar">
       <div class="stat-card"><div class="number" id="stat-pending">0</div><div class="label">Pending</div></div>
       <div class="stat-card"><div class="number" id="stat-approved">0</div><div class="label">Approved</div></div>
       <div class="stat-card"><div class="number" id="stat-taken">0</div><div class="label">Taken</div></div>
+      <div class="stat-card"><div class="number" id="stat-tenants">0</div><div class="label">Tenants</div></div>
     </div>
 
     <div class="main-tabs">
       <button class="active" onclick="switchTab('rooms')">🏠 Manage Rooms</button>
+      <button onclick="switchTab('activity')">📜 Activity Log</button>
       <button onclick="switchTab('settings')" style="color: #b8493b;">⚙️ Danger Zone</button>
     </div>
 
@@ -102,6 +103,11 @@
         <button onclick="loadTab('declined', this)">❌ Declined</button>
       </div>
       <div id="roomList"></div>
+    </div>
+
+    <!-- ACTIVITY LOG ADDED BACK -->
+    <div id="tab-activity" class="section-content">
+      <div id="activityList"></div>
     </div>
 
     <div id="tab-settings" class="section-content">
@@ -124,6 +130,16 @@
       <input type="hidden" id="editRoomFrom">
       
       <label>Title</label><input type="text" id="editRoomTitle">
+      
+      <!-- PROPERTY TYPE FIX -->
+      <label>Property Type</label>
+      <select id="editRoomType">
+        <option value="room">Room</option>
+        <option value="bachelor">Bachelor</option>
+        <option value="flat">Flat</option>
+        <option value="house">House</option>
+      </select>
+
       <label>Location</label><input type="text" id="editRoomLocation">
       <label>Address</label><input type="text" id="editRoomAddress">
       <label>Amount (R)</label><input type="text" id="editRoomAmount">
@@ -150,6 +166,14 @@
 <script>
   let allData = {};
   let currentTab = 'pending';
+
+  function logAct(action) {
+    const entry = { time: new Date().toISOString(), action: action };
+    let logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    logs.unshift(entry);
+    if (logs.length > 50) logs.pop();
+    localStorage.setItem('adminLogs', JSON.stringify(logs));
+  }
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -188,8 +212,10 @@
       document.getElementById('stat-pending').textContent = (allData.rooms.pending || []).length;
       document.getElementById('stat-approved').textContent = (allData.rooms.approved || []).length;
       document.getElementById('stat-taken').textContent = (allData.rooms.taken || []).length;
+      document.getElementById('stat-tenants').textContent = (allData.tenantRequests.approved || []).length;
       
       loadTab(currentTab, null);
+      renderActivity();
     } catch (err) { alert("Failed to load data"); }
   }
 
@@ -200,10 +226,21 @@
     if (tab === 'rooms') {
       document.querySelectorAll('.main-tabs button')[0].classList.add('active');
       document.getElementById('tab-rooms').classList.add('active');
-    } else {
+    } else if (tab === 'activity') {
       document.querySelectorAll('.main-tabs button')[1].classList.add('active');
+      document.getElementById('tab-activity').classList.add('active');
+      renderActivity();
+    } else {
+      document.querySelectorAll('.main-tabs button')[2].classList.add('active');
       document.getElementById('tab-settings').classList.add('active');
     }
+  }
+
+  function renderActivity() {
+    const list = document.getElementById('activityList');
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    if (logs.length === 0) { list.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+    list.innerHTML = logs.map(l => `<div style="background:#fff; padding:10px; margin-bottom:8px; border-radius:6px; border-left:4px solid #0f7a5f;"><strong>${l.action}</strong><br><small>${new Date(l.time).toLocaleString()}</small></div>`).join('');
   }
 
   function loadTab(status, btn) {
@@ -228,11 +265,14 @@
       }
       if (!mediaHtml) mediaHtml = `<div style="width:100px; height:100px; background:#eee; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px;">No Media</div>`;
 
+      // Show the actual type clearly
+      const displayType = room.type || room.roomType || 'room';
+
       return `
         <div class="room-card">
           <div class="media-grid">${mediaHtml}</div>
           <div class="room-info">
-            <h3>${room.title || 'Untitled'} <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:4px;">${room.type}</span></h3>
+            <h3>${room.title || 'Untitled'} <span style="font-size:12px; background:#e0e7ff; color:#1e40af; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${displayType}</span></h3>
             <p>📍 ${room.location} | 💰 R${room.amount}</p>
             <p>👤 ${room.posterName} | 📞 ${room.posterContact}</p>
             <div class="actions">
@@ -260,11 +300,11 @@
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ action: action, section: 'rooms', from: from, to: to, id: id })
       });
+      logAct(`Moved room ${from} → ${to}`);
       loadData(); 
     } catch (e) { alert("Action failed"); }
   }
 
-  // EDIT MODAL LOGIC
   function openEditModal(id, from) {
     const room = allData.rooms[from].find(r => r.id === id);
     if (!room) return;
@@ -272,6 +312,11 @@
     document.getElementById('editRoomId').value = id;
     document.getElementById('editRoomFrom').value = from;
     document.getElementById('editRoomTitle').value = room.title || '';
+    
+    // Set the type dropdown correctly
+    const typeVal = (room.type || room.roomType || 'room').toLowerCase();
+    document.getElementById('editRoomType').value = typeVal;
+    
     document.getElementById('editRoomLocation').value = room.location || '';
     document.getElementById('editRoomAddress').value = room.address || '';
     document.getElementById('editRoomAmount').value = room.amount || '';
@@ -295,6 +340,7 @@
     
     const data = {
       title: document.getElementById('editRoomTitle').value,
+      type: document.getElementById('editRoomType').value, // Save the type
       location: document.getElementById('editRoomLocation').value,
       address: document.getElementById('editRoomAddress').value,
       amount: document.getElementById('editRoomAmount').value,
@@ -310,13 +356,13 @@
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ action: 'edit', section: 'rooms', from: from, id: id, data: data })
       });
+      logAct(`Edited room details (Type set to ${data.type})`);
       alert('✅ Room updated!');
       closeEditModal();
       loadData();
     } catch (err) { alert("Failed to save changes"); }
   });
 
-  // ADMIN IMAGE UPLOAD
   async function uploadAdminImage() {
     const fileInput = document.getElementById('adminNewImage');
     if (!fileInput.files || fileInput.files.length === 0) { alert('Select an image first.'); return; }
@@ -342,6 +388,7 @@
         body: JSON.stringify({ action: 'add-images', section: 'rooms', from: from, id: id, data: { images: [newUrl] } })
       });
       
+      logAct(`Uploaded new image`);
       alert('✅ Image uploaded to post!');
       fileInput.value = '';
       loadData();
@@ -354,6 +401,7 @@
     if (!confirm('⚠️ ARE YOU SURE? This will delete ALL posts.')) return;
     try {
       await fetch('/api/admin/reset-everything');
+      logAct('Wiped database');
       alert('✅ All data wiped.');
       loadData();
     } catch(e) { alert('❌ Failed'); }
