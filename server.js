@@ -14,7 +14,6 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-// Base64 images need a large limit
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.static(__dirname)); 
