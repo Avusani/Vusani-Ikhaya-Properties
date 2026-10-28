@@ -102,19 +102,26 @@ input,select,textarea{font-family:inherit;}
 .chip{border:1px solid var(--line);background:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink-soft);text-decoration:none;transition:all .15s;}
 .chip:hover{border-color:var(--green-dark);text-decoration:none;}
 .chip.active{background:var(--green-dark);color:#fff;border-color:var(--green-dark);}
-.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px;}
+.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:22px;}
 .empty-state{background:#fff;border:1px dashed var(--line);border-radius:var(--radius);padding:48px 24px;text-align:center;color:var(--muted);grid-column:1/-1;}
 
-/* ===================== PROPERTY CARD ===================== */
-.pc-card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;}
+/* ===================== PROPERTY CARD (SWIPEABLE) ===================== */
+.pc-card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;position:relative;}
 .pc-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
-.pc-gallery{display:grid;grid-template-columns:1fr 90px;gap:2px;background:var(--line);height:240px;position:relative;}
-.pc-main{position:relative;background:#dfe4e8;overflow:hidden;}
-.pc-main img{width:100%;height:100%;object-fit:cover;display:block;}
-.pc-thumbs{display:grid;grid-template-rows:1fr 1fr 1fr;gap:2px;}
-.pc-thumbs img{width:100%;height:100%;object-fit:cover;display:block;background:#dfe4e8;}
-.pc-thumbs .no-img{background:#e4e8ec;}
-.pc-badge{position:absolute;left:12px;bottom:12px;background:#2f6fb2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:4px;text-transform:uppercase;z-index:2;}
+
+/* The Carousel Container */
+.pc-gallery{width:100%; height:240px; position:relative; overflow:hidden; background:#dfe4e8;}
+.pc-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+.pc-slider::-webkit-scrollbar { display: none; }
+.pc-slide{flex:0 0 100%; scroll-snap-align:start; position:relative;}
+.pc-slide img, .pc-slide video{width:100%; height:100%; object-fit:cover; display:block;}
+
+/* Swipe Indicators */
+.pc-dots{position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:5;}
+.pc-dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.5);}
+.pc-dot.active{background:#fff; width:8px; height:8px;}
+
+.pc-badge{position:absolute;left:12px;top:12px;background:#2f6fb2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:4px;text-transform:uppercase;z-index:2;}
 .pc-body{padding:16px;flex:1;display:flex;flex-direction:column;position:relative;}
 .pc-sponsored{position:absolute;top:14px;right:16px;font-size:10.5px;color:#8a8f98;letter-spacing:.3px;font-weight:600;}
 .pc-price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-right:60px;margin-bottom:8px;}
@@ -128,17 +135,13 @@ input,select,textarea{font-family:inherit;}
 .pc-flag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;}
 .pc-flag.yes{background:#e6f5ec;color:#11733f;}
 .pc-flag.no{background:#fdecea;color:#a12a1e;}
-.pc-fav{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:transform .1s;}
+.pc-fav{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:transform .1s; z-index:10;}
 .pc-fav:hover{transform:scale(1.08);}
 .pc-fav svg{width:20px;height:20px;stroke:var(--green-dark);fill:none;stroke-width:2;transition:fill .15s;}
 .pc-fav.active svg{fill:var(--green-dark);}
 
-.pc-gallery.single-image { grid-template-columns: 1fr; }
-
 @media(max-width:480px){
-  .pc-gallery{grid-template-columns:1fr;grid-template-rows:220px;height:auto;}
-  .pc-thumbs{display:none;} 
-  .pc-gallery.single-image { grid-template-columns: 1fr; }
+  .pc-gallery{height:220px;}
 }
 
 /* ===================== ABOUT / CONTACT ===================== */
@@ -163,21 +166,17 @@ input,select,textarea{font-family:inherit;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
 .modal-overlay.show{display:flex;}
 .modal-box{background:#fff;border-radius:var(--radius);max-width:980px;width:100%;position:relative;box-shadow:var(--shadow-lg);overflow:hidden;}
-.modal-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:10;}
+.modal-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:20;}
 .modal-close:hover{background:rgba(0,0,0,.8);}
 
-/* MODAL GALLERY */
-.modal-gallery{display:grid;grid-template-columns:1fr 96px;gap:2px;background:var(--line);height:400px;position:relative;}
-.modal-gallery .main{background:#dfe4e8;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.modal-gallery .main img,.modal-gallery .main video{width:100%;height:100%;object-fit:cover;display:block;}
-.modal-gallery .thumbs{display:grid;grid-template-rows:1fr 1fr 1fr;gap:2px;}
-.modal-gallery .thumbs img{width:100%;height:100%;object-fit:cover;cursor:pointer;opacity:.85;transition:opacity .15s;}
-.modal-gallery .thumbs img:hover{opacity:1;}
+/* MODAL SWIPEABLE GALLERY */
+.modal-gallery{width:100%; height:400px; position:relative; background:#000;}
+.modal-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+.modal-slider::-webkit-scrollbar { display: none; }
+.modal-slide{flex:0 0 100%; scroll-snap-align:start; position:relative; display:flex; align-items:center; justify-content:center;}
+.modal-slide img, .modal-slide video{max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain;}
 
-@media(max-width:700px){
-  .modal-gallery{grid-template-columns:1fr;height:280px;}
-  .modal-gallery .thumbs{display:none;}
-}
+@media(max-width:700px){ .modal-gallery { height: 280px; } }
 
 .modal-body{padding:24px 28px 28px;}
 .modal-body h2{margin:0 0 6px;font-size:24px;color:var(--green-dark);}
@@ -714,12 +713,24 @@ function buildFlags(p){
 }
 
 function renderCard(p){
-  const mainImage = p.mainImage || (p.images && p.images.length > 0 ? p.images[0] : '');
-  const thumbs = (p.thumbs || (p.images ? p.images.slice(1, 4) : []));
-  const thumbHTML = [0,1,2].map(i => {
-    const u = thumbs[i];
-    return u ? `<img src="${escapeHTML(u)}" alt="" loading="lazy">` : `<div class="no-img"></div>`;
+  let mediaItems = [];
+  if (p.images && p.images.length > 0) {
+    mediaItems = p.images.map(url => ({ type: 'image', url: url }));
+  }
+  if (p.video) {
+    mediaItems.unshift({ type: 'video', url: p.video });
+  }
+  if (mediaItems.length === 0) {
+    mediaItems.push({ type: 'empty', url: '' });
+  }
+
+  const slides = mediaItems.map((m) => {
+    if (m.type === 'video') return `<div class="pc-slide"><video src="${escapeHTML(m.url)}" controls muted playsinline></video></div>`;
+    if (m.type === 'empty') return `<div class="pc-slide" style="background:#dfe4e8;display:flex;align-items:center;justify-content:center;color:#637268;">No Image</div>`;
+    return `<div class="pc-slide"><img src="${escapeHTML(m.url)}" loading="lazy"></div>`;
   }).join('');
+
+  const dots = mediaItems.length > 1 ? `<div class="pc-dots">${mediaItems.map((_, i) => `<div class="pc-dot ${i===0?'active':''}"></div>`).join('')}</div>` : '';
 
   const price = formatPrice(p.amount);
   const suburb = escapeHTML(p.alexandraSuburb || p.location || 'Johannesburg');
@@ -728,18 +739,16 @@ function renderCard(p){
   const bathrooms = Number(p.bathrooms) || 1;
   const parking = Number(p.parkingSpaces) || (p.parking === 'Yes' ? 1 : 0);
 
-  const galleryClass = thumbs.filter(t => t).length === 0 ? "pc-gallery single-image" : "pc-gallery";
-
   return `
-    <article class="pc-card" data-id="${escapeHTML(p.id)}" onclick="openProp('${escapeHTML(p.id)}')" tabindex="0" role="button">
-      <div class="${galleryClass}">
-        <div class="pc-main">
-          ${mainImage ? `<img src="${escapeHTML(mainImage)}" alt="${escapeHTML(p.title || '')}" loading="lazy">` : `<div style="height:100%; background:#dfe4e8; display:flex; align-items:center; justify-content:center; color:#637268;">No Image</div>`}
-          <span class="pc-badge">Available Now</span>
+    <article class="pc-card" data-id="${escapeHTML(p.id)}" tabindex="0" role="button">
+      <div class="pc-gallery">
+        <span class="pc-badge">Available Now</span>
+        <div class="pc-slider" onscroll="updateDots(this)">
+          ${slides}
         </div>
-        ${thumbs.filter(t => t).length > 0 ? `<div class="pc-thumbs">${thumbHTML}</div>` : ''}
+        ${dots}
       </div>
-      <div class="pc-body">
+      <div class="pc-body" onclick="openProp('${escapeHTML(p.id)}')">
         <span class="pc-sponsored">Sponsored</span>
         <div class="pc-price-row">
           <span class="pc-price">${price}</span>
@@ -754,6 +763,13 @@ function renderCard(p){
         <button class="pc-fav ${localStorage.getItem('fav_'+p.id) ? 'active' : ''}" aria-label="Save" onclick="event.stopPropagation();toggleFav(this,'${escapeHTML(p.id)}')">${ICON_HEART}</button>
       </div>
     </article>`;
+}
+
+function updateDots(slider) {
+  const dots = slider.parentElement.querySelectorAll('.pc-dot');
+  if (!dots.length) return;
+  const index = Math.round(slider.scrollLeft / slider.clientWidth);
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
 }
 
 function toggleFav(btn, id){
@@ -844,13 +860,21 @@ function openProp(id){
   const p = ALL.find(x => x.id === id);
   if (!p) return;
 
-  const images = (p.images || []);
-  const mainImage = p.mainImage || images[0] || '';
-  const thumbs = (p.thumbs || images.slice(1, 4) || []).slice(0,3);
+  let mediaItems = [];
+  if (p.images && p.images.length > 0) {
+    mediaItems = p.images.map(url => ({ type: 'image', url: url }));
+  }
+  if (p.video) {
+    mediaItems.unshift({ type: 'video', url: p.video });
+  }
+  if (mediaItems.length === 0) {
+    mediaItems.push({ type: 'empty', url: '' });
+  }
 
-  const thumbHTML = [0,1,2].map(i => {
-    const u = thumbs[i];
-    return u ? `<img src="${escapeHTML(u)}" alt="" onclick="swapMain('${escapeHTML(u)}')" loading="lazy">` : `<div style="background:#e4e8ec"></div>`;
+  const slides = mediaItems.map(m => {
+    if (m.type === 'video') return `<div class="modal-slide"><video src="${escapeHTML(m.url)}" controls playsinline></video></div>`;
+    if (m.type === 'empty') return `<div class="modal-slide" style="color:#fff;">No Image</div>`;
+    return `<div class="modal-slide"><img src="${escapeHTML(m.url)}"></div>`;
   }).join('');
 
   const price = formatPrice(p.amount);
@@ -860,13 +884,7 @@ function openProp(id){
 
   $('#propContent').innerHTML = `
     <div class="modal-gallery">
-      <div class="main">
-        ${p.video ? `<video id="modalMainMedia" src="${escapeHTML(p.video)}" controls playsinline poster="${escapeHTML(mainImage)}"></video>`
-          : mainImage ? `<img id="modalMainMedia" src="${escapeHTML(mainImage)}" alt="${escapeHTML(p.title || '')}">`
-          : `<div style="height:100%; background:#dfe4e8;"></div>`}
-        <span class="pc-badge" style="left:14px;bottom:14px;">Available Now</span>
-      </div>
-      <div class="thumbs">${thumbHTML}</div>
+      <div class="modal-slider">${slides}</div>
     </div>
     <div class="modal-body">
       <div class="price">${price}</div>
@@ -903,11 +921,6 @@ function openProp(id){
 
   $('#propModal').classList.add('show');
   document.body.style.overflow = 'hidden';
-}
-
-function swapMain(src){
-  const el = $('#modalMainMedia');
-  if (el && el.tagName === 'IMG') el.src = src;
 }
 
 function closeProp(){
