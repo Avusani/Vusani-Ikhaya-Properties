@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vusani Ikhaya Properties — Trusted Rooms. Real People. Real Value.</title>
+<meta name="description" content="Vusani Ikhaya Properties (Pty) Ltd — rooms, apartments and homes for rent and sale in Alexandra Township and surrounding Johannesburg areas.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230E382A'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='%23D4AF37' font-family='system-ui'>V</text></svg>">
 
 <style>
@@ -921,7 +922,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ============================================================
-   FORM SUBMISSION (CLOUDINARY UPLOAD)
+   FORM SUBMISSION (WITHOUT SERVER UPLOAD - BASE64)
    ============================================================ */
 let uploadedImageUrls = [];
 let uploadedVideoUrl = '';
@@ -931,25 +932,25 @@ async function handleImageSelect(e) {
   if (files.length > 8) { alert("You can only upload a maximum of 8 pictures."); e.target.value = ''; return; }
   
   const preview = $('#imagePreview');
-  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Uploading pictures...</div>';
+  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Processing pictures...</div>';
   
-  const formData = new FormData();
-  files.forEach(f => formData.append('media', f));
-  
-  try {
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success) {
-      uploadedImageUrls = data.urls;
-      preview.innerHTML = uploadedImageUrls.map(url => `<img src="${url}" alt="preview">`).join('');
-    } else {
-      alert('Upload failed: ' + (data.error || 'Check Cloudinary keys'));
-      preview.innerHTML = '';
-    }
-  } catch (err) {
-    alert('Error uploading pictures. Please try again.');
-    preview.innerHTML = '';
-  }
+  uploadedImageUrls = [];
+  preview.innerHTML = '';
+
+  let processed = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      uploadedImageUrls.push(ev.target.result);
+      preview.innerHTML += `<img src="${ev.target.result}" alt="preview">`;
+      
+      processed++;
+      if(processed === files.length) {
+         // Done
+      }
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 async function handleVideoSelect(e) {
@@ -957,25 +958,14 @@ async function handleVideoSelect(e) {
   if (!file) return;
   
   const preview = $('#videoPreview');
-  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Uploading video...</div>';
+  preview.innerHTML = '<div style="font-size:13px;color:var(--muted);">Processing video...</div>';
   
-  const formData = new FormData();
-  formData.append('media', file);
-  
-  try {
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success && data.urls.length > 0) {
-      uploadedVideoUrl = data.urls[0];
-      preview.innerHTML = `<video src="${uploadedVideoUrl}" controls></video>`;
-    } else {
-      alert('Video upload failed: ' + (data.error || 'Check Cloudinary keys'));
-      preview.innerHTML = '';
-    }
-  } catch (err) {
-    alert('Error uploading video. Please try again.');
-    preview.innerHTML = '';
-  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    uploadedVideoUrl = ev.target.result;
+    preview.innerHTML = `<video src="${uploadedVideoUrl}" controls></video>`;
+  };
+  reader.readAsDataURL(file);
 }
 
 $('#postForm')?.addEventListener('submit', async (e) => {
