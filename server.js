@@ -43,23 +43,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 const sessions = new Map();
 
 // ==========================================
-// 3. AGENT FEE ENGINE  (single source of truth)
+// 3. AGENT FEE ENGINE (single source of truth)
 // ==========================================
 const RENTAL_FEE_TABLE = [
-  { min: 800,  max: 1700,  fee: 300  },
-  { min: 1800, max: 2500,  fee: 350  },
-  { min: 2600, max: 3900,  fee: 400  },
-  { min: 4000, max: 6000,  fee: 500  },
-  { min: 6100, max: 7900,  fee: 700  },
-  { min: 8000, max: 15000, fee: 1500 },
+  { min: 800,   max: 1700,  fee: 300  },
+  { min: 1800,  max: 2500,  fee: 350  },
+  { min: 2600,  max: 3900,  fee: 400  },
+  { min: 4000,  max: 6000,  fee: 500  },
+  { min: 6100,  max: 7900,  fee: 700  },
+  { min: 8000,  max: 15000, fee: 1500 },
 ];
 const SALE_FEE_RATE = 0.12;
 const NON_ALEX_SURCHARGE = 100;
 
-// Detect whether a listing is inside Alexandra Township proper.
-// East Bank / Avenues / Tsutsumane / River Park are "Alexandra" for the
-// surcharge rule — the user asked for "besides Alexandra Township" to pay extra,
-// and those areas are part of Alexandra Township.
 const ALEXANDRA_TOWNSHIP_TOKENS = [
   'alexandra', 'alex', 'east bank', 'far east bank', 'tsutsumane',
   'river park', 'riverpark', '1st avenue', '2nd avenue', '3rd avenue',
@@ -79,19 +75,12 @@ function parseAmount(v) {
   return Number(String(v || '').replace(/[^\d.]/g, '')) || 0;
 }
 
-/**
- * Calculates the agent fee for a listing.
- * Returns { base, surcharge, total, kind, inAlexandra, breakdown }
- * - kind: 'rent' | 'sale' | 'unknown'
- * - Never double-applies: `total` is always base + surcharge computed fresh.
- */
 function calculateAgentFee({ amount, purpose, location, alexandraSuburb }) {
   const amt = parseAmount(amount);
   const inAlex = isAlexandraTownship(location, alexandraSuburb);
   const surcharge = inAlex ? 0 : NON_ALEX_SURCHARGE;
-  const isSale = String(purpose || 'rent').toLowerCase() === 'sale' ||
-                 String(purpose || 'rent').toLowerCase() === 'buy' ||
-                 String(purpose || 'rent').toLowerCase() === 'sell';
+  const p = String(purpose || 'rent').toLowerCase();
+  const isSale = p === 'sale' || p === 'buy' || p === 'sell';
 
   if (isSale) {
     const base = Math.round(amt * SALE_FEE_RATE);
@@ -101,12 +90,12 @@ function calculateAgentFee({ amount, purpose, location, alexandraSuburb }) {
       surcharge,
       total: base + surcharge,
       inAlexandra: inAlex,
-      breakdown: `12% of R${amt.toLocaleString('en-ZA')} (R${base.toLocaleString('en-ZA')})` +
+      manual: false,
+      breakdown: `12% of R${amt.toLocaleString('en-ZA')} = R${base.toLocaleString('en-ZA')}` +
                  (surcharge ? ` + R${surcharge} location surcharge` : '')
     };
   }
 
-  // Rental lookup
   let base = 0;
   let matchedRange = null;
   for (const row of RENTAL_FEE_TABLE) {
@@ -117,9 +106,8 @@ function calculateAgentFee({ amount, purpose, location, alexandraSuburb }) {
     }
   }
   if (!base) {
-    // Out-of-range: fall back to nearest bucket so we never silently return 0
-    if (amt > 0 && amt < 800)         base = RENTAL_FEE_TABLE[0].fee;
-    else if (amt > 15000)             base = RENTAL_FEE_TABLE[RENTAL_FEE_TABLE.length - 1].fee;
+    if (amt > 0 && amt < 800)  base = RENTAL_FEE_TABLE[0].fee;
+    else if (amt > 15000)      base = RENTAL_FEE_TABLE[RENTAL_FEE_TABLE.length - 1].fee;
   }
 
   return {
@@ -128,21 +116,38 @@ function calculateAgentFee({ amount, purpose, location, alexandraSuburb }) {
     surcharge,
     total: base + surcharge,
     inAlexandra: inAlex,
+    manual: false,
     breakdown: matchedRange
       ? `Rent ${matchedRange} → R${base} fee` + (surcharge ? ` + R${surcharge} location surcharge` : '')
       : `R${base} fee` + (surcharge ? ` + R${surcharge} location surcharge` : '')
   };
 }
 
-// Attach fee fields to any room object, without mutating the stored record.
+/**
+ * Resolves the effective agent fee for a room:
+ *   - If room.agentFeeOverride is a positive number → use it (manual)
+ *   - Otherwise → calculateAgentFee(...)
+ * The result always carries { manual, total, base, surcharge, kind, breakdown }.
+ */
+function resolveAgentFee(room) {
+  const override = Number(room.agentFeeOverride);
+  if (Number.isFinite(override) && override > 0) {
+    const auto = calculateAgentFee(room);
+    return {
+      kind: auto.kind,
+      base: override,
+      surcharge: 0,
+      total: override,
+      inAlexandra: auto.inAlexandra,
+      manual: true,
+      breakdown: `MANUAL override — R${override.toLocaleString('en-ZA')} (system would have been R${auto.total.toLocaleString('en-ZA')})`
+    };
+  }
+  return calculateAgentFee(room);
+}
+
 function withFee(room) {
-  const fee = calculateAgentFee({
-    amount: room.amount,
-    purpose: room.purpose,
-    location: room.location,
-    alexandraSuburb: room.alexandraSuburb,
-  });
-  return { ...room, agentFee: fee };
+  return { ...room, agentFee: resolveAgentFee(room) };
 }
 
 // ==========================================
@@ -161,19 +166,22 @@ async function initDB() {
       CREATE TABLE IF NOT EXISTS financial_ledger (
         id SERIAL PRIMARY KEY,
         room_id VARCHAR(80),
-        kind VARCHAR(20),          -- 'rent' | 'sale'
-        amount NUMERIC(12,2),      -- listing amount
+        kind VARCHAR(20),
+        amount NUMERIC(12,2),
         fee_base NUMERIC(12,2),
         surcharge NUMERIC(12,2),
         fee_total NUMERIC(12,2),
         in_alexandra BOOLEAN,
         location VARCHAR(200),
         suburb VARCHAR(200),
-        event VARCHAR(40),         -- 'approved' | 'reposted' | 'adjusted'
+        event VARCHAR(40),
+        manual BOOLEAN DEFAULT FALSE,
         actor VARCHAR(80),
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+    // Backfill column for older ledgers
+    await client.query(`ALTER TABLE financial_ledger ADD COLUMN IF NOT EXISTS manual BOOLEAN DEFAULT FALSE;`);
     await client.query(`
       CREATE TABLE IF NOT EXISTS admin_audit (
         id SERIAL PRIMARY KEY,
@@ -207,8 +215,12 @@ async function writeDB(db) {
   await pool.query('UPDATE app_state SET data = $1 WHERE id = $2', [db, 'main_db']);
 }
 async function audit(actor, action, detail) {
-  try { await pool.query('INSERT INTO admin_audit (actor, action, detail) VALUES ($1,$2,$3)',
-    [actor || 'admin', action, detail || '']); } catch (_) {}
+  try {
+    await pool.query(
+      'INSERT INTO admin_audit (actor, action, detail) VALUES ($1,$2,$3)',
+      [actor || 'admin', action, detail || '']
+    );
+  } catch (_) {}
 }
 
 initDB().catch(err => console.error('DB init failed:', err.message));
@@ -226,43 +238,40 @@ app.post('/api/admin/upload', upload.array('images'), (req, res) => {
 });
 
 // ==========================================
-// 6. PUBLIC ENDPOINTS
+// 6. PUBLIC ENDPOINTS  (fee intentionally NOT exposed)
 // ==========================================
 app.get('/api/public', async (req, res) => {
   try {
     const db = await readDB();
     const rooms = db.rooms.approved
       .filter(r => r.online !== false)
-      .map(room => {
-        const withFeeRoom = withFee(room);
-        return {
-          id: room.id,
-          title: room.title,
-          location: room.location,
-          alexandraSuburb: room.alexandraSuburb || '',
-          purpose: room.purpose || 'rent',
-          amount: room.amount,
-          deposit: room.deposit || 'No deposit',
-          bedrooms: Number(room.bedrooms) || 1,
-          bathrooms: Number(room.bathrooms) || 1,
-          parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
-          childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No',
-          maxKids: room.maxKids || '0',
-          toiletType: room.toiletType || 'Shared',
-          bathroomType: room.bathroomType || 'Shared',
-          tiles: room.tiles || 'No',
-          ceiling: room.ceiling || 'No',
-          type: room.type || 'room',
-          images: Array.isArray(room.images) ? room.images : [],
-          mainImage: (room.images || [])[0] || '',
-          thumbs: (room.images || []).slice(1, 4),
-          video: room.video || '',
-          notes: room.notes,
-          posterName: room.posterName,
-          posterContact: room.posterContact,
-          agentFee: withFeeRoom.agentFee,   // <-- always server-computed
-        };
-      });
+      .map(room => ({
+        id: room.id,
+        title: room.title,
+        location: room.location,
+        alexandraSuburb: room.alexandraSuburb || '',
+        purpose: room.purpose || 'rent',
+        amount: room.amount,
+        deposit: room.deposit || 'No deposit',
+        bedrooms: Number(room.bedrooms) || 1,
+        bathrooms: Number(room.bathrooms) || 1,
+        parkingSpaces: Number(room.maxCars) || (room.parking === 'Yes' ? 1 : 0),
+        childFriendly: room.childFriendly === 'Yes' ? 'Yes' : 'No',
+        maxKids: room.maxKids || '0',
+        toiletType: room.toiletType || 'Shared',
+        bathroomType: room.bathroomType || 'Shared',
+        tiles: room.tiles || 'No',
+        ceiling: room.ceiling || 'No',
+        type: room.type || 'room',
+        images: Array.isArray(room.images) ? room.images : [],
+        mainImage: (room.images || [])[0] || '',
+        thumbs: (room.images || []).slice(1, 4),
+        video: room.video || '',
+        notes: room.notes,
+        posterName: room.posterName,
+        posterContact: room.posterContact,
+        // NOTE: agentFee intentionally omitted — this is admin-only data.
+      }));
     res.json({
       rooms,
       reviews: db.reviews.approved,
@@ -282,7 +291,6 @@ app.post('/api/rooms', async (req, res) => {
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
-    // Stamp the fee at submission time — recomputable, never trusted blindly.
     room.agentFeeSnapshot = calculateAgentFee(room);
     db.rooms.pending.unshift(room);
     await writeDB(db);
@@ -335,6 +343,31 @@ app.post('/api/contact', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Fee preview (admin only — used by edit modal)
+app.post('/api/fee-preview', (req, res) => {
+  try {
+    const { amount, purpose, location, alexandraSuburb, agentFeeOverride } = req.body || {};
+    const autoFee = calculateAgentFee({ amount, purpose, location, alexandraSuburb });
+    const overrideNum = Number(agentFeeOverride);
+    if (Number.isFinite(overrideNum) && overrideNum > 0) {
+      res.json({
+        fee: {
+          kind: autoFee.kind,
+          base: overrideNum,
+          surcharge: 0,
+          total: overrideNum,
+          inAlexandra: autoFee.inAlexandra,
+          manual: true,
+          breakdown: `MANUAL override — R${overrideNum.toLocaleString('en-ZA')} (system would have been R${autoFee.total.toLocaleString('en-ZA')})`,
+          autoTotal: autoFee.total
+        }
+      });
+      return;
+    }
+    res.json({ fee: autoFee });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
 // ==========================================
 // 7. ADMIN AUTH
 // ==========================================
@@ -354,7 +387,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // ==========================================
-// 8. ADMIN DATA (all rooms have live fee)
+// 8. ADMIN DATA
 // ==========================================
 app.get('/api/admin/data', requireAuth, async (req, res) => {
   try {
@@ -365,28 +398,23 @@ app.get('/api/admin/data', requireAuth, async (req, res) => {
     }
     db.rooms = enriched;
 
-    // Live fee totals across the whole system
-    const feeTotals = { rent: 0, sale: 0, surcharges: 0, grand: 0, byStatus: {} };
+    const feeTotals = { rent: 0, sale: 0, surcharges: 0, manual: 0, grand: 0, byStatus: {} };
     for (const status of Object.keys(enriched)) {
       let statusTotal = 0;
       for (const r of enriched[status]) {
-        feeTotals[r.agentFee.kind] += r.agentFee.base;
-        feeTotals.surcharges += r.agentFee.surcharge;
-        feeTotals.grand     += r.agentFee.total;
-        statusTotal         += r.agentFee.total;
+        if (r.agentFee.manual) feeTotals.manual += r.agentFee.total;
+        else {
+          feeTotals[r.agentFee.kind] += r.agentFee.base;
+          feeTotals.surcharges += r.agentFee.surcharge;
+        }
+        feeTotals.grand += r.agentFee.total;
+        statusTotal += r.agentFee.total;
       }
       feeTotals.byStatus[status] = statusTotal;
     }
 
-    // Financial ledger (approved fee events)
-    const ledger = await pool.query(
-      `SELECT * FROM financial_ledger ORDER BY created_at DESC LIMIT 500`
-    );
-
-    // Audit trail
-    const auditRows = await pool.query(
-      `SELECT * FROM admin_audit ORDER BY created_at DESC LIMIT 200`
-    );
+    const ledger = await pool.query(`SELECT * FROM financial_ledger ORDER BY created_at DESC LIMIT 500`);
+    const auditRows = await pool.query(`SELECT * FROM admin_audit ORDER BY created_at DESC LIMIT 200`);
 
     res.json({
       ...db,
@@ -416,20 +444,21 @@ app.post('/api/admin/action', requireAuth, async (req, res) => {
       if (item) {
         db[section][from] = db[section][from].filter(x => x.id !== id);
         const fresh = { ...item, status: to, updatedAt: new Date().toISOString() };
-        fresh.agentFeeSnapshot = calculateAgentFee(fresh); // recompute on move
+        fresh.agentFeeSnapshot = resolveAgentFee(fresh);
         db[section][to].unshift(fresh);
 
-        // When a room is approved, freeze the fee into the financial ledger.
         if (section === 'rooms' && to === 'approved') {
           const f = fresh.agentFeeSnapshot;
           await pool.query(
             `INSERT INTO financial_ledger
-              (room_id, kind, amount, fee_base, surcharge, fee_total, in_alexandra, location, suburb, event, actor)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+              (room_id, kind, amount, fee_base, surcharge, fee_total, in_alexandra, location, suburb, event, manual, actor)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
             [fresh.id, f.kind, parseAmount(fresh.amount), f.base, f.surcharge, f.total,
-             f.inAlexandra, fresh.location || '', fresh.alexandraSuburb || '', 'approved', req.actor]
+             f.inAlexandra, fresh.location || '', fresh.alexandraSuburb || '', 'approved',
+             !!f.manual, req.actor]
           );
-          audit(req.actor, 'approve-room', `${fresh.id} → fee R${f.total} (base R${f.base} + surcharge R${f.surcharge})`);
+          audit(req.actor, 'approve-room',
+            `${fresh.id} → fee R${f.total}${f.manual ? ' (MANUAL)' : ''}`);
         }
         if (section === 'rooms' && from === 'approved' && to !== 'approved') {
           audit(req.actor, 'unapprove-room', `${fresh.id} → ${to}`);
@@ -440,9 +469,39 @@ app.post('/api/admin/action', requireAuth, async (req, res) => {
       const i = db[section][from].findIndex(x => x.id === id);
       if (i !== -1) {
         const merged = { ...db[section][from][i], ...data, updatedAt: new Date().toISOString() };
-        merged.agentFeeSnapshot = calculateAgentFee(merged); // recompute after edit
+
+        // Handle manual override field explicitly:
+        // - If admin typed a positive number → store it
+        // - If admin left blank / 0 / cleared → remove the override (back to auto)
+        if (Object.prototype.hasOwnProperty.call(data, 'agentFeeOverride')) {
+          const n = Number(data.agentFeeOverride);
+          if (Number.isFinite(n) && n > 0) merged.agentFeeOverride = n;
+          else delete merged.agentFeeOverride;
+        }
+
+        merged.agentFeeSnapshot = resolveAgentFee(merged);
         db[section][from][i] = merged;
-        audit(req.actor, 'edit-room', `${id} → fee R${merged.agentFeeSnapshot.total}`);
+        audit(req.actor, 'edit-room',
+          `${id} → fee R${merged.agentFeeSnapshot.total}${merged.agentFeeSnapshot.manual ? ' (MANUAL)' : ''}`);
+      }
+    }
+    else if (action === 'set-fee-override') {
+      const i = db[section][from].findIndex(x => x.id === id);
+      if (i !== -1) {
+        const n = Number(data.agentFeeOverride);
+        if (Number.isFinite(n) && n > 0) db[section][from][i].agentFeeOverride = n;
+        else delete db[section][from][i].agentFeeOverride;
+        db[section][from][i].agentFeeSnapshot = resolveAgentFee(db[section][from][i]);
+        audit(req.actor, 'set-fee-override',
+          `${id} → ${Number.isFinite(n) && n > 0 ? 'R' + n : 'cleared (back to auto)'}`);
+      }
+    }
+    else if (action === 'clear-fee-override') {
+      const i = db[section][from].findIndex(x => x.id === id);
+      if (i !== -1) {
+        delete db[section][from][i].agentFeeOverride;
+        db[section][from][i].agentFeeSnapshot = resolveAgentFee(db[section][from][i]);
+        audit(req.actor, 'clear-fee-override', `${id} → back to auto`);
       }
     }
     else if (action === 'delete') {
@@ -464,31 +523,14 @@ app.post('/api/admin/action', requireAuth, async (req, res) => {
       const item = db[section][from].find(x => x.id === id);
       if (item && item.images) item.images = item.images.filter((_, i) => i !== data.index);
     }
-    else if (action === 'fee-preview') {
-      // used by the edit modal to show the live fee while typing
-      const fee = calculateAgentFee({
-        amount: data.amount, purpose: data.purpose,
-        location: data.location, alexandraSuburb: data.alexandraSuburb,
-      });
-      await writeDB(db);
-      return res.json({ ok: true, fee });
-    }
 
     await writeDB(db);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Fee preview endpoint (no auth needed for server-side consistency check)
-app.post('/api/fee-preview', (req, res) => {
-  try {
-    const fee = calculateAgentFee(req.body || {});
-    res.json({ fee });
-  } catch (err) { res.status(400).json({ error: err.message }); }
-});
-
 // ==========================================
-// 10. FINANCIAL LEDGER / REPORTS
+// 10. LEDGER
 // ==========================================
 app.get('/api/admin/ledger', requireAuth, async (req, res) => {
   try {
@@ -508,7 +550,7 @@ app.get('/api/admin/ledger', requireAuth, async (req, res) => {
 app.get('/api/admin/ledger.csv', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(`SELECT * FROM financial_ledger ORDER BY created_at DESC`);
-    const headers = ['id','room_id','kind','amount','fee_base','surcharge','fee_total','in_alexandra','location','suburb','event','actor','created_at'];
+    const headers = ['id','room_id','kind','amount','fee_base','surcharge','fee_total','in_alexandra','location','suburb','event','manual','actor','created_at'];
     const lines = [headers.join(',')];
     for (const row of r.rows) {
       lines.push(headers.map(h => {
@@ -525,7 +567,7 @@ app.get('/api/admin/ledger.csv', requireAuth, async (req, res) => {
 });
 
 // ==========================================
-// 11. RESET (admin-only, audited)
+// 11. RESET
 // ==========================================
 app.get('/api/admin/reset-everything', requireAuth, async (req, res) => {
   try {
