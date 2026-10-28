@@ -4,67 +4,49 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin | VUSANI IKHAYA PROPERTIES</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #edf4ee; color: #17201b; }
-    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .topbar a { color: #fff; text-decoration: none; }
-    .brand { font-weight: 900; font-size: 20px; }
-    .brand small { color: rgba(255,255,255,0.7); font-size: 12px; display: block; }
-    .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
-    .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-    .login-box h2 { margin-top: 0; }
-    .login-box input { width: 100%; padding: 12px; border: 1px solid #cad8cf; border-radius: 8px; font-size: 16px; }
-    .login-box button { width: 100%; padding: 12px; background: #0f7a5f; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .error { color: #b8493b; background: #fde5df; padding: 10px; border-radius: 6px; display: none; margin-top: 10px; }
-    .error.show { display: block; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #edf4ee; color: #17201b; }
+    .topbar { background: #101713; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+    
+    .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .login-box input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    .login-box button { width: 100%; padding: 10px; background: #0f7a5f; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    
     .panel { display: none; }
     .panel.show { display: block; }
-    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; text-align: center; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #fff; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ccc; }
     .stat-card .number { font-size: 28px; font-weight: 900; color: #0f7a5f; }
-    .stat-card .label { font-size: 12px; color: #637268; }
-    .main-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
-    .main-tabs button { padding: 10px 20px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 14px; }
+    .stat-card .label { font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase;}
+
+    .main-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .main-tabs button { padding: 10px 20px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-weight: bold; font-size: 14px; }
     .main-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-    .main-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
-    .main-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
-    .sub-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #cad8cf; }
-    .sub-tabs button { padding: 8px 16px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
+    .sub-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;}
+    .sub-tabs button { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; font-weight: bold;}
     .sub-tabs button.active { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-    .sub-tabs button .count { background: #eef3ee; padding: 1px 8px; border-radius: 12px; font-size: 11px; margin-left: 4px; }
-    .sub-tabs button.active .count { background: rgba(255,255,255,0.2); color: #fff; }
-    .room-card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #cad8cf; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
-    .room-card .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .room-card .media-grid .media-item { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; background: #eef3ee; cursor: pointer; }
-    .room-card .media-grid .no-media { background: #edf4ee; height: 120px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #637268; font-size: 12px; grid-column: 1 / -1; }
-    .room-card .info { display: grid; gap: 4px; }
-    .room-card .info .title { font-weight: 700; font-size: 18px; }
-    .room-card .info .detail { font-size: 14px; color: #637268; }
-    .room-card .info .landlord { font-size: 13px; color: #0f7a5f; font-weight: 600; }
-    .room-card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .room-card .actions button { padding: 5px 12px; border: 1px solid #cad8cf; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; }
-    .room-card .actions .approve { background: #0f7a5f; color: #fff; border-color: #0f7a5f; }
-    .room-card .actions .decline { background: #b8493b; color: #fff; border-color: #b8493b; }
-    .room-card .actions .delete { background: #b8493b; color: #fff; border-color: #b8493b; }
-    .room-card .actions .repost { background: #e5a638; color: #fff; border-color: #e5a638; }
-    .room-card .actions .taken { background: #1e40af; color: #fff; border-color: #1e40af; }
-    .room-card .actions .edit { background: #6b7280; color: #fff; border-color: #6b7280; }
-    .room-card .actions .wa { background: #25D366; color: #fff; border-color: #25D366; text-decoration: none; display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .badge.pending { background: #fef3c7; color: #92400e; }
-    .badge.approved { background: #d1fae5; color: #065f46; }
-    .badge.taken { background: #dbeafe; color: #1e40af; }
-    .badge.declined { background: #fee2e2; color: #991b1b; }
-    .badge.removed { background: #f3f4f6; color: #4b5563; }
-    .badge.online { background: #d1fae5; color: #065f46; }
-    .badge.offline { background: #fee2e2; color: #991b1b; }
-    .empty { color: #637268; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #cad8cf; }
-    .notice { padding: 12px; border-radius: 8px; margin: 10px 0; display: none; font-weight: 600; }
-    .notice.show { display: block; }
-    .notice.success { background: #dbf4e9; color: #0d4c3a; }
-    .notice.error { background: #fde5df; color: #7f2318; }
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+
+    .room-card { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    .media-grid { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;}
+    .media-grid img, .media-grid video { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer; flex-shrink: 0;}
+    .room-info h3 { margin: 0 0 5px 0; font-size: 18px; }
+    .room-info p { margin: 0 0 4px 0; font-size: 14px; color: #555; }
+    .actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .actions button { padding: 6px 12px; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .btn-approve { background: #0f7a5f; }
+    .btn-decline { background: #b8493b; }
+    .btn-delete { background: #333; }
+    .btn-taken { background: #1e40af; }
+    .btn-repost { background: #e5a638; }
+    .btn-edit { background: #6b7280; }
+    .empty { padding: 40px; text-align: center; color: #666; background: #fff; border-radius: 8px; border: 1px dashed #ccc;}
+
+    /* MODALS */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal { background: #fff; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
@@ -74,151 +56,87 @@
     .modal .btn-save { background: #0f7a5f; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; }
     .modal .hr { margin:18px 0;border:none;border-top:2px solid #eef3ee; }
     .modal .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    
     .media-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .media-viewer.show { display: flex; }
     .media-viewer img, .media-viewer video { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
     .media-viewer .close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: #fff; cursor: pointer; background: none; border: none; }
-    .section-content { display: none; }
-    .section-content.active { display: block; }
-    .stats-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #cad8cf; }
-    .stats-section .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    .stats-section .filters select { padding: 8px 12px; border: 1px solid #cad8cf; border-radius: 6px; font-size: 14px; }
-    .fee-info { background: #f8faf9; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #637268; border: 1px solid #eef3ee; }
-    .fee-info strong { color: #0f7a5f; }
-    .chart-container { height: 300px; margin-top: 16px; }
-    .refresh-btn { background: #c9a227; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
-    .refresh-btn:hover { background: #a88516; }
-    .log-row { background: #fff; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #0f7a5f; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .log-row.warn { border-left-color: #e5a638; }
-    .log-row.danger { border-left-color: #b8493b; }
-    .log-row .time { font-size: 12px; color: #637268; }
-    .log-row .who { font-size: 13px; font-weight: 600; }
-    .trace-input { width: 100%; padding: 12px 16px; border: 2px solid #cad8cf; border-radius: 8px; font-size: 16px; margin-bottom: 16px; }
-    .trace-input:focus { outline: none; border-color: #0f7a5f; }
-    .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .report-card { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid #cad8cf; }
-    .report-card .title { font-size: 13px; color: #637268; margin-bottom: 6px; }
-    .report-card .value { font-size: 24px; font-weight: 900; color: #0f7a5f; }
-    .report-card .sub { font-size: 12px; color: #637268; margin-top: 4px; }
-    @media (max-width: 700px) { .room-card { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div class="brand">VUSANI IKHAYA PROPERTIES<small>Trusted rooms. Real people. Real value.</small></div>
-  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-    <a href="/" target="_blank">🌐 View Public Site</a>
-    <span id="adminUser" style="color:rgba(255,255,255,0.6);font-size:13px;"></span>
-    <button onclick="logout()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);padding:4px 12px;border-radius:4px;cursor:pointer;">Logout</button>
+  <div>VUSANI IKHAYA PROPERTIES ADMIN</div>
+  <div>
+    <a href="/" target="_blank">🌐 View Site</a> | 
+    <a href="#" onclick="logout()">Logout</a>
   </div>
 </div>
 
 <div class="container">
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
-    <p style="color:#637268;font-size:14px;">Log in to manage rooms, tenants, matches, transport, reports and activity.</p>
     <form id="loginForm">
-      <div style="margin-bottom:16px;">
-        <label style="display:block;margin-bottom:6px;font-weight:700;">Password</label>
-        <input type="password" id="adminPassword" placeholder="Enter admin password" required>
-      </div>
-      <div id="loginError" class="error"></div>
+      <input type="password" id="adminPassword" placeholder="Password" required>
       <button type="submit">Log In</button>
     </form>
   </div>
 
   <div id="adminPanel" class="panel">
-    <div id="notice" class="notice"></div>
-
     <div class="stats-bar">
-      <div class="stat-card"><div class="number" id="statRoomsPending">0</div><div class="label">🏠 Rooms Pending</div></div>
-      <div class="stat-card"><div class="number" id="statRoomsApproved">0</div><div class="label">✅ Rooms Approved</div></div>
-      <div class="stat-card"><div class="number" id="statRoomsTaken">0</div><div class="label">📦 Rooms Taken</div></div>
-      <div class="stat-card"><div class="number" id="statTenantsPending">0</div><div class="label">👥 Tenants Pending</div></div>
-      <div class="stat-card"><div class="number" id="statMatches">0</div><div class="label">🔗 Matches</div></div>
-      <div class="stat-card"><div class="number" id="statServiceFeeRevenue">R0</div><div class="label">💰 Service Fee Revenue</div></div>
+      <div class="stat-card"><div class="number" id="stat-pending">0</div><div class="label">Pending</div></div>
+      <div class="stat-card"><div class="number" id="stat-approved">0</div><div class="label">Approved</div></div>
+      <div class="stat-card"><div class="number" id="stat-taken">0</div><div class="label">Taken</div></div>
     </div>
 
     <div class="main-tabs">
-      <button class="active" data-section="rooms" onclick="switchSection('rooms')">🏠 Rooms <span class="count" id="mainRoomsCount">0</span></button>
-      <button data-section="tenants" onclick="switchSection('tenants')">👥 Tenants <span class="count" id="mainTenantCount">0</span></button>
-      <button data-section="matches" onclick="switchSection('matches')">🔗 Matches <span class="count" id="mainMatchCount">0</span></button>
-      <button data-section="transport" onclick="switchSection('transport')">🚗 Transport <span class="count" id="mainTransportCount">0</span></button>
-      <button data-section="activity" onclick="switchSection('activity')">📜 Activity Log</button>
-      <button data-section="analytics" onclick="switchSection('analytics')">📈 Analytics</button>
-      <button data-section="settings" onclick="switchSection('settings')" style="margin-left:auto; color:#b8493b;">⚙️ Danger Zone</button>
+      <button class="active" onclick="switchTab('rooms')">🏠 Manage Rooms</button>
+      <button onclick="switchTab('settings')" style="color: #b8493b;">⚙️ Danger Zone</button>
     </div>
 
-    <div id="roomsSection" class="section-content active">
+    <div id="tab-rooms" class="section-content active">
       <div class="sub-tabs">
-        <button class="active" data-tab="pending" onclick="switchRoomTab('pending')">⏳ Pending <span class="count" id="countPending">0</span></button>
-        <button data-tab="approved" onclick="switchRoomTab('approved')">✅ Approved <span class="count" id="countApproved">0</span></button>
-        <button data-tab="taken" onclick="switchRoomTab('taken')">📦 Taken <span class="count" id="countTaken">0</span></button>
-        <button data-tab="declined" onclick="switchRoomTab('declined')">❌ Declined <span class="count" id="countDeclined">0</span></button>
+        <button class="active" onclick="loadTab('pending', this)">⏳ Pending</button>
+        <button onclick="loadTab('approved', this)">✅ Approved</button>
+        <button onclick="loadTab('taken', this)">📦 Taken</button>
+        <button onclick="loadTab('declined', this)">❌ Declined</button>
       </div>
       <div id="roomList"></div>
     </div>
 
-    <div id="tenantsSection" class="section-content">
-      <div class="sub-tabs">
-        <button class="active" data-tab="pending" onclick="switchTenantTab('pending')">⏳ Pending</button>
-        <button data-tab="approved" onclick="switchTenantTab('approved')">✅ Approved</button>
-      </div>
-      <div id="tenantList"></div>
-    </div>
-
-    <div id="matchesSection" class="section-content">
-      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-        <div><h3 style="margin:0 0 6px 0;">🔗 Matches</h3></div>
-        <button class="refresh-btn" onclick="loadMatches()">🔄 Refresh</button>
-      </div>
-      <div id="matchesList"></div>
-    </div>
-
-    <div id="transportSection" class="section-content">
-      <div class="sub-tabs">
-        <button class="active" data-tab="pending" onclick="switchTransportTab('pending')">⏳ Pending</button>
-        <button data-tab="approved" onclick="switchTransportTab('approved')">✅ Approved</button>
-      </div>
-      <div id="transportList"></div>
-    </div>
-
-    <div id="activitySection" class="section-content">
-      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-        <div><h3 style="margin:0 0 6px 0;">📜 Activity Log</h3></div>
-        <button class="refresh-btn" onclick="loadActivity()">🔄 Refresh Log</button>
-      </div>
-      <div id="activityList"></div>
-    </div>
-
-    <div id="analyticsSection" class="section-content">
-      <div class="report-grid" id="analyticsGrid"></div>
-      <div style="background:#fff;border:1px solid #cad8cf;border-radius:10px;padding:20px;">
-        <h4 style="margin:0 0 12px 0;">Monthly Service Fee Revenue</h4>
-        <div class="chart-container"><canvas id="analyticsChart"></canvas></div>
+    <div id="tab-settings" class="section-content">
+      <div style="background:#fff; padding:20px; border-radius:8px; border: 1px solid red;">
+        <h2 style="color:red; margin-top:0;">⚠️ Danger Zone</h2>
+        <p>Clicking this button will delete all posts permanently.</p>
+        <button onclick="wipeDatabase()" style="background:red; color:#fff; padding:12px 24px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:16px;">🗑️ Clear All Data</button>
       </div>
     </div>
-
-    <div id="settingsSection" class="section-content" style="padding:20px; background:#fff; border-radius:10px;">
-      <h2 style="color:#b8493b;">⚠️ Danger Zone</h2>
-      <p>Clicking this button will delete all posts (pending, approved, taken) permanently.</p>
-      <button onclick="wipeDatabase()" style="background:#b8493b; color:#fff; border:none; padding:12px 24px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:16px;">🗑️ Clear All Database Data</button>
-    </div>
-
   </div>
 </div>
 
+<!-- EDIT MODAL -->
 <div class="modal-overlay" id="editRoomModal">
   <div class="modal">
-    <button class="close" onclick="closeEditRoomModal()">✕</button>
-    <h3>✏️ Edit Room</h3>
+    <button class="close" onclick="closeEditModal()">✕</button>
+    <h3>✏️ Edit Property</h3>
     <form id="editRoomForm">
-      <input type="hidden" id="editRoomId"><input type="hidden" id="editRoomFrom">
+      <input type="hidden" id="editRoomId">
+      <input type="hidden" id="editRoomFrom">
+      
       <label>Title</label><input type="text" id="editRoomTitle">
       <label>Location</label><input type="text" id="editRoomLocation">
       <label>Address</label><input type="text" id="editRoomAddress">
       <label>Amount (R)</label><input type="text" id="editRoomAmount">
+      <label>Deposit</label><input type="text" id="editRoomDeposit">
+      <label>Landlord Name</label><input type="text" id="editRoomPosterName">
+      <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
       <label>Notes</label><textarea id="editRoomNotes"></textarea>
+
+      <hr class="hr">
+      <label style="color:#0f7a5f;font-size:15px;">📷 Add More Pictures</label>
+      <input type="file" id="adminNewImage" accept="image/*" style="padding:8px; margin-bottom:8px;">
+      <button type="button" onclick="uploadAdminImage()" style="background:#0f7a5f; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%;">Upload Image to this Post</button>
+
       <button type="submit" class="btn-save">💾 Save Changes</button>
     </form>
   </div>
@@ -230,69 +148,34 @@
 </div>
 
 <script>
-  const SESSION_KEY = "adminSession";
-  let currentRoomTab = 'pending';
-  let currentTenantTab = 'pending';
-  let currentSection = 'rooms';
-  let allRooms = { pending: [], approved: [], taken: [], declined: [], removed: [] };
-  let allTenants = { pending: [], approved: [], declined: [], removed: [] };
-  let allTransport = { pending: [], approved: [], declined: [], removed: [] };
-  let allMatches = [];
-  let allActivity = [];
-  let analyticsChart = null;
+  let allData = {};
+  let currentTab = 'pending';
 
-  function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
-  function getEl(id) { return document.getElementById(id); }
-  const notice = getEl('notice');
-
-  function logActivity(action, section, id, result) {
-    const entry = { time: new Date().toISOString(), action: action, section: section || '', id: id || '', result: result || 'ok' };
-    allActivity.unshift(entry);
-    if (allActivity.length > 100) allActivity.length = 100;
-    try {
-      const saved = JSON.parse(localStorage.getItem('adminActivityLog') || '[]');
-      saved.unshift(entry);
-      if (saved.length > 100) saved.length = 100;
-      localStorage.setItem('adminActivityLog', JSON.stringify(saved));
-    } catch (e) {}
-    if (currentSection === 'activity') renderActivity();
-  }
-
-  function loadActivity() {
-    try { allActivity = JSON.parse(localStorage.getItem('adminActivityLog') || '[]'); } catch (e) { allActivity = []; }
-    renderActivity();
-  }
-
-  function renderActivity() {
-    const list = getEl('activityList');
-    if (!list) return;
-    if (allActivity.length === 0) { list.innerHTML = '<div class="empty">📜 No activity yet.</div>'; return; }
-    list.innerHTML = allActivity.map(a => `
-      <div class="log-row">
-        <div><div class="who">${a.action}</div><div class="time">${new Date(a.time).toLocaleString()}</div></div>
-      </div>
-    `).join('');
-  }
-
-  getEl('loginForm').addEventListener('submit', async (e) => {
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    getEl('loginError').classList.remove('show');
+    const pass = document.getElementById('adminPassword').value;
     try {
-      const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: getEl('adminPassword').value }) });
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass })
+      });
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
-        sessionStorage.setItem(SESSION_KEY, 'yes');
-        setText('adminUser', '👤 Admin');
-        getEl('loginScreen').style.display = 'none';
-        getEl('adminPanel').classList.add('show');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').classList.add('show');
         loadData();
       } else {
-        getEl('loginError').textContent = data.error || 'Invalid password';
-        getEl('loginError').classList.add('show');
+        alert("Incorrect password");
       }
-    } catch (err) { getEl('loginError').textContent = 'Server error'; getEl('loginError').classList.add('show'); }
+    } catch (err) { alert("Server error"); }
   });
+
+  function logout() {
+    localStorage.removeItem('adminToken');
+    location.reload();
+  }
 
   async function loadData() {
     const token = localStorage.getItem('adminToken');
@@ -300,177 +183,199 @@
     try {
       const res = await fetch('/api/admin/data', { headers: { 'Authorization': 'Bearer ' + token } });
       if (res.status === 401) { logout(); return; }
-      const data = await res.json();
-
-      if (data.rooms) allRooms = { pending: data.rooms.pending || [], approved: data.rooms.approved || [], taken: data.rooms.taken || [], declined: data.rooms.declined || [], removed: data.rooms.removed || [] };
-      if (data.tenantRequests) allTenants = { pending: data.tenantRequests.pending || [], approved: data.tenantRequests.approved || [], declined: data.tenantRequests.declined || [], removed: data.tenantRequests.removed || [] };
-      if (data.transports) allTransport = { pending: data.transports.pending || [], approved: data.transports.approved || [], declined: data.transports.declined || [], removed: data.transports.removed || [] };
+      allData = await res.json();
       
-      updateAllCounts(); loadActivity(); renderRoomTab(currentRoomTab); renderTenantTab(currentTenantTab); renderTransportTab('pending'); renderAnalytics(); await loadMatches();
-    } catch (err) { alert('Failed to load data: ' + err.message); }
+      document.getElementById('stat-pending').textContent = (allData.rooms.pending || []).length;
+      document.getElementById('stat-approved').textContent = (allData.rooms.approved || []).length;
+      document.getElementById('stat-taken').textContent = (allData.rooms.taken || []).length;
+      
+      loadTab(currentTab, null);
+    } catch (err) { alert("Failed to load data"); }
   }
 
-  function switchSection(section) {
-    currentSection = section;
-    document.querySelectorAll('.main-tabs button').forEach(btn => { btn.classList.toggle('active', btn.dataset.section === section); });
-    document.querySelectorAll('.section-content').forEach(el => { el.classList.toggle('active', el.id === section + 'Section'); });
-    if (section === 'rooms') renderRoomTab(currentRoomTab);
-    else if (section === 'tenants') renderTenantTab(currentTenantTab);
-    else if (section === 'matches') loadMatches();
-    else if (section === 'transport') renderTransportTab('pending');
-    else if (section === 'activity') renderActivity();
-    else if (section === 'analytics') renderAnalytics();
+  function switchTab(tab) {
+    document.querySelectorAll('.main-tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
+    
+    if (tab === 'rooms') {
+      document.querySelectorAll('.main-tabs button')[0].classList.add('active');
+      document.getElementById('tab-rooms').classList.add('active');
+    } else {
+      document.querySelectorAll('.main-tabs button')[1].classList.add('active');
+      document.getElementById('tab-settings').classList.add('active');
+    }
   }
 
-  function switchRoomTab(tab) { currentRoomTab = tab; document.querySelectorAll('#roomsSection .sub-tabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab)); renderRoomTab(tab); }
+  function loadTab(status, btn) {
+    currentTab = status;
+    if (btn) {
+      document.querySelectorAll('.sub-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    
+    const rooms = allData.rooms[status] || [];
+    const list = document.getElementById('roomList');
+    
+    if (rooms.length === 0) {
+      list.innerHTML = `<div class="empty">No rooms in "${status}"</div>`;
+      return;
+    }
 
-  function renderRoomTab(tab) {
-    const rooms = allRooms[tab] || []; currentRoomTab = tab;
-    if (!getEl('roomList')) return;
-    if (rooms.length === 0) { getEl('roomList').innerHTML = `<div class="empty">📭 No rooms in "${tab}"</div>`; return; }
-    getEl('roomList').innerHTML = rooms.map(room => {
-      const images = room.images || [];
+    list.innerHTML = rooms.map(room => {
       let mediaHtml = '';
-      if (images.length > 0) {
-        mediaHtml = images.slice(0, 4).map(img => `<img src="${img}" class="media-item" onclick="openMediaViewer('image', '${img}')">`).join('');
-      } else mediaHtml = `<div class="no-media">📷 No media</div>`;
-      const isOnline = room.online !== false;
+      if (room.images && room.images.length > 0) {
+        mediaHtml = room.images.map(img => `<img src="${img}" onclick="viewMedia('image', '${img}')">`).join('');
+      }
+      if (!mediaHtml) mediaHtml = `<div style="width:100px; height:100px; background:#eee; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px;">No Media</div>`;
 
       return `
         <div class="room-card">
           <div class="media-grid">${mediaHtml}</div>
-          <div class="info">
-            <div class="title">${room.title || 'Untitled'} (${room.type})</div>
-            <div class="landlord">👤 ${room.posterName} | 📞 ${room.posterContact}</div>
-            <div class="detail">📍 ${room.location} | 💰 R${room.amount}</div>
+          <div class="room-info">
+            <h3>${room.title || 'Untitled'} <span style="font-size:12px; background:#eee; padding:2px 6px; border-radius:4px;">${room.type}</span></h3>
+            <p>📍 ${room.location} | 💰 R${room.amount}</p>
+            <p>👤 ${room.posterName} | 📞 ${room.posterContact}</p>
             <div class="actions">
-              ${tab === 'pending' ? `<button class="approve" onclick="moveRoom('${room.id}','pending','approved')">✅ Approve</button>` : ''}
-              ${tab === 'pending' ? `<button class="decline" onclick="moveRoom('${room.id}','pending','declined')">❌ Decline</button>` : ''}
-              ${tab === 'approved' ? `<button class="decline" onclick="moveRoom('${room.id}','approved','declined')">❌ Decline</button>` : ''}
-              ${tab === 'approved' ? `<button class="taken" onclick="moveRoom('${room.id}','approved','taken')">📦 Mark Taken</button>` : ''}
-              ${tab === 'taken' ? `<button class="repost" onclick="moveRoom('${room.id}','taken','pending')">🔄 Repost</button>` : ''}
-              ${tab === 'declined' ? `<button class="repost" onclick="moveRoom('${room.id}','declined','pending')">🔄 Repost</button>` : ''}
-              ${tab !== 'pending' ? `<button class="delete" onclick="deleteRoom('${room.id}','${tab}')">🗑️ Delete</button>` : ''}
+              ${status === 'pending' ? `<button class="btn-approve" onclick="doAction('move', '${room.id}', 'pending', 'approved')">✅ Approve</button>` : ''}
+              ${status === 'pending' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'pending', 'declined')">❌ Decline</button>` : ''}
+              ${status === 'approved' ? `<button class="btn-taken" onclick="doAction('move', '${room.id}', 'approved', 'taken')">📦 Mark Taken</button>` : ''}
+              ${status === 'approved' ? `<button class="btn-decline" onclick="doAction('move', '${room.id}', 'approved', 'declined')">❌ Remove</button>` : ''}
+              ${status === 'taken' ? `<button class="btn-repost" onclick="doAction('move', '${room.id}', 'taken', 'pending')">🔄 Repost</button>` : ''}
+              ${status === 'declined' ? `<button class="btn-repost" onclick="doAction('move', '${room.id}', 'declined', 'pending')">🔄 Repost</button>` : ''}
+              ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete', '${room.id}', '${status}')">🗑️ Delete</button>` : ''}
+              <button class="btn-edit" onclick="openEditModal('${room.id}', '${status}')">✏️ Edit</button>
             </div>
           </div>
-        </div>`;
+        </div>
+      `;
     }).join('');
   }
 
-  async function moveRoom(id, from, to) {
+  async function doAction(action, id, from, to) {
+    if (action === 'delete' && !confirm('Delete this room permanently?')) return;
     const token = localStorage.getItem('adminToken');
-    await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'move', section: 'rooms', from, to, id }) });
-    logActivity(`Moved room ${from} → ${to}`, 'rooms', id); await loadData();
-  }
-
-  async function deleteRoom(id, from) {
-    if (!confirm('⚠️ Delete permanently?')) return;
-    const token = localStorage.getItem('adminToken');
-    await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'delete', section: 'rooms', from, id }) });
-    logActivity(`Deleted room`, 'rooms', id); await loadData();
-  }
-
-  async function loadMatches() {
-    const token = localStorage.getItem('adminToken');
-    if (!token) return;
     try {
-      const res = await fetch('/api/admin/matches', { headers: { 'Authorization': 'Bearer ' + token } });
-      const data = await res.json();
-      allMatches = data.matches || [];
-      renderMatches();
-    } catch (e) {}
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ action: action, section: 'rooms', from: from, to: to, id: id })
+      });
+      loadData(); 
+    } catch (e) { alert("Action failed"); }
   }
 
-  function renderMatches() {
-    const list = getEl('matchesList'); if (!list) return;
-    if (allMatches.length === 0) { list.innerHTML = '<div class="empty">🔗 No matches found.</div>'; return; }
-    list.innerHTML = allMatches.map(m => `
-      <div class="room-card" style="grid-template-columns:1fr;"><div class="info">
-        <div class="title">🏠 ${m.landlordTitle}</div>
-        <div class="detail">📍 ${m.landlordLocation} | 💰 R${m.landlordRent}</div>
-        <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
-          <div style="font-weight:700; color:#0f7a5f; margin-bottom:6px;">🎯 Matched Tenant: ${m.tenantName}</div>
-          <div class="detail">📞 ${m.tenantContact} | 💰 ${m.tenantBudgetRange}</div>
-        </div>
-      </div></div>`).join('');
+  // EDIT MODAL LOGIC
+  function openEditModal(id, from) {
+    const room = allData.rooms[from].find(r => r.id === id);
+    if (!room) return;
+    
+    document.getElementById('editRoomId').value = id;
+    document.getElementById('editRoomFrom').value = from;
+    document.getElementById('editRoomTitle').value = room.title || '';
+    document.getElementById('editRoomLocation').value = room.location || '';
+    document.getElementById('editRoomAddress').value = room.address || '';
+    document.getElementById('editRoomAmount').value = room.amount || '';
+    document.getElementById('editRoomDeposit').value = room.deposit || '';
+    document.getElementById('editRoomPosterName').value = room.posterName || '';
+    document.getElementById('editRoomPosterContact').value = room.posterContact || '';
+    document.getElementById('editRoomNotes').value = room.notes || '';
+    
+    document.getElementById('editRoomModal').classList.add('show');
   }
 
-  function renderTenantTab(tab) {
-    const list = getEl('tenantList');
-    if (!list) return;
-    const tenants = allTenants[tab] || [];
-    if (tenants.length === 0) { list.innerHTML = `<div class="empty">📭 No tenants in "${tab}"</div>`; return; }
-    list.innerHTML = tenants.map(t => `
-      <div class="room-card" style="grid-template-columns:1fr;"><div class="info">
-        <div class="title">👤 ${t.tenantName || 'Unknown'}</div>
-        <div class="landlord">📞 ${t.contactNumber || 'No contact'}</div>
-        <div class="detail">📍 ${(t.preferredLocations||[]).join(', ')} | 🛏️ ${t.roomType || 'Any'} | 💰 ${t.budgetRange || t.budget || '—'}</div>
-        <div class="actions">
-          ${tab === 'pending' ? `<button class="approve" onclick="moveTenant('${t.id}','pending','approved')">✅ Approve</button>` : ''}
-          ${tab === 'pending' ? `<button class="decline" onclick="moveTenant('${t.id}','pending','declined')">❌ Decline</button>` : ''}
-        </div>
-      </div></div>`).join('');
+  function closeEditModal() {
+    document.getElementById('editRoomModal').classList.remove('show');
   }
 
-  function switchTenantTab(tab) { currentTenantTab = tab; document.querySelectorAll('#tenantsSection .sub-tabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab)); renderTenantTab(tab); }
-  async function moveTenant(id, from, to) { const token = localStorage.getItem('adminToken'); await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'move', section: 'tenantRequests', from, to, id }) }); await loadData(); }
+  document.getElementById('editRoomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const id = document.getElementById('editRoomId').value;
+    const from = document.getElementById('editRoomFrom').value;
+    
+    const data = {
+      title: document.getElementById('editRoomTitle').value,
+      location: document.getElementById('editRoomLocation').value,
+      address: document.getElementById('editRoomAddress').value,
+      amount: document.getElementById('editRoomAmount').value,
+      deposit: document.getElementById('editRoomDeposit').value,
+      posterName: document.getElementById('editRoomPosterName').value,
+      posterContact: document.getElementById('editRoomPosterContact').value,
+      notes: document.getElementById('editRoomNotes').value
+    };
 
-  function renderTransportTab(tab) {
-    const list = getEl('transportList');
-    if (!list) return;
-    const transports = allTransport[tab] || [];
-    if (transports.length === 0) { list.innerHTML = `<div class="empty">🚗 No transport in "${tab}"</div>`; return; }
-    list.innerHTML = transports.map(t => `
-      <div class="room-card" style="grid-template-columns:1fr;"><div class="info">
-        <div class="title">🚗 ${t.firstName || ''} ${t.surname || ''}</div>
-        <div class="landlord">📞 ${t.phone || ''}</div>
-        <div class="actions">
-          ${tab === 'pending' ? `<button class="approve" onclick="moveTransport('${t.id}','pending','approved')">✅ Approve</button>` : ''}
-          ${tab === 'pending' ? `<button class="decline" onclick="moveTransport('${t.id}','pending','declined')">❌ Decline</button>` : ''}
-        </div>
-      </div></div>`).join('');
-  }
+    try {
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ action: 'edit', section: 'rooms', from: from, id: id, data: data })
+      });
+      alert('✅ Room updated!');
+      closeEditModal();
+      loadData();
+    } catch (err) { alert("Failed to save changes"); }
+  });
 
-  function switchTransportTab(tab) { document.querySelectorAll('#transportSection .sub-tabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab)); renderTransportTab(tab); }
-  async function moveTransport(id, from, to) { const token = localStorage.getItem('adminToken'); await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ action: 'move', section: 'transports', from, to, id }) }); await loadData(); }
+  // ADMIN IMAGE UPLOAD
+  async function uploadAdminImage() {
+    const fileInput = document.getElementById('adminNewImage');
+    if (!fileInput.files || fileInput.files.length === 0) { alert('Select an image first.'); return; }
+    
+    const formData = new FormData();
+    formData.append('images', fileInput.files[0]);
 
-  function renderAnalytics() {
-    const grid = getEl('analyticsGrid');
-    if (!grid) return;
-    const totalRooms = Object.values(allRooms).reduce((s, a) => s + a.length, 0);
-    const totalTenants = Object.values(allTenants).reduce((s, a) => s + a.length, 0);
-    grid.innerHTML = `<div class="report-card"><div class="title">Total Rooms</div><div class="value">${totalRooms}</div></div><div class="report-card"><div class="title">Total Tenants</div><div class="value">${totalTenants}</div></div><div class="report-card"><div class="title">Total Matches</div><div class="value">${allMatches.length}</div></div>`;
-  }
+    const token = localStorage.getItem('adminToken');
+    const id = document.getElementById('editRoomId').value;
+    const from = document.getElementById('editRoomFrom').value;
 
-  function updateAllCounts() {
-    setText('countPending', (allRooms.pending || []).length);
-    setText('countApproved', (allRooms.approved || []).length);
-    setText('countTaken', (allRooms.taken || []).length);
-    setText('countDeclined', (allRooms.declined || []).length);
-    setText('statRoomsPending', (allRooms.pending || []).length);
-    setText('statRoomsApproved', (allRooms.approved || []).length);
-    setText('statRoomsTaken', (allRooms.taken || []).length);
-    setText('mainRoomsCount', (allRooms.pending || []).length + (allRooms.approved || []).length + (allRooms.taken || []).length + (allRooms.declined || []).length);
+    try {
+      const uploadRes = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+      const uploadData = await uploadRes.json();
+      
+      if (!uploadData.success) throw new Error("Upload failed");
+      
+      const newUrl = uploadData.urls[0];
+
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ action: 'add-images', section: 'rooms', from: from, id: id, data: { images: [newUrl] } })
+      });
+      
+      alert('✅ Image uploaded to post!');
+      fileInput.value = '';
+      loadData();
+    } catch (err) {
+      alert("Failed to upload image.");
+    }
   }
 
   async function wipeDatabase() {
-    if (!confirm('⚠️ ARE YOU SURE?')) return;
+    if (!confirm('⚠️ ARE YOU SURE? This will delete ALL posts.')) return;
     try {
       await fetch('/api/admin/reset-everything');
-      alert('✅ Wiped.');
+      alert('✅ All data wiped.');
       loadData();
-    } catch(e) { alert('Failed'); }
+    } catch(e) { alert('❌ Failed'); }
   }
 
-  function openMediaViewer(type, src) {
-    getEl('mediaContent').innerHTML = type === 'image' ? `<img src="${src}">` : `<video src="${src}" controls autoplay></video>`;
-    getEl('mediaViewer').classList.add('show');
+  function viewMedia(type, src) {
+    const viewer = document.getElementById('mediaViewer');
+    const content = document.getElementById('mediaContent');
+    content.innerHTML = type === 'image' ? `<img src="${src}">` : `<video src="${src}" controls autoplay></video>`;
+    viewer.classList.add('show');
   }
 
-  function closeMediaViewer() { getEl('mediaViewer').classList.remove('show'); getEl('mediaContent').innerHTML = ''; }
-  function logout() { localStorage.removeItem('adminToken'); sessionStorage.removeItem(SESSION_KEY); location.reload(); }
+  function closeMediaViewer() {
+    document.getElementById('mediaViewer').classList.remove('show');
+    document.getElementById('mediaContent').innerHTML = '';
+  }
 
-  if (localStorage.getItem('adminToken') && sessionStorage.getItem(SESSION_KEY)) { getEl('loginScreen').style.display = 'none'; getEl('adminPanel').classList.add('show'); setText('adminUser', '👤 Admin'); loadData(); }
+  if (localStorage.getItem('adminToken')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('show');
+    loadData();
+  }
 </script>
 </body>
 </html>
