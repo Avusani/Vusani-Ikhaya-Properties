@@ -696,6 +696,10 @@ function formatPrice(amount){
   return 'R ' + n.toLocaleString('en-ZA');
 }
 
+function formatFee(n){
+  return 'R ' + Number(n || 0).toLocaleString('en-ZA');
+}
+
 function showToast(msg, type='success'){
   const t = $('#toast');
   t.textContent = msg;
@@ -722,6 +726,15 @@ function buildFlags(p){
   if ((p.bathroomSharing || 'Private') === 'Shared') out.push('<span class="pc-flag no">🛁 Shared bathroom</span>');
   else out.push('<span class="pc-flag yes">🛁 Private bathroom</span>');
   return out.join('');
+}
+
+function buildFeeBadge(p){
+  if (!p.agentFee) return '';
+  const f = p.agentFee;
+  const surchargeLine = f.surcharge
+    ? `<span style="color:#b8493b"> (+ R${f.surcharge} location surcharge)</span>`
+    : `<span style="color:#0f7a5f"> (Alexandra — no surcharge)</span>`;
+  return `<div style="margin-top:8px;font-size:12px;color:#8a6d0b;font-weight:700;">Agent fee: ${formatFee(f.total)}${surchargeLine}</div>`;
 }
 
 function renderCard(p){
@@ -772,9 +785,25 @@ function renderCard(p){
           <span class="pc-spec">${ICON_CAR}${parking}</span>
         </div>
         <div class="pc-flags">${buildFlags(p)}</div>
+        ${buildFeeBadge(p)}
         <button class="pc-fav ${localStorage.getItem('fav_'+p.id) ? 'active' : ''}" aria-label="Save" onclick="event.stopPropagation();toggleFav(this,'${escapeHTML(p.id)}')">${ICON_HEART}</button>
       </div>
     </article>`;
+}
+
+function buildFeeBox(p){
+  if (!p.agentFee) return '';
+  const f = p.agentFee;
+  const surchargeLine = f.surcharge
+    ? `<div style="font-size:12px;color:#b8493b;font-weight:700;margin-top:4px;">+ R${f.surcharge} non-Alexandra location surcharge</div>`
+    : `<div style="font-size:12px;color:#0f7a5f;font-weight:700;margin-top:4px;">✓ Alexandra Township — no surcharge</div>`;
+  return `
+    <div style="background:#fef9e7;border:1px solid #e5d18a;border-radius:8px;padding:14px;margin:14px 0;">
+      <div style="font-size:12px;font-weight:800;color:#8a6d0b;text-transform:uppercase;letter-spacing:.5px;">Agent Fee</div>
+      <div style="font-size:24px;font-weight:900;color:#8a6d0b;">${formatFee(f.total)}</div>
+      <div style="font-size:13px;color:#6b5b1b;margin-top:4px;">${escapeHTML(f.breakdown || '')}</div>
+      ${surchargeLine}
+    </div>`;
 }
 
 function updateDots(slider) {
@@ -923,6 +952,8 @@ function openProp(id){
 
       <div class="modal-flags">${buildFlags(p)}</div>
 
+      ${buildFeeBox(p)}
+
       <h3>Description</h3>
       <p>${escapeHTML(p.notes || p.description || 'No description provided. Please contact us for more information.')}</p>
 
@@ -956,6 +987,34 @@ function closeProp(){
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#propModal').classList.contains('show')) closeProp();
 });
+
+/* ============================================================
+   IMAGE / VIDEO PREVIEW
+   ============================================================ */
+function handleImageSelect(ev){
+  const files = Array.from(ev.target.files || []).slice(0, 8);
+  const preview = document.getElementById('imagePreview');
+  preview.innerHTML = '';
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    const img = document.createElement('img');
+    img.src = url;
+    preview.appendChild(img);
+  });
+}
+
+function handleVideoSelect(ev){
+  const files = Array.from(ev.target.files || []).slice(0, 1);
+  const preview = document.getElementById('videoPreview');
+  preview.innerHTML = '';
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    const vid = document.createElement('video');
+    vid.src = url;
+    vid.controls = true;
+    preview.appendChild(vid);
+  });
+}
 
 /* ============================================================
    FORM SUBMISSION (FILE UPLOAD)
@@ -1027,11 +1086,12 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       notice.textContent = '✅ Property submitted successfully! It will appear once approved.';
       e.target.reset(); 
       $('#imagePreview').innerHTML = '';
+      $('#videoPreview').innerHTML = '';
     } else {
       throw new Error(data.error || 'Could not submit property.');
     }
   } catch (err) {
-    notice.style.color = 'var(--red)'; 
+    notice.style.color = '#b8493b'; 
     notice.textContent = '⚠️ ' + (err.message || 'Failed to submit.');
   } finally { 
     btn.disabled = false; 
