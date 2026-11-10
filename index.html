@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vusani Ikhaya Properties — Trusted Rooms. Real People. Real Value.</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230E382A'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='%23D4AF37' font-family='system-ui'>V</text></svg>">
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --green-dark:#0E382A; 
@@ -36,6 +37,11 @@ button{font-family:inherit;cursor:pointer;}
 input,select,textarea{font-family:inherit;}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
 .container{max-width:1240px;margin:0 auto;padding:0 20px;}
+
+/* FLOATING WHATSAPP BUTTON */
+.fab-wa { position: fixed; bottom: 20px; right: 20px; background: #25D366; color: #fff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9999; transition: transform 0.2s; }
+.fab-wa:hover { transform: scale(1.1); text-decoration: none; }
+.fab-wa svg { width: 35px; height: 35px; fill: #fff; }
 
 .topbar{background:var(--green-dark);color:#dfe6f0;font-size:13px;padding:6px 0;}
 .topbar .container{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
@@ -86,10 +92,11 @@ input,select,textarea{font-family:inherit;}
 .hero-btn.secondary{background:transparent;color:#fff;border:1px solid #fff;}
 .hero-btn.secondary:hover{background:rgba(255,255,255,0.1);}
 
-.search-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:-50px;position:relative;z-index:10;}
+/* UPGRADED SEARCH BAR */
+.search-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:-50px;position:relative;z-index:10;}
 .search-card .field{display:flex;flex-direction:column;gap:5px;}
 .search-card label{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
-.search-card input,.search-card select{padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);background:#fff;}
+.search-card input,.search-card select{padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);background:#fff;width:100%;}
 .search-card input:focus,.search-card select:focus{border-color:var(--green-dark);outline:none;}
 .search-card .search-btn{background:var(--gold);color:var(--green-dark);border:none;padding:13px 26px;border-radius:var(--radius-sm);font-weight:800;font-size:14px;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;white-space:nowrap;}
 .search-card .search-btn:hover{background:var(--gold-dark);}
@@ -120,7 +127,6 @@ input,select,textarea{font-family:inherit;}
 .pc-slide{flex:0 0 100%; scroll-snap-align:start; position:relative;}
 .pc-slide img{width:100%; height:100%; object-fit:cover; display:block;}
 
-/* Video slide — poster + play button, opens large player */
 .pc-video-slide{position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;}
 .pc-video-slide video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
 .pc-video-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55));display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;}
@@ -201,8 +207,9 @@ input,select,textarea{font-family:inherit;}
 .modal-contact .actions a{padding:10px 18px;border-radius:var(--radius-sm);font-weight:700;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
 .modal-contact .actions .wa{background:#25D366;color:#fff;}
 .modal-contact .actions .call{background:var(--green-dark);color:#fff;}
+#modalMap{width:100%;height:220px;border-radius:8px;margin:8px 0 4px;border:1px solid var(--line);}
+.modal-map-label{font-size:12px;color:var(--muted);margin-bottom:14px;}
 
-/* Fullscreen video overlay (public) */
 .fs-video-overlay{display:none;position:fixed;inset:0;background:#000;z-index:5000;align-items:center;justify-content:center;padding:20px;}
 .fs-video-overlay.show{display:flex;}
 .fs-video-overlay video{max-width:100%;max-height:100%;width:auto;height:auto;outline:none;}
@@ -237,6 +244,10 @@ input,select,textarea{font-family:inherit;}
 </style>
 </head>
 <body>
+
+<a href="https://wa.me/27685353186?text=Hi%20Vusani%20Ikhaya%20Properties%2C%20I%20found%20you%20on%20your%20website." target="_blank" class="fab-wa" title="Chat with us on WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.126-.074-.273-.086-.623-.201-1.075-.395-1.89-.817-3.122-2.738-3.217-2.866-.095-.128-.771-.1026-1.091-1.026-.32-.924-.12-1.428.012-1.583.132-.155.32-.252.427-.252.107 0 .213.001.305.008.096.007.226-.036.353.271.128.307.435 1.062.473 1.14.038.078.064.168.012.271-.052.103-.078.168-.155.258-.077.09-.162.201-.232.27-.077.077-.159.161-.068.316.09.155.402.663.859 1.074.585.529 1.077.694 1.23.774.153.08.243.064.333-.039.09-.103.384-.447.486-.6.103-.153.206-.128.347-.077.141.051.895.422 1.048.498.153.077.255.115.293.181.038.066.038.382-.106.787z"/></svg>
+</a>
 
 <div class="topbar">
   <div class="container">
@@ -299,8 +310,16 @@ input,select,textarea{font-family:inherit;}
   <div class="container">
     <form class="search-card" onsubmit="doSearch(event)" aria-label="Property search">
       <div class="field">
-        <label for="sLocation">Location</label>
-        <input type="text" id="sLocation" placeholder="e.g. Alexandra, Wynberg">
+        <label for="sMainLocation">Main location</label>
+        <select id="sMainLocation" onchange="syncSearchSublocations()">
+          <option value="">Any area</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sSublocation">Sublocation / street</label>
+        <select id="sSublocation">
+          <option value="">Any</option>
+        </select>
       </div>
       <div class="field">
         <label for="sPurpose">Purpose</label>
@@ -311,7 +330,7 @@ input,select,textarea{font-family:inherit;}
         </select>
       </div>
       <div class="field">
-        <label for="sType">Property type</label>
+        <label for="sType">Type</label>
         <select id="sType">
           <option value="">Any type</option>
           <option value="room">Room</option>
@@ -321,7 +340,7 @@ input,select,textarea{font-family:inherit;}
         </select>
       </div>
       <div class="field">
-        <label for="sMax">Max price (R)</label>
+        <label for="sMax">Max budget (R)</label>
         <input type="number" id="sMax" placeholder="e.g. 3500" min="0">
       </div>
       <button type="submit" class="search-btn">
@@ -470,74 +489,42 @@ input,select,textarea{font-family:inherit;}
               <option value="house">House</option>
             </select>
           </div>
-          <div class="form-field full">
-            <label>Township / Area *</label>
-            <select id="pTownship" required>
-              <option value="">Select area...</option>
-              <option value="Alexandra">Alexandra</option>
-              <option value="East Bank">East Bank</option>
-              <option value="Tsutsumane">Tsutsumane</option>
-              <option value="River Park">River Park</option>
-              <option value="Wynberg">Wynberg</option>
-              <option value="Marlboro">Marlboro</option>
-              <option value="Bramley">Bramley</option>
-              <option value="Lombardy East">Lombardy East</option>
-              <option value="Sandton">Sandton</option>
-              <option value="Kew">Kew</option>
-              <option value="Balfour">Balfour</option>
-              <option value="Other">Other</option>
+          <div class="form-field">
+            <label>Main Location *</label>
+            <select id="pMainLocation" required onchange="syncPostSublocations()">
+              <option value="">Select main location…</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Sublocation / Street *</label>
+            <select id="pSublocation" required>
+              <option value="">Select sublocation…</option>
             </select>
           </div>
           <div class="form-field full">
-            <label>Street Address / Location *</label>
-            <input type="text" id="pAddress" required placeholder="e.g. 123 Main Street">
+            <label>Street Address / Description of location *</label>
+            <input type="text" id="pAddress" required placeholder="e.g. Corner 4th Ave & Roosevelt St (no house number)">
           </div>
+          
+          <div class="form-field full">
+            <label>Pick the street corner on the map *</label>
+            <div id="postMap" style="height:320px;border-radius:8px;border:1px solid var(--line);background:#eef3ee"></div>
+            <div style="margin-top:6px;font-size:12px;color:var(--muted)">Drag the pin to a street corner. Do NOT place it on a house number. This becomes the public map location.</div>
+            <input type="text" id="pMapLabel" placeholder="Corner auto-detected from pin…" readonly style="margin-top:6px;background:#f3f6f4">
+            <input type="hidden" id="pMapLat"><input type="hidden" id="pMapLng">
+          </div>
+
           <div class="form-field">
-            <label>Price (R) *</label>
+            <label>Rent Price (R) *</label>
             <input type="number" id="pPrice" required placeholder="e.g. 2500">
           </div>
           <div class="form-field">
             <label>Deposit (R) *</label>
             <input type="text" id="pDeposit" required placeholder="e.g. 2500 or No deposit">
           </div>
-          <div class="form-field full">
-            <label>Available Date *</label>
-            <input type="date" id="pAvailableDate" required>
-          </div>
-          <div class="form-field full">
-            <label>Description / Notes</label>
-            <textarea id="pNotes" placeholder="Describe the property, rules, nearby amenities..."></textarea>
-          </div>
-          <div class="form-field">
-            <label>Child Friendly? *</label>
-            <select id="pChild" required onchange="document.getElementById('childCountBox').style.display = this.value === 'Yes' ? 'block' : 'none';">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
-          </div>
-          <div class="form-field" id="childCountBox" style="display:none;">
-            <label>How many children allowed? *</label>
-            <input type="number" id="pChildCount" min="1" placeholder="e.g. 2">
-          </div>
-          <div class="form-field">
-            <label>Parking Available?</label>
-            <select id="pParking" onchange="document.getElementById('carCountBox').style.display = this.value === 'Yes' ? 'block' : 'none';">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
-          </div>
-          <div class="form-field" id="carCountBox" style="display:none;">
-            <label>How many cars?</label>
-            <input type="number" id="pCarCount" min="1" placeholder="e.g. 2">
-          </div>
-          <div class="form-field">
-            <label>Has Ceiling?</label>
-            <select id="pCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
-          </div>
-          <div class="form-field">
-            <label>Has Tiles?</label>
-            <select id="pTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
-          </div>
+          
+          <div class="form-field"><label>Number of Bedrooms *</label><input type="number" id="pBedrooms" min="1" value="1" required></div>
+          <div class="form-field"><label>Number of Bathrooms *</label><input type="number" id="pBathrooms" min="1" value="1" required></div>
           <div class="form-field">
             <label>Toilet Options *</label>
             <select id="pToilet" required>
@@ -548,22 +535,73 @@ input,select,textarea{font-family:inherit;}
             </select>
           </div>
           <div class="form-field">
-            <label>Bathroom Options *</label>
-            <select id="pBathroom" required>
-              <option value="Shared Bathroom">Shared Bathroom</option>
-              <option value="Own Bathroom">Own Bathroom</option>
-              <option value="Own Bathroom & Shower">Own Bathroom &amp; Shower</option>
-              <option value="Inside Bathroom">Inside Bathroom</option>
+            <label>Kitchen Type *</label>
+            <select id="pKitchenType" required>
+              <option value="No Kitchen">No Kitchen</option>
+              <option value="Shared Kitchen">Shared Kitchen</option>
+              <option value="Own Kitchen">Own Kitchen</option>
             </select>
           </div>
           <div class="form-field">
-            <label>Your Name *</label>
-            <input type="text" id="pOwnerName" required placeholder="Your full name">
+            <label>Furniture Status *</label>
+            <select id="pFurniture" required>
+              <option value="Unfurnished">Unfurnished</option>
+              <option value="Furnished">Furnished</option>
+            </select>
           </div>
           <div class="form-field">
-            <label>Your Phone / WhatsApp *</label>
-            <input type="tel" id="pOwnerPhone" required placeholder="e.g. 071 234 5678">
+            <label>Wardrobe Available? *</label>
+            <select id="pWardrobe" required>
+              <option value="Not Available">Not Available</option>
+              <option value="Available">Available</option>
+            </select>
           </div>
+          <div class="form-field">
+            <label>Kitchen Unit Available? *</label>
+            <select id="pKitchenUnit" required>
+              <option value="Not Available">Not Available</option>
+              <option value="Available">Available</option>
+            </select>
+          </div>
+
+          <div class="form-field full"><label>Available Date *</label><input type="date" id="pAvailableDate" required></div>
+          <div class="form-field full"><label>Description / Notes</label><textarea id="pNotes" placeholder="Describe the property, rules, nearby amenities..."></textarea></div>
+          
+          <div class="form-field">
+            <label>Pets Friendly? *</label>
+            <select id="pPets" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Child Friendly? *</label>
+            <select id="pChild" required onchange="document.getElementById('childCountBox').style.display = this.value === 'Yes' ? 'block' : 'none';">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="form-field" id="childCountBox" style="display:none;">
+            <label>Max Occupants / Kids Allowed *</label>
+            <input type="number" id="pChildCount" min="1" placeholder="e.g. 2">
+          </div>
+          <div class="form-field">
+            <label>Parking Available?</label>
+            <select id="pParking" onchange="document.getElementById('carCountBox').style.display = this.value === 'Yes' ? 'block' : 'none';">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="form-field" id="carCountBox" style="display:none;">
+            <label>Max Cars Allowed</label>
+            <input type="number" id="pCarCount" min="1" placeholder="e.g. 2">
+          </div>
+          <div class="form-field"><label>Has Ceiling?</label><select id="pCeiling"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+          <div class="form-field"><label>Has Tiles?</label><select id="pTiles"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+          
+          <div class="form-field"><label>Your Name *</label><input type="text" id="pOwnerName" required placeholder="Your full name"></div>
+          <div class="form-field"><label>Your Phone / WhatsApp *</label><input type="tel" id="pOwnerPhone" required placeholder="e.g. 071 234 5678"></div>
+          
           <div class="form-field full">
             <label>Upload Pictures (Max 8) *</label>
             <label class="upload-box">
@@ -647,7 +685,6 @@ input,select,textarea{font-family:inherit;}
   </div>
 </div>
 
-<!-- Fullscreen video player overlay -->
 <div class="fs-video-overlay" id="fsVideoOverlay" onclick="if(event.target===this)closeFsVideo()">
   <button class="fs-video-close" onclick="closeFsVideo()" aria-label="Close fullscreen">✕</button>
   <video id="fsVideoPlayer" controls playsinline></video>
@@ -662,6 +699,25 @@ const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 let ALL = [];              
 let ACTIVE_PURPOSE = 'all';
 let ACTIVE_TYPE = 'all';
+let LOC_TREE = [];
+
+const FALLBACK_TREE = [
+  { name:'Alexandra Township', children:['1st Avenue','2nd Avenue','3rd Avenue','4th Avenue','5th Avenue','6th Avenue','7th Avenue','8th Avenue','9th Avenue','10th Avenue','11th Avenue','12th Avenue','13th Avenue','14th Avenue','15th Avenue','16th Avenue','17th Avenue','18th Avenue','19th Avenue','20th Avenue','21st Avenue','22nd Avenue','East Bank','Far East Bank','River Park','Setswetla','Extension 7','Extension 8','Extension 9','Extension 10']},
+  { name:'Wynberg', children:['Wynberg'] },
+  { name:'Marlboro', children:['Marlboro'] },
+  { name:'Bramley', children:['Bramley'] },
+  { name:'Kew', children:['Kew'] },
+  { name:'Lombardy', children:['Lombardy East','Lombardy West'] },
+  { name:'Sandton', children:['Sandton CBD','Sandown','Morningside','Bryanston','Rivonia','Benmore Gardens','Woodmead'] },
+  { name:'Linbro Park', children:['Linbro Park'] },
+  { name:'Lyndhurst', children:['Lyndhurst'] },
+  { name:'Orange Grove', children:['Orange Grove'] },
+  { name:'Norwood', children:['Norwood'] },
+  { name:'Linksfield', children:['Linksfield'] },
+  { name:'Modderfontein', children:['Modderfontein'] },
+  { name:'Edenvale', children:['Edenvale'] },
+  { name:'Greenstone', children:['Greenstone'] }
+];
 
 const escapeHTML = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -699,10 +755,6 @@ function buildFlags(p){
   return out.join('');
 }
 
-/**
- * Builds the ordered media list — VIDEO FIRST, then images.
- * Returns array of { type:'video'|'image'|'empty', url }
- */
 function buildMediaList(p){
   const list = [];
   if (p.video) list.push({ type: 'video', url: p.video });
@@ -718,7 +770,6 @@ function renderCard(p){
 
   const slides = mediaItems.map((m, idx) => {
     if (m.type === 'video') {
-      // Poster + play button — click opens large player
       return `<div class="pc-slide">
         <div class="pc-video-slide" onclick="event.stopPropagation();openVideoFullscreen('${escapeHTML(m.url)}')" title="Play video">
           <video src="${escapeHTML(m.url)}" preload="metadata" muted playsinline></video>
@@ -806,7 +857,9 @@ function filterPurpose(purpose, ev){
   else if (purpose === 'buy') { $('#listingsHeading').textContent = 'Properties for Sale'; $('#listingsSubtext').textContent = 'Browse all properties available to buy.'; }
   else { $('#listingsHeading').textContent = 'Available properties'; $('#listingsSubtext').textContent = 'Approved listings across our service areas.'; }
   renderListings();
-  document.getElementById('listings').scrollIntoView({behavior:'smooth'});
+  setTimeout(() => {
+    document.getElementById('listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
 }
 
 function filterType(type, ev){
@@ -817,23 +870,46 @@ function filterType(type, ev){
   $('#listingsSubtext').textContent = 'Showing all approved ' + type + ' listings.';
   $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === 'all'));
   renderListings();
-  document.getElementById('listings').scrollIntoView({behavior:'smooth'});
+  setTimeout(() => {
+    document.getElementById('listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
 }
 
 function doSearch(ev){
   if (ev) ev.preventDefault();
-  const loc = ($('#sLocation').value || '').trim();
+  
+  const main = $('#sMainLocation').value;
+  const sub = $('#sSublocation').value;
   const purpose = $('#sPurpose').value;
   const type = $('#sType').value;
   const max = ($('#sMax').value || '').trim();
 
   let list = ALL.slice();
-  if (purpose) list = list.filter(p => (p.purpose || 'rent') === purpose);
-  if (loc) list = list.filter(p => ((p.location || '') + ' ' + (p.alexandraSuburb || '') + ' ' + (p.address || '')).toLowerCase().includes(loc.toLowerCase()));
-  if (type) list = list.filter(p => String(p.type || p.roomType || '').toLowerCase() === type.toLowerCase());
+  
+  if (main) {
+    list = list.filter(p => {
+      const pMain = (p.mainLocation || p.location || '').toLowerCase();
+      return pMain.includes(main.toLowerCase());
+    });
+  }
+  
+  if (purpose) {
+    list = list.filter(p => (p.purpose || 'rent').toLowerCase() === purpose.toLowerCase());
+  }
+  
+  if (type) {
+    list = list.filter(p => {
+      const pType = (p.type || p.roomType || '').toLowerCase();
+      return pType === type.toLowerCase();
+    });
+  }
+  
   if (max) {
     const m = Number(max);
-    list = list.filter(p => Number(String(p.amount || '').replace(/[^\d.]/g,'')) <= m);
+    list = list.filter(p => {
+      const pAmount = Number(String(p.amount || '').replace(/[^\d.]/g,''));
+      return pAmount <= m;
+    });
   }
 
   const grid = $('#listingGrid');
@@ -842,10 +918,17 @@ function doSearch(ev){
   } else {
     grid.innerHTML = list.map(renderCard).join('');
   }
-  ACTIVE_PURPOSE = purpose;
+  
+  ACTIVE_PURPOSE = purpose || 'all';
   ACTIVE_TYPE = type || 'all';
-  $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === purpose));
-  $('#listings').scrollIntoView({ behavior:'smooth', block:'start' });
+  $$('.chip').forEach(c => c.classList.toggle('active', c.dataset.purpose === ACTIVE_PURPOSE));
+  
+  $('#listingsHeading').textContent = 'Search results';
+  $('#listingsSubtext').textContent = `${list.length} matching property(ies)`;
+  
+  setTimeout(() => {
+    document.getElementById('listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
 }
 
 async function loadPublic(){
@@ -887,6 +970,25 @@ function openProp(id){
   const bedrooms = Number(p.bedrooms) || 1;
   const bathrooms = Number(p.bathrooms) || 1;
   const parking = Number(p.parkingSpaces) || (p.parking === 'Yes' ? 1 : 0);
+  const hasMap = p.mapLat != null && p.mapLng != null;
+
+  const waMessage = `Good day Vusani Ikhaya Properties.
+
+I am interested in the property advertised on your website and would like to find out more information.
+
+**Property Details:**
+- Property ID: ${p.id}
+- Property Type: ${(p.type || 'Room')}
+- Main Location: ${(p.mainLocation || '')}
+- Area / Sublocation: ${(p.sublocation || '')}
+- Rental Price: R${p.amount} per month
+- Property Pictures: https://vusaniikhaya.co.za/uploads/
+- Property Listing: https://vusaniikhaya.co.za
+
+Kindly provide me with more information regarding availability, deposit requirements and viewing arrangements.
+
+Thank you. I look forward to your response.`;
+  const waUrl = `https://wa.me/27685353186?text=${encodeURIComponent(waMessage)}`;
 
   $('#propContent').innerHTML = `
     <div class="modal-gallery">
@@ -895,7 +997,7 @@ function openProp(id){
     <div class="modal-body">
       <div class="price">${price}</div>
       <h2 id="propTitle">${escapeHTML(p.title || 'Property')}</h2>
-      <div class="loc">📍 ${escapeHTML(p.alexandraSuburb || p.location || 'Johannesburg')}</div>
+      <div class="loc">📍 ${escapeHTML(p.mainLocation || '')}${p.sublocation ? ' / '+escapeHTML(p.sublocation) : ''}</div>
 
       <div class="specs">
         <span class="pc-spec">${ICON_BED}${bedrooms} Bedroom${bedrooms === 1 ? '' : 's'}</span>
@@ -908,18 +1010,29 @@ function openProp(id){
       <h3>Description</h3>
       <p>${escapeHTML(p.notes || p.description || 'No description provided. Please contact us for more information.')}</p>
 
+      ${hasMap ? `<h3>Location (street corner)</h3><div id="modalMap"></div><div class="modal-map-label">📍 ${escapeHTML(p.mapLabel || 'Street corner')} — house numbers are not shown for privacy.</div>` : ''}
+
       <h3>Details</h3>
       <p>
         <b>Type:</b> ${escapeHTML((p.type || p.roomType || 'Property'))}<br>
         <b>Available:</b> ${escapeHTML(p.availableDate || p.moveInDate || 'Immediately')}<br>
         <b>Deposit:</b> ${escapeHTML(p.deposit || 'No deposit stated')}<br>
+        <b>Pets:</b> ${escapeHTML(p.petsFriendly || 'No')} | <b>Kids:</b> ${escapeHTML(p.childFriendly || 'No')} (Max: ${escapeHTML(p.maxKids || '0')})<br>
         <b>Tiles:</b> ${escapeHTML(p.tiles || 'No')} | <b>Ceiling:</b> ${escapeHTML(p.ceiling || 'No')}
+      </p>
+
+      <h3>Room Features</h3>
+      <p>
+        <b>Kitchen Type:</b> ${escapeHTML(p.kitchenType || 'None')}<br>
+        <b>Furniture:</b> ${escapeHTML(p.furniture || 'Unfurnished')}<br>
+        <b>Wardrobe:</b> ${escapeHTML(p.wardrobe || 'Not Available')}<br>
+        <b>Kitchen Unit:</b> ${escapeHTML(p.kitchenUnit || 'Not Available')}
       </p>
 
       <div class="modal-contact" style="border:1px solid var(--line);">
         <div style="font-weight:700; color:var(--green-dark); margin-bottom:8px;">Contact us to view this property</div>
         <div class="actions">
-          <a class="wa" href="https://wa.me/27685353186?text=Hi%20Vusani%20Ikhaya%20Properties,%20I%20am%20interested%20in%20property%20ID:%20${escapeHTML(p.id)}" target="_blank" rel="noopener">💬 WhatsApp</a>
+          <a class="wa" href="${waUrl}" target="_blank" rel="noopener">💬 WhatsApp Us</a>
           <a class="call" href="tel:0613642449">📞 Call</a>
         </div>
       </div>
@@ -927,33 +1040,41 @@ function openProp(id){
 
   $('#propModal').classList.add('show');
   document.body.style.overflow = 'hidden';
+  if (hasMap) setTimeout(() => renderMiniMap(p.mapLat, p.mapLng, p.mapLabel), 60);
+}
+
+let modalMap = null;
+function renderMiniMap(lat, lng, label){
+  const el = document.getElementById('modalMap');
+  if (!el) return;
+  if (modalMap) { modalMap.remove(); modalMap = null; }
+  modalMap = L.map('modalMap', { zoomControl: true, attributionControl: false }).setView([lat, lng], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(modalMap);
+  L.circleMarker([lat, lng], { radius:10, color:'#0E382A', fillColor:'#D4AF37', fillOpacity:1, weight:3 })
+    .addTo(modalMap).bindPopup(label || 'Street corner').openPopup();
+  setTimeout(() => modalMap.invalidateSize(), 100);
 }
 
 function closeProp(){
   $('#propModal').classList.remove('show');
   document.body.style.overflow = '';
   $('#propContent').innerHTML = '';
+  if (modalMap) { modalMap.remove(); modalMap = null; }
 }
 
-/* ============================================================
-   FULLSCREEN VIDEO PLAYER (public)
-   ============================================================ */
 function openVideoFullscreen(url){
   const overlay = $('#fsVideoOverlay');
   const player = $('#fsVideoPlayer');
   player.src = url;
   overlay.classList.add('show');
   document.body.style.overflow = 'hidden';
-  // Attempt autoplay after opening
   const p = player.play();
-  if (p && p.catch) p.catch(() => { /* user must press play */ });
+  if (p && p.catch) p.catch(() => {});
 }
 function closeFsVideo(){
   const overlay = $('#fsVideoOverlay');
   const player = $('#fsVideoPlayer');
-  player.pause();
-  player.removeAttribute('src');
-  player.load();
+  player.pause(); player.removeAttribute('src'); player.load();
   overlay.classList.remove('show');
   document.body.style.overflow = '';
 }
@@ -1017,7 +1138,6 @@ $('#postForm')?.addEventListener('submit', async (e) => {
     if (!uploadData.success) throw new Error("Image upload failed.");
     const uploadedImageUrls = uploadData.urls;
 
-    // Upload video if present
     let uploadedVideoUrl = "";
     const videoInput = document.getElementById('pVideo');
     if (videoInput.files && videoInput.files.length > 0) {
@@ -1038,8 +1158,10 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       title: $('#pTitle').value, 
       purpose: $('#pPurpose').value, 
       type: $('#pType').value, 
-      alexandraSuburb: $('#pTownship').value,
-      location: $('#pTownship').value, 
+      mainLocation: $('#pMainLocation').value,
+      sublocation: $('#pSublocation').value,
+      alexandraSuburb: $('#pSublocation').value,
+      location: $('#pMainLocation').value, 
       address: $('#pAddress').value,
       amount: $('#pPrice').value, 
       deposit: $('#pDeposit').value, 
@@ -1053,10 +1175,18 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       tiles: $('#pTiles').value,
       toiletType: $('#pToilet').value, 
       bathroomType: $('#pBathroom').value,
+      kitchenType: $('#pKitchenType').value,
+      furniture: $('#pFurniture').value,
+      wardrobe: $('#pWardrobe').value,
+      kitchenUnit: $('#pKitchenUnit').value,
+      petsFriendly: $('#pPets').value,
       posterName: $('#pOwnerName').value, 
       posterContact: cleanPhone,
       images: uploadedImageUrls, 
-      video: uploadedVideoUrl
+      video: uploadedVideoUrl,
+      mapLat: $('#pMapLat').value ? Number($('#pMapLat').value) : null,
+      mapLng: $('#pMapLng').value ? Number($('#pMapLng').value) : null,
+      mapLabel: $('#pMapLabel').value
     };
 
     const res = await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -1068,6 +1198,7 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       e.target.reset(); 
       $('#imagePreview').innerHTML = '';
       $('#videoPreview').innerHTML = '';
+      $('#pMapLabel').value = '';
     } else {
       throw new Error(data.error || 'Could not submit property.');
     }
@@ -1084,12 +1215,95 @@ function showPage(page, ev){
   if (ev) ev.preventDefault();
   $('#page-home').style.display = 'none'; $('#page-about').style.display = 'none'; $('#page-post').style.display = 'none';
   if (page === 'about') $('#page-about').style.display = 'block';
-  else if (page === 'post') $('#page-post').style.display = 'block';
+  else if (page === 'post') {
+    $('#page-post').style.display = 'block';
+    setTimeout(() => { initPostMap(); if (postMap) postMap.invalidateSize(); }, 200);
+  }
   else $('#page-home').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+let postMap = null, postMarker = null;
+function initPostMap(){
+  const el = document.getElementById('postMap');
+  if (!el || postMap) return;
+  postMap = L.map('postMap').setView([-26.1036, 28.0567], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(postMap);
+  postMarker = L.marker([-26.1036, 28.0567], { draggable: true }).addTo(postMap);
+  postMarker.on('dragend', e => {
+    const { lat, lng } = e.target.getLatLng();
+    setCornerLabel(lat, lng);
+  });
+  postMap.on('click', e => {
+    postMarker.setLatLng(e.latlng);
+    setCornerLabel(e.latlng.lat, e.latlng.lng);
+  });
+  setCornerLabel(-26.1036, 28.0567);
+  setTimeout(() => postMap.invalidateSize(), 150);
+}
+function setCornerLabel(lat, lng){
+  document.getElementById('pMapLat').value = lat;
+  document.getElementById('pMapLng').value = lng;
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { 'Accept-Language': 'en' } })
+    .then(r => r.json())
+    .then(d => {
+      const a = d.address || {};
+      const road = a.road || a.pedestrian || a.footway || a.residential || '';
+      const hood = a.neighbourhood || a.suburb || a.village || '';
+      const label = road ? `Corner ${road}${hood ? ', ' + hood : ''}` : (hood || 'Selected corner');
+      document.getElementById('pMapLabel').value = label;
+    })
+    .catch(() => { document.getElementById('pMapLabel').value = 'Selected corner'; });
+}
+
+function populateMainDropdowns(){
+  const sm = $('#sMainLocation');
+  const pm = $('#pMainLocation');
+  const mains = LOC_TREE.map(x => x.name);
+  [sm, pm].forEach(sel => {
+    if (!sel) return;
+    while (sel.options.length > 1) sel.remove(1);
+    mains.forEach(name => sel.appendChild(new Option(name, name)));
+  });
+}
+async function loadLocations(){
+  try {
+    const res = await fetch('/api/locations');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const tree = Array.isArray(data.locations) ? data.locations : [];
+    if (tree.length) LOC_TREE = tree;
+    else LOC_TREE = FALLBACK_TREE.slice();
+  } catch (e) {
+    LOC_TREE = FALLBACK_TREE.slice();
+  }
+  populateMainDropdowns();
+}
+function syncSearchSublocations(){
+  const parent = LOC_TREE.find(l => l.name === $('#sMainLocation').value);
+  const sub = $('#sSublocation');
+  sub.innerHTML = '<option value="">Any</option>';
+  if (!parent) return;
+  parent.children.forEach(c => {
+    const name = typeof c === 'string' ? c : c.name;
+    sub.appendChild(new Option(name, name));
+  });
+}
+function syncPostSublocations(){
+  const parent = LOC_TREE.find(l => l.name === $('#pMainLocation').value);
+  const sub = $('#pSublocation');
+  sub.innerHTML = '<option value="">Select sublocation…</option>';
+  if (!parent) return;
+  parent.children.forEach(c => {
+    const name = typeof c === 'string' ? c : c.name;
+    sub.appendChild(new Option(name, name));
+  });
+}
+
 $('#year').textContent = new Date().getFullYear();
+loadLocations();
 loadPublic();
 </script>
 </body>
