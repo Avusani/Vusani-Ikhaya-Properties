@@ -108,6 +108,7 @@
   <div id="loginScreen" class="login-box">
     <h2>🔐 Admin Login</h2>
     <form id="loginForm">
+      <input type="text" id="adminUsername" placeholder="Username" required>
       <input type="password" id="adminPassword" placeholder="Password" required>
       <button type="submit">Log In</button>
     </form>
@@ -253,13 +254,16 @@
 
   $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const user = $('#adminUsername').value;
     const pass = $('#adminPassword').value;
+    
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pass })
+        body: JSON.stringify({ username: user, password: pass })
       });
+      
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
@@ -267,7 +271,7 @@
         $('#adminPanel').classList.add('show');
         loadData();
       } else {
-        alert('Incorrect password');
+        alert('Incorrect username or password');
       }
     } catch (err) { alert('Server error'); }
   });
@@ -707,7 +711,6 @@
     if (type === 'video') {
       content.innerHTML = `<video id="viewerVideo" src="${src}" controls autoplay playsinline></video>`;
       fsBtn.classList.add('show');
-      // Attempt autoplay
       const v = document.getElementById('viewerVideo');
       if (v) { const p = v.play(); if (p && p.catch) p.catch(()=>{}); }
     } else {
