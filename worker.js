@@ -35,7 +35,7 @@ export default {
     if (path === "/api/admin/login" && request.method === "POST") {
         try {
             const body = await request.json();
-            if (body.username === "admin" && body.password === "admin123") {
+            if (body.username === "Vusani24" && body.password === "Khanya0901@12") {
                 return Response.json({ token: "vusani-secret-token-2024" }, { headers: corsHeaders });
             }
             return Response.json({ error: "Invalid credentials" }, { status: 401, headers: corsHeaders });
