@@ -11,17 +11,15 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // 1. PUBLIC API (Load approved rooms for the website)
+    // 1. PUBLIC API
     if (path === "/api/public" && request.method === "GET") {
       try {
-        // Track traffic silently (Fixed to pass exactly 4 values)
         const today = new Date().toISOString().split('T')[0];
         await env.DB.prepare(`
             INSERT INTO traffic (id, date, page, count) VALUES (?, ?, 'home', 1)
             ON CONFLICT(id) DO UPDATE SET count = count + 1
         `).bind(today, today).run();
 
-        // Fetch only approved rooms (ignoring case/spaces)
         const { results } = await env.DB.prepare("SELECT * FROM rooms WHERE LOWER(TRIM(status)) = 'approved'").all();
         const parsedRooms = results.map(r => ({ ...r, images: r.images ? JSON.parse(r.images) : [] }));
         return Response.json({ rooms: parsedRooms }, { headers: corsHeaders });
@@ -39,7 +37,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 3. ADMIN DATA (Dashboard Load)
+    // 3. ADMIN DATA
     if (path === "/api/admin/data" && request.method === "GET") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
@@ -57,61 +55,12 @@ export default {
             });
             
             return Response.json({
-                rooms: rooms,
-                expenses: allExpenses || [],
-                traffic: allTraffic || []
+                rooms: rooms, expenses: allExpenses || [], traffic: allTraffic || []
             }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 4. ADD EXPENSE
-    if (path === "/api/admin/expense" && request.method === "POST") {
-        const auth = request.headers.get("Authorization");
-        if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
-        
-        try {
-            const body = await request.json();
-            const id = Date.now().toString();
-            const now = new Date();
-            const date = now.toISOString().split('T')[0];
-            const time = now.toTimeString().split(' ')[0];
-
-            await env.DB.prepare(`
-                INSERT INTO expenses (id, date, time, category, description, amount) 
-                VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(id, date, time, body.category, body.description, body.amount).run();
-
-            return Response.json({ success: true }, { headers: corsHeaders });
-        } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
-    }
-
-    // 5. DELETE EXPENSE
-    if (path === "/api/admin/expense/delete" && request.method === "POST") {
-        const auth = request.headers.get("Authorization");
-        if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
-        
-        try {
-            const body = await request.json();
-            await env.DB.prepare("DELETE FROM expenses WHERE id = ?").bind(body.id).run();
-            return Response.json({ success: true }, { headers: corsHeaders });
-        } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
-    }
-
-    // 6. RECORD TAKEN
-    if (path === "/api/admin/take" && request.method === "POST") {
-        const auth = request.headers.get("Authorization");
-        if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
-        
-        try {
-            const body = await request.json();
-            await env.DB.prepare(`
-                UPDATE rooms SET status = 'taken', amount = ?, tenantName = ?, rent = ?, deposit = ?, houseNumber = ? WHERE id = ?
-            `).bind(body.fee, body.tenantName, body.rent, body.deposit, body.houseNumber, body.id).run();
-            return Response.json({ success: true }, { headers: corsHeaders });
-        } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
-    }
-
-    // 7. UPLOAD TO R2
+    // 4. UPLOAD TO R2 (For both public and admin)
     if (path === "/api/upload" && request.method === "POST") {
         try {
             const formData = await request.formData();
@@ -125,7 +74,7 @@ export default {
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 8. SUBMIT PROPERTY
+    // 5. SUBMIT PROPERTY (Public)
     if (path === "/api/submit" && request.method === "POST") {
         try {
             const body = await request.json();
@@ -138,7 +87,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 9. ACTION (Approve, Delete, Edit)
+    // 6. ADMIN ACTIONS (Approve, Delete, Edit, Repost)
     if (path === "/api/admin/action" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
@@ -146,13 +95,32 @@ export default {
         try {
             const body = await request.json();
             if (body.action === "move") {
-                // Save the status exactly as 'approved' or 'declined'
                 await env.DB.prepare("UPDATE rooms SET status = ? WHERE id = ?").bind(body.to.toLowerCase().trim(), body.id).run();
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
             } else if (body.action === "edit") {
-                await env.DB.prepare("UPDATE rooms SET title = ?, amount = ?, location = ?, type = ?, notes = ? WHERE id = ?").bind(body.data.title, body.data.amount, body.data.location, body.data.type, body.data.notes, body.id).run();
+                // Full update of all fields
+                await env.DB.prepare(`
+                    UPDATE rooms SET title = ?, amount = ?, deposit = ?, location = ?, type = ?, notes = ?, images = ?, video = ? WHERE id = ?
+                `).bind(
+                    body.data.title, body.data.amount, body.data.deposit, body.data.location, 
+                    body.data.type, body.data.notes, JSON.stringify(body.data.images || []), body.data.video || '', body.id
+                ).run();
             }
+            return Response.json({ success: true }, { headers: corsHeaders });
+        } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
+    }
+
+    // 7. RECORD TAKEN (Admin)
+    if (path === "/api/admin/take" && request.method === "POST") {
+        const auth = request.headers.get("Authorization");
+        if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
+        
+        try {
+            const body = await request.json();
+            await env.DB.prepare(`
+                UPDATE rooms SET status = 'taken', amount = ?, tenantName = ?, rent = ?, deposit = ?, houseNumber = ? WHERE id = ?
+            `).bind(body.fee, body.tenantName, body.rent, body.deposit, body.houseNumber, body.id).run();
             return Response.json({ success: true }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
