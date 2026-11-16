@@ -185,6 +185,7 @@
     <div id="tab-dashboard" class="tab-content">
       <div class="stats-grid">
         <div class="stat-card"><h3>Pending Approval</h3><div class="value" id="stat-pending">0</div><span class="icon">⏳</span></div>
+        <div class="stat-card"><h3>Approved Rooms</h3><div class="value" id="stat-approved">0</div><span class="icon">✅</span></div>
         <div class="stat-card"><h3>Properties Taken</h3><div class="value" id="stat-taken">0</div><span class="icon">🔑</span></div>
         <div class="stat-card revenue"><h3>Total Revenue</h3><div class="value" id="stat-revenue">R0</div><span class="icon">💰</span></div>
         <div class="stat-card expense"><h3>Total Expenses</h3><div class="value" id="stat-expenses">R0</div><span class="icon">💸</span></div>
@@ -383,6 +384,7 @@
       (allData.traffic || []).forEach(t => visitors += Number(t.count || 0));
 
       $('#stat-pending').textContent = (allData.rooms.pending || []).length;
+      $('#stat-approved').textContent = (allData.rooms.approved || []).length;
       $('#stat-taken').textContent = (allData.rooms.taken || []).length;
       $('#stat-revenue').textContent = money(revenue);
       $('#stat-expenses').textContent = money(expenses);
