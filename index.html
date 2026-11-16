@@ -1111,7 +1111,7 @@ function handleVideoSelect(ev){
   });
 }
 
-// ✅ UPDATED FORM SUBMISSION FOR CLOUDFLARE WORKER
+// FIXED FORM SUBMISSION
 $('#postForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('#postSubmitBtn');
@@ -1132,10 +1132,9 @@ $('#postForm')?.addEventListener('submit', async (e) => {
 
   try {
     let uploadedImageUrls = [];
-    // Upload images one by one to R2 via the Worker
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
-        formData.append('images', files[i]); // Matches Worker expectation
+        formData.append('images', files[i]);
 
         const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
         const uploadData = await uploadRes.json();
@@ -1152,7 +1151,7 @@ $('#postForm')?.addEventListener('submit', async (e) => {
     if (videoInput.files && videoInput.files.length > 0) {
       btn.textContent = 'Uploading video...';
       const vFormData = new FormData();
-      vFormData.append('images', videoInput.files[0]); // Reusing 'images' key for single file upload
+      vFormData.append('images', videoInput.files[0]);
       const vRes = await fetch('/api/upload', { method: 'POST', body: vFormData });
       const vData = await vRes.json();
       if (vData.success && vData.urls && vData.urls[0]) uploadedVideoUrl = vData.urls[0];
@@ -1162,6 +1161,10 @@ $('#postForm')?.addEventListener('submit', async (e) => {
 
     const rawPhone = $('#pOwnerPhone').value;
     const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
+
+    // SAFELY GET VALUES THAT MIGHT NOT EXIST
+    const childCountEl = document.getElementById('pChildCount');
+    const carCountEl = document.getElementById('pCarCount');
 
     const payload = {
       title: $('#pTitle').value, 
@@ -1177,13 +1180,12 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       availableDate: $('#pAvailableDate').value, 
       notes: $('#pNotes').value,
       childFriendly: $('#pChild').value, 
-      maxKids: $('#pChildCount').value || '0',
+      maxKids: childCountEl ? childCountEl.value : '0',
       parking: $('#pParking').value, 
-      maxCars: $('#pCarCount').value || '0',
+      maxCars: carCountEl ? carCountEl.value : '0',
       ceiling: $('#pCeiling').value, 
       tiles: $('#pTiles').value,
       toiletType: $('#pToilet').value, 
-      bathroomType: $('#pBathroom').value,
       kitchenType: $('#pKitchenType').value,
       furniture: $('#pFurniture').value,
       wardrobe: $('#pWardrobe').value,
@@ -1198,7 +1200,6 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       mapLabel: $('#pMapLabel').value
     };
 
-    // ✅ Changed URL from /api/rooms to /api/submit
     const res = await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json().catch(() => ({}));
     
