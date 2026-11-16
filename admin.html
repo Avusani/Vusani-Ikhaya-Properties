@@ -4,254 +4,294 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin | VUSANI IKHAYA PROPERTIES</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,sans-serif;background:#edf4ee;color:#17201b}
-  .topbar{background:#101713;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-  .topbar a{color:#fff;text-decoration:none;font-weight:bold}
-  .container{max-width:1200px;margin:20px auto;padding:0 20px}
-  .login-box{max-width:400px;margin:60px auto;background:#fff;padding:30px;border-radius:12px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.1)}
-  .login-box input{width:100%;padding:10px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;font-size:16px}
-  .login-box button{width:100%;padding:10px;background:#0f7a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:16px}
-  .panel{display:none}.panel.show{display:block}
-  .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
-  .stat-card{background:#fff;padding:15px;border-radius:8px;text-align:center;border:1px solid #ccc}
-  .stat-card .number{font-size:22px;font-weight:900;color:#0f7a5f}
-  .stat-card .label{font-size:11px;color:#666;font-weight:bold;text-transform:uppercase}
-  .stat-card.fee .number{color:#B5952F}
-  .stat-card.manual .number{color:#b8493b}
-  .main-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-  .main-tabs button{padding:10px 20px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-weight:bold;font-size:14px}
-  .main-tabs button.active{background:#0f7a5f;color:#fff;border-color:#0f7a5f}
-  .sub-tabs{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
-  .sub-tabs button{padding:6px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;font-weight:bold}
-  .sub-tabs button.active{background:#0f7a5f;color:#fff;border-color:#0f7a5f}
-  .section-content{display:none}.section-content.active{display:block}
-  .room-card{background:#fff;padding:15px;margin-bottom:15px;border-radius:8px;border:1px solid #ddd}
-  .media-grid{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:5px}
-  .media-thumb{position:relative;flex-shrink:0;width:140px;height:100px;border-radius:6px;overflow:hidden;background:#eee;cursor:pointer;border:1px solid #ddd}
-  .media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .media-thumb video{width:100%;height:100%;object-fit:cover;display:block}
-  .media-thumb .play-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .media-thumb .play-overlay svg{width:32px;height:32px;fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
-  .media-thumb .video-tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:3px;text-transform:uppercase}
-  .room-info h3{margin:0 0 5px;font-size:18px}
-  .room-info p{margin:0 0 4px;font-size:14px;color:#555}
-  .fee-box{margin:8px 0;padding:10px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
-  .fee-box.manual{background:#fdecea;border-color:#f5a69c}
-  .fee-box .fee-total{font-size:18px;font-weight:900;color:#8a6d0b}
-  .fee-box.manual .fee-total{color:#a12a1e}
-  .fee-box .fee-line{color:#6b5b1b;font-size:12px}
-  .fee-box.manual .fee-line{color:#7a2a1e}
-  .fee-box .surcharge{color:#b8493b;font-weight:700}
-  .manual-badge{display:inline-block;background:#b8493b;color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-left:6px}
-  .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-  .actions button{padding:6px 12px;border:none;border-radius:4px;color:#fff;cursor:pointer;font-weight:bold;font-size:13px}
-  .btn-approve{background:#0f7a5f}.btn-decline{background:#b8493b}.btn-delete{background:#333}
-  .btn-taken{background:#1e40af}.btn-repost{background:#e5a638}.btn-edit{background:#6b7280}
-  .btn-fee{background:#8a6d0b}
-  .empty{padding:40px;text-align:center;color:#666;background:#fff;border-radius:8px;border:1px dashed #ccc}
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px}
-  .modal-overlay.show{display:flex}
-  .modal{background:#fff;border-radius:12px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;position:relative}
-  .modal .close{position:absolute;top:12px;right:16px;font-size:24px;cursor:pointer;color:#637268;background:none;border:none}
-  .modal label{display:block;font-weight:600;margin-top:10px;font-size:13px}
-  .modal input,.modal textarea,.modal select{width:100%;padding:10px;border:1px solid #cad8cf;border-radius:6px;font-size:14px}
-  .modal .btn-save{background:#0f7a5f;color:#fff;border:none;padding:12px;border-radius:6px;font-weight:700;cursor:pointer;width:100%;margin-top:16px}
-  .modal .hr{margin:18px 0;border:none;border-top:2px solid #eef3ee}
-  .fee-preview-modal{margin-top:10px;padding:12px;background:#fef9e7;border:1px solid #e5d18a;border-radius:6px;font-size:13px}
-  .fee-preview-modal.manual{background:#fdecea;border-color:#f5a69c}
-  .fee-preview-modal .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#8a6d0b;margin-bottom:4px}
-  .fee-preview-modal.manual .label{color:#a12a1e}
-  .fee-preview-modal .total{font-size:22px;font-weight:900;color:#8a6d0b}
-  .fee-preview-modal.manual .total{color:#a12a1e}
-  .fee-preview-modal .sub{font-size:12px;color:#6b5b1b;margin-top:4px}
-  .fee-preview-modal.manual .sub{color:#7a2a1e}
-  .fee-controls{margin-top:12px;padding:12px;background:#f8f9fa;border:1px dashed #b6c2b9;border-radius:6px}
-  .fee-controls label{font-size:12px;color:#444}
-  .fee-controls .row{display:flex;gap:8px;align-items:end;margin-top:6px}
-  .fee-controls .row input{flex:1}
-  .fee-controls button{padding:8px 12px;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px}
-  .fee-controls .apply{background:#b8493b;color:#fff}
-  .fee-controls .clear{background:#6b7280;color:#fff}
-  .media-viewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;align-items:center;justify-content:center;padding:20px}
-  .media-viewer.show{display:flex}
-  .media-viewer img{max-width:95vw;max-height:90vh;border-radius:8px}
-  .media-viewer video{max-width:95vw;max-height:90vh;width:auto;height:auto;border-radius:8px;background:#000}
-  .media-viewer .close{position:fixed;top:20px;right:30px;font-size:40px;color:#fff;cursor:pointer;background:none;border:none;z-index:2001}
-  .media-viewer .fullscreen-btn{position:fixed;top:24px;right:110px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:8px 14px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;z-index:2001;display:none;align-items:center;gap:6px}
-  .media-viewer .fullscreen-btn.show{display:inline-flex}
-  .media-viewer .fullscreen-btn:hover{background:rgba(255,255,255,.3)}
-  .media-viewer .fullscreen-btn svg{width:14px;height:14px;fill:#fff}
-  .ledger-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
-  .ledger-table th,.ledger-table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
-  .ledger-table th{background:#0f7a5f;color:#fff;font-size:12px;text-transform:uppercase}
-  .audit-item{background:#fff;padding:10px;margin-bottom:8px;border-radius:6px;border-left:4px solid #0f7a5f}
-  .audit-item strong{font-size:13px}
-  .audit-item small{color:#666;font-size:11px}
-  .filter-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:end}
-  .filter-bar label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:3px}
-  .filter-bar input,.filter-bar select{padding:8px;border:1px solid #ccc;border-radius:6px;font-size:13px}
+  :root {
+    --green-dark: #0E382A;
+    --green-light: #1a4f3a;
+    --gold: #D4AF37;
+    --gold-dark: #B5952F;
+    --bg-color: #f4f7f6;
+    --white: #ffffff;
+    --text-main: #1a1d23;
+    --text-muted: #637268;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+  
+  /* SIDEBAR */
+  .sidebar { width: 260px; background: var(--green-dark); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+  .sidebar-logo { padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-logo svg { width: 40px; height: 40px; }
+  .sidebar-logo h1 { font-size: 18px; font-weight: 800; letter-spacing: 1px; line-height: 1.2; }
+  .sidebar-logo span { font-size: 10px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+  .nav-menu { padding: 20px 12px; flex: 1; overflow-y: auto; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 8px; color: #cdd6e2; text-decoration: none; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+  .nav-item:hover, .nav-item.active { background: var(--green-light); color: white; }
+  .nav-item.active { border-left: 4px solid var(--gold); }
+  .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-footer a { color: #cdd6e2; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  
+  /* MAIN CONTENT */
+  .main-content { margin-left: 260px; flex: 1; padding: 32px; }
+  .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .top-header h2 { font-size: 28px; font-weight: 800; color: var(--green-dark); }
+  .top-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+  .user-profile { display: flex; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .user-profile .avatar { width: 36px; height: 36px; background: var(--gold); color: var(--green-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+
+  /* DASHBOARD CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
+  .stat-card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--green-dark); }
+  .stat-card.revenue::before { background: var(--gold); }
+  .stat-card h3 { font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 32px; font-weight: 800; color: var(--green-dark); margin-top: 8px; }
+  .stat-card.revenue .value { color: var(--gold-dark); }
+  .stat-card .icon { position: absolute; right: 24px; top: 24px; font-size: 24px; opacity: 0.2; }
+
+  /* DATA SECTION */
+  .data-section { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 24px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .section-header h3 { font-size: 20px; font-weight: 800; color: var(--green-dark); }
+  
+  .tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+  .tab { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--text-muted); background: none; border: none; transition: all 0.2s; }
+  .tab:hover { background: var(--bg-color); }
+  .tab.active { background: var(--green-dark); color: white; }
+
+  .property-list { display: flex; flex-direction: column; gap: 16px; }
+  .property-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
+  .property-row:hover { border-color: var(--green-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .prop-info { display: flex; flex-direction: column; gap: 4px; }
+  .prop-title { font-weight: 700; font-size: 16px; color: var(--text-main); }
+  .prop-meta { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
+  .prop-price { font-weight: 800; color: var(--green-dark); font-size: 18px; }
+  
+  .actions { display: flex; gap: 8px; }
+  .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-approve { background: var(--green-dark); color: white; }
+  .btn-approve:hover { background: var(--green-light); }
+  .btn-take { background: var(--gold); color: var(--green-dark); }
+  .btn-take:hover { background: var(--gold-dark); }
+  .btn-delete { background: #fee2e2; color: #b91c1c; }
+  .btn-delete:hover { background: #fecaca; }
+  .btn-view { background: #e0e7ff; color: #3730a3; }
+  .btn-view:hover { background: #c7d2fe; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+
+  /* LOGIN SCREEN */
+  #loginScreen { position: fixed; inset: 0; background: var(--green-dark); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  .login-box { background: white; padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; }
+  .login-box svg { width: 80px; height: 80px; margin-bottom: 20px; }
+  .login-box h2 { color: var(--green-dark); font-weight: 800; margin-bottom: 8px; }
+  .login-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; text-align: left; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+  .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; }
+  .form-group input:focus { outline: none; border-color: var(--green-dark); }
+  .btn-login { width: 100%; padding: 14px; background: var(--green-dark); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .btn-login:hover { background: var(--green-light); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: white; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 32px; position: relative; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
+  .modal-box h2 { color: var(--green-dark); margin-bottom: 20px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .modal-media { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .modal-media img, .modal-media video { width: 120px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: relative; }
+    .main-content { margin-left: 0; padding: 20px; }
+    .modal-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div>VUSANI IKHAYA PROPERTIES ADMIN</div>
-  <div>
-    <a href="/" target="_blank">🌐 View Site</a> |
-    <a href="#" onclick="logout()">Logout</a>
-  </div>
-</div>
-
-<div class="container">
-  <div id="loginScreen" class="login-box">
-    <h2>🔐 Admin Login</h2>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="45" r="38" stroke="#0E382A" stroke-width="2" fill="none"/>
+      <path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#0E382A"/>
+      <rect x="42" y="45" width="16" height="20" fill="#fff"/>
+      <path d="M42 45 L50 37 L58 45" stroke="#0E382A" stroke-width="2" fill="none"/>
+      <path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/>
+      <circle cx="20" cy="60" r="10" fill="#D4AF37"/>
+    </svg>
+    <h2>Admin Portal</h2>
+    <p>Vusani Ikhaya Properties</p>
     <form id="loginForm">
-      <input type="text" id="adminUsername" placeholder="Username" required>
-      <input type="password" id="adminPassword" placeholder="Password" required>
-      <button type="submit">Log In</button>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="adminUsername" required placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="adminPassword" required placeholder="Enter password">
+      </div>
+      <button type="submit" class="btn-login">Log In</button>
     </form>
   </div>
-
-  <div id="adminPanel" class="panel">
-    <div class="stats-bar">
-      <div class="stat-card"><div class="number" id="stat-pending">0</div><div class="label">Pending</div></div>
-      <div class="stat-card"><div class="number" id="stat-approved">0</div><div class="label">Approved</div></div>
-      <div class="stat-card"><div class="number" id="stat-taken">0</div><div class="label">Taken</div></div>
-      <div class="stat-card"><div class="number" id="stat-tenants">0</div><div class="label">Tenants</div></div>
-      <div class="stat-card fee"><div class="number" id="stat-fee-rent">R0</div><div class="label">Rental Fees</div></div>
-      <div class="stat-card fee"><div class="number" id="stat-fee-sale">R0</div><div class="label">Sale Fees</div></div>
-      <div class="stat-card fee"><div class="number" id="stat-fee-surcharge">R0</div><div class="label">Surcharges</div></div>
-      <div class="stat-card manual"><div class="number" id="stat-fee-manual">R0</div><div class="label">Manual Fees</div></div>
-      <div class="stat-card fee"><div class="number" id="stat-fee-total">R0</div><div class="label">Total Fees</div></div>
-    </div>
-
-    <div class="main-tabs">
-      <button class="active" onclick="switchTab('rooms')">🏠 Manage Rooms</button>
-      <button onclick="switchTab('ledger')">💰 Financial Ledger</button>
-      <button onclick="switchTab('audit')">📜 Audit Trail</button>
-      <button onclick="switchTab('settings')" style="color:#b8493b">⚙️ Danger Zone</button>
-    </div>
-
-    <div id="tab-rooms" class="section-content active">
-      <div class="sub-tabs">
-        <button class="active" onclick="loadTab('pending', this)">⏳ Pending</button>
-        <button onclick="loadTab('approved', this)">✅ Approved</button>
-        <button onclick="loadTab('taken', this)">📦 Taken</button>
-        <button onclick="loadTab('declined', this)">❌ Declined</button>
-      </div>
-      <div id="roomList"></div>
-    </div>
-
-    <div id="tab-ledger" class="section-content">
-      <div class="filter-bar">
-        <div><label>From</label><input type="date" id="ledgerFrom"></div>
-        <div><label>To</label><input type="date" id="ledgerTo"></div>
-        <button onclick="loadLedger()" style="background:#0f7a5f;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer">Filter</button>
-        <button onclick="downloadLedgerCSV()" style="background:#1e40af;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer">⬇️ Export CSV</button>
-      </div>
-      <div id="ledgerTableWrap"></div>
-    </div>
-
-    <div id="tab-audit" class="section-content">
-      <div id="auditList"></div>
-    </div>
-
-    <div id="tab-settings" class="section-content">
-      <div style="background:#fff;padding:20px;border-radius:8px;border:1px solid red">
-        <h2 style="color:red;margin-top:0">⚠️ Danger Zone</h2>
-        <p>Clicking this button will delete all posts and the financial ledger permanently.</p>
-        <button onclick="wipeDatabase()" style="background:red;color:#fff;padding:12px 24px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;font-size:16px">🗑️ Clear All Data</button>
-      </div>
-    </div>
-  </div>
 </div>
 
-<div class="modal-overlay" id="editRoomModal">
-  <div class="modal">
-    <button class="close" onclick="closeEditModal()">✕</button>
-    <h3>✏️ Edit Property</h3>
-    <form id="editRoomForm">
-      <input type="hidden" id="editRoomId">
-      <input type="hidden" id="editRoomFrom">
+<!-- MAIN DASHBOARD -->
+<div id="dashboard" style="display: none; width: 100%; display: flex;">
+  
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="45" r="38" stroke="#D4AF37" stroke-width="2" fill="none"/>
+        <path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#D4AF37"/>
+        <rect x="42" y="45" width="16" height="20" fill="#0E382A"/>
+        <path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/>
+        <circle cx="20" cy="60" r="10" fill="#fff"/>
+      </svg>
+      <div>
+        <h1>VUSANI IKHAYA</h1>
+        <span>Admin System</span>
+      </div>
+    </div>
+    <nav class="nav-menu">
+      <a class="nav-item active" onclick="switchTab('dashboard', this)">
+        <span>📊</span> Dashboard
+      </a>
+      <a class="nav-item" onclick="switchTab('properties', this)">
+        <span>🏠</span> Manage Properties
+      </a>
+      <a class="nav-item" onclick="switchTab('revenue', this)">
+        <span>💰</span> Revenue & Fees
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Logout</a>
+    </div>
+  </aside>
 
-      <label>Title</label><input type="text" id="editRoomTitle">
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <header class="top-header">
+      <div>
+        <h2 id="pageTitle">Dashboard Overview</h2>
+        <p id="pageSubtitle">Welcome back, Vusani.</p>
+      </div>
+      <div class="user-profile">
+        <div class="avatar">V</div>
+        <div style="font-weight: 600; font-size: 14px;">Vusani24</div>
+      </div>
+    </header>
 
-      <label>Purpose</label>
-      <select id="editRoomPurpose" onchange="refreshFeePreview()">
-        <option value="rent">For Rent</option>
-        <option value="buy">For Sale</option>
-      </select>
-
-      <label>Property Type</label>
-      <select id="editRoomType">
-        <option value="room">Room</option>
-        <option value="bachelor">Bachelor</option>
-        <option value="flat">Flat</option>
-        <option value="house">House</option>
-      </select>
-
-      <label>Location</label>
-      <input type="text" id="editRoomLocation" oninput="refreshFeePreview()">
-      <label>Alexandra Suburb</label>
-      <input type="text" id="editRoomSuburb" oninput="refreshFeePreview()">
-      <label>Address</label><input type="text" id="editRoomAddress">
-      <label>Amount (R)</label><input type="text" id="editRoomAmount" oninput="refreshFeePreview()">
-      <label>Deposit</label><input type="text" id="editRoomDeposit">
-      <label>Landlord Name</label><input type="text" id="editRoomPosterName">
-      <label>Landlord Contact</label><input type="text" id="editRoomPosterContact">
-      <label>Notes</label><textarea id="editRoomNotes"></textarea>
-
-      <div class="fee-preview-modal" id="feePreviewModal">Fill amount, purpose and location to see the agent fee.</div>
-
-      <div class="fee-controls">
-        <label>🔧 Manual agent fee override</label>
-        <div style="font-size:11px;color:#666;margin-top:2px;">Leave blank and click Apply to clear the override and return to the system-calculated fee.</div>
-        <div class="row">
-          <input type="number" id="editFeeOverride" placeholder="e.g. 450" min="0" step="0.01">
-          <button type="button" class="apply" onclick="applyFeeOverride()">Apply</button>
-          <button type="button" class="clear" onclick="clearFeeOverride()">Clear</button>
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Pending Approval</h3>
+          <div class="value" id="stat-pending">0</div>
+          <span class="icon">⏳</span>
+        </div>
+        <div class="stat-card">
+          <h3>Available Properties</h3>
+          <div class="value" id="stat-approved">0</div>
+          <span class="icon">🏠</span>
+        </div>
+        <div class="stat-card">
+          <h3>Properties Taken</h3>
+          <div class="value" id="stat-taken">0</div>
+          <span class="icon">🔑</span>
+        </div>
+        <div class="stat-card revenue">
+          <h3>Total Revenue (Fees)</h3>
+          <div class="value" id="stat-revenue">R0</div>
+          <span class="icon">💰</span>
         </div>
       </div>
+      
+      <div class="data-section">
+        <div class="section-header">
+          <h3>Recent Activity</h3>
+        </div>
+        <div class="property-list">
+          <p style="color: var(--text-muted);">Your dashboard is up to date. Check "Manage Properties" to review new submissions.</p>
+        </div>
+      </div>
+    </div>
 
-      <hr class="hr">
-      <label style="color:#0f7a5f;font-size:15px">📷 Add More Pictures</label>
-      <input type="file" id="adminNewImage" accept="image/*" style="padding:8px;margin-bottom:8px">
-      <button type="button" onclick="uploadAdminImage()" style="background:#0f7a5f;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;width:100%">Upload Image to this Post</button>
+    <!-- PROPERTIES TAB -->
+    <div id="tab-properties" class="tab-content" style="display: none;">
+      <div class="data-section">
+        <div class="section-header">
+          <h3>All Properties</h3>
+        </div>
+        
+        <div class="tabs">
+          <button class="tab active" onclick="loadProperties('pending', this)">Pending</button>
+          <button class="tab" onclick="loadProperties('approved', this)">Available</button>
+          <button class="tab" onclick="loadProperties('taken', this)">Taken</button>
+        </div>
 
-      <button type="submit" class="btn-save">💾 Save Changes</button>
-    </form>
-  </div>
+        <div class="property-list" id="propertyList">
+          <!-- Properties will be injected here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- REVENUE TAB -->
+    <div id="tab-revenue" class="tab-content" style="display: none;">
+      <div class="data-section">
+        <div class="section-header">
+          <h3>Fee Collection History</h3>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+              <th style="padding: 12px; color: var(--text-muted);">Date</th>
+              <th style="padding: 12px; color: var(--text-muted);">Property</th>
+              <th style="padding: 12px; color: var(--text-muted);">Fee Amount</th>
+              <th style="padding: 12px; color: var(--text-muted);">Status</th>
+            </tr>
+          </thead>
+          <tbody id="revenueList">
+            <!-- Revenue rows will be injected here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-<div class="media-viewer" id="mediaViewer">
-  <button class="close" onclick="closeMediaViewer()">✕</button>
-  <button class="fullscreen-btn" id="mediaFullscreenBtn" onclick="goFullscreen()">
-    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm0-4h2V7h3V5H5v5zm10 7h-3v2h5v-5h-2v3zm-3-12v2h3v3h2V5h-5z"/></svg>
-    Fullscreen
-  </button>
-  <div id="mediaContent"></div>
+<!-- MODAL FOR VIEWING PROPERTY -->
+<div class="modal-overlay" id="propertyModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">Property Details</h2>
+    <div class="modal-grid">
+      <div><strong>Location:</strong> <span id="modalLocation"></span></div>
+      <div><strong>Price:</strong> <span id="modalPrice"></span></div>
+      <div><strong>Type:</strong> <span id="modalType"></span></div>
+      <div><strong>Contact:</strong> <span id="modalContact"></span></div>
+    </div>
+    <div><strong>Description:</strong> <p id="modalDesc" style="margin-top: 8px; color: var(--text-muted); line-height: 1.6;"></p></div>
+    <div class="modal-media" id="modalMedia"></div>
+  </div>
 </div>
 
 <script>
-  let allData = {};
-  let currentTab = 'pending';
-  let currentMediaType = null;
-
   const $ = (s) => document.querySelector(s);
   const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA', { maximumFractionDigits: 2 });
+  
+  let allData = { rooms: { pending: [], approved: [], taken: [] } };
+  let currentStatus = 'pending';
 
-  const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-
-  function logAct(action) {
-    const entry = { time: new Date().toISOString(), action };
-    let logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    logs.unshift(entry);
-    if (logs.length > 50) logs.pop();
-    localStorage.setItem('adminLogs', JSON.stringify(logs));
-  }
-
+  // 1. LOGIN LOGIC
   $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const user = $('#adminUsername').value;
@@ -263,17 +303,19 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: user, password: pass })
       });
-      
       const data = await res.json();
+      
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
         $('#loginScreen').style.display = 'none';
-        $('#adminPanel').classList.add('show');
-        loadData();
+        $('#dashboard').style.display = 'flex';
+        fetchData();
       } else {
-        alert('Incorrect username or password');
+        alert('Invalid credentials');
       }
-    } catch (err) { alert('Server error'); }
+    } catch (err) {
+      alert('Server error connecting to database');
+    }
   });
 
   function logout() {
@@ -281,475 +323,185 @@
     location.reload();
   }
 
-  async function loadData() {
+  // 2. FETCH DATA FROM CLOUDFLARE
+  async function fetchData() {
     const token = localStorage.getItem('adminToken');
-    if (!token) { logout(); return; }
+    if (!token) return logout();
+
     try {
       const res = await fetch('/api/admin/data', { headers: { Authorization: 'Bearer ' + token } });
-      if (res.status === 401) { logout(); return; }
+      if (res.status === 401) return logout();
+      
       allData = await res.json();
-
+      
+      // Update Stats
       $('#stat-pending').textContent = (allData.rooms.pending || []).length;
       $('#stat-approved').textContent = (allData.rooms.approved || []).length;
       $('#stat-taken').textContent = (allData.rooms.taken || []).length;
-      $('#stat-tenants').textContent = (allData.tenantRequests.approved || []).length;
+      
+      // Calculate Revenue (Assuming fee is stored in 'amount' field for taken properties)
+      let totalRevenue = 0;
+      (allData.rooms.taken || []).forEach(r => totalRevenue += Number(r.amount || 0));
+      $('#stat-revenue').textContent = money(totalRevenue);
 
-      if (allData.feeTotals) {
-        $('#stat-fee-rent').textContent = money(allData.feeTotals.rent);
-        $('#stat-fee-sale').textContent = money(allData.feeTotals.sale);
-        $('#stat-fee-surcharge').textContent = money(allData.feeTotals.surcharges);
-        $('#stat-fee-manual').textContent = money(allData.feeTotals.manual);
-        $('#stat-fee-total').textContent = money(allData.feeTotals.grand);
-      }
-
-      loadTab(currentTab, null);
-      renderAudit();
-      renderLedger(allData.ledger || []);
-    } catch (err) { alert('Failed to load data'); }
-  }
-
-  function switchTab(tab) {
-    document.querySelectorAll('.main-tabs button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
-
-    if (tab === 'rooms') {
-      document.querySelectorAll('.main-tabs button')[0].classList.add('active');
-      $('#tab-rooms').classList.add('active');
-    } else if (tab === 'ledger') {
-      document.querySelectorAll('.main-tabs button')[1].classList.add('active');
-      $('#tab-ledger').classList.add('active');
-      loadLedger();
-    } else if (tab === 'audit') {
-      document.querySelectorAll('.main-tabs button')[2].classList.add('active');
-      $('#tab-audit').classList.add('active');
-      renderAudit();
-    } else {
-      document.querySelectorAll('.main-tabs button')[3].classList.add('active');
-      $('#tab-settings').classList.add('active');
+      loadProperties(currentStatus);
+      loadRevenue();
+    } catch (err) {
+      console.error('Failed to load data', err);
     }
   }
 
-  function renderAudit() {
-    const list = $('#auditList');
-    const rows = allData.auditTrail || [];
-    if (!rows.length) { list.innerHTML = '<div class="empty">No audit records yet.</div>'; return; }
-    list.innerHTML = rows.map(l => `
-      <div class="audit-item">
-        <strong>${l.action}</strong><br>
-        <small>${new Date(l.created_at).toLocaleString()} · ${l.detail || ''}</small>
-      </div>`).join('');
+  // 3. TABS
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    $(`#tab-${tabId}`).style.display = 'block';
+    el.classList.add('active');
+
+    const titles = {
+      dashboard: ['Dashboard Overview', 'Welcome back, Vusani.'],
+      properties: ['Manage Properties', 'Review, approve, and track your listings.'],
+      revenue: ['Revenue & Fees', 'Track your agent fee collections.']
+    };
+    $('#pageTitle').textContent = titles[tabId][0];
+    $('#pageSubtitle').textContent = titles[tabId][1];
   }
 
-  function renderLedger(rows) {
-    const wrap = $('#ledgerTableWrap');
-    if (!rows.length) { wrap.innerHTML = '<div class="empty">No fee entries yet.</div>'; return; }
-    wrap.innerHTML = `<table class="ledger-table">
-      <thead>
-        <tr>
-          <th>Date</th><th>Room</th><th>Kind</th><th>Amount</th>
-          <th>Base Fee</th><th>Surcharge</th><th>Total</th><th>Manual</th><th>In Alex?</th><th>Location</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows.map(r => `
-          <tr>
-            <td>${new Date(r.created_at).toLocaleDateString()}</td>
-            <td>${r.room_id}</td>
-            <td>${r.kind}</td>
-            <td>${money(r.amount)}</td>
-            <td>${money(r.fee_base)}</td>
-            <td>${money(r.surcharge)}</td>
-            <td><b>${money(r.fee_total)}</b></td>
-            <td>${r.manual ? '🔧 YES' : '—'}</td>
-            <td>${r.in_alexandra ? '✅' : '❌'}</td>
-            <td>${r.location}${r.suburb ? ' / ' + r.suburb : ''}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
-  }
-
-  async function loadLedger() {
-    const token = localStorage.getItem('adminToken');
-    const from = $('#ledgerFrom').value;
-    const to = $('#ledgerTo').value;
-    const qs = from && to ? `?from=${from}&to=${to}` : '';
-    try {
-      const res = await fetch('/api/admin/ledger' + qs, { headers: { Authorization: 'Bearer ' + token } });
-      const data = await res.json();
-      renderLedger(data.ledger || []);
-    } catch (e) { alert('Could not load ledger'); }
-  }
-
-  function downloadLedgerCSV() {
-    const token = localStorage.getItem('adminToken');
-    fetch('/api/admin/ledger.csv', { headers: { Authorization: 'Bearer ' + token } })
-      .then(r => r.blob())
-      .then(blob => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'ledger.csv';
-        a.click();
-      });
-  }
-
-  function buildAdminMediaList(room){
-    const list = [];
-    if (room.video) list.push({ type: 'video', url: room.video });
-    if (Array.isArray(room.images) && room.images.length) {
-      room.images.forEach(url => list.push({ type: 'image', url }));
-    }
-    return list;
-  }
-
-  function loadTab(status, btn) {
-    currentTab = status;
+  // 4. RENDER PROPERTIES
+  function loadProperties(status, btn = null) {
+    currentStatus = status;
     if (btn) {
-      document.querySelectorAll('.sub-tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tabs .tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
+
+    const list = $('#propertyList');
     const rooms = allData.rooms[status] || [];
-    const list = $('#roomList');
 
     if (rooms.length === 0) {
-      list.innerHTML = `<div class="empty">No rooms in "${status}"</div>`;
+      list.innerHTML = `<div class="empty-state">No properties found in this section.</div>`;
       return;
     }
 
-    list.innerHTML = rooms.map(room => {
-      const media = buildAdminMediaList(room);
-      let mediaHtml = '';
-      if (media.length) {
-        mediaHtml = media.map(m => {
-          if (m.type === 'video') {
-            return `<div class="media-thumb" onclick="viewMedia('video', '${escapeAttr(m.url)}')" title="Play video">
-              <video src="${escapeAttr(m.url)}" preload="metadata" muted></video>
-              <div class="play-overlay">${ICON_PLAY}</div>
-              <span class="video-tag">▶ Video</span>
-            </div>`;
-          }
-          return `<div class="media-thumb" onclick="viewMedia('image', '${escapeAttr(m.url)}')">
-            <img src="${escapeAttr(m.url)}" loading="lazy">
-          </div>`;
-        }).join('');
-      } else {
-        mediaHtml = `<div style="width:140px;height:100px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">No Media</div>`;
-      }
-
-      const displayType = room.type || room.roomType || 'room';
-      const f = room.agentFee || { base: 0, surcharge: 0, total: 0, kind: 'rent', manual: false, breakdown: '' };
-      const manualBadge = f.manual ? `<span class="manual-badge">MANUAL</span>` : '';
-
-      return `
-        <div class="room-card">
-          <div class="media-grid">${mediaHtml}</div>
-          <div class="room-info">
-            <h3>${escapeHTML(room.title || 'Untitled')}
-              <span style="font-size:12px;background:#e0e7ff;color:#1e40af;padding:2px 6px;border-radius:4px;text-transform:uppercase">${escapeHTML(displayType)}</span>
-              <span style="font-size:12px;background:${f.kind === 'sale' ? '#fde68a' : '#d1fae5'};color:#065f46;padding:2px 6px;border-radius:4px;text-transform:uppercase">${f.kind === 'sale' ? 'SALE' : 'RENT'}</span>
-              ${manualBadge}
-            </h3>
-            <p>📍 ${escapeHTML(room.location || '')} ${room.alexandraSuburb ? ' / ' + escapeHTML(room.alexandraSuburb) : ''} | 💰 R${escapeHTML(String(room.amount || ''))}</p>
-            <p>👤 ${escapeHTML(room.posterName || '')} | 📞 ${escapeHTML(room.posterContact || '')}</p>
-
-            <div class="fee-box ${f.manual ? 'manual' : ''}">
-              <div class="fee-total">Agent fee: ${money(f.total)} ${manualBadge}</div>
-              <div class="fee-line">${escapeHTML(f.breakdown || '')}</div>
-              ${!f.manual ? (f.surcharge
-                ? `<div class="fee-line surcharge">+ R${f.surcharge} non-Alexandra surcharge</div>`
-                : `<div class="fee-line" style="color:#0f7a5f">✓ Alexandra Township — no surcharge</div>`) : ''}
-            </div>
-
-            <div class="actions">
-              ${status === 'pending' ? `<button class="btn-approve" onclick="doAction('move','${room.id}','pending','approved')">✅ Approve</button>` : ''}
-              ${status === 'pending' ? `<button class="btn-decline" onclick="doAction('move','${room.id}','pending','declined')">❌ Decline</button>` : ''}
-              ${status === 'approved' ? `<button class="btn-taken" onclick="doAction('move','${room.id}','approved','taken')">📦 Mark Taken</button>` : ''}
-              ${status === 'approved' ? `<button class="btn-decline" onclick="doAction('move','${room.id}','approved','declined')">❌ Remove</button>` : ''}
-              ${status === 'taken' ? `<button class="btn-repost" onclick="doAction('move','${room.id}','taken','pending')">🔄 Repost</button>` : ''}
-              ${status === 'declined' ? `<button class="btn-repost" onclick="doAction('move','${room.id}','declined','pending')">🔄 Repost</button>` : ''}
-              ${status !== 'pending' ? `<button class="btn-delete" onclick="doAction('delete','${room.id}','${status}')">🗑️ Delete</button>` : ''}
-              <button class="btn-edit" onclick="openEditModal('${room.id}','${status}')">✏️ Edit</button>
-              <button class="btn-fee" onclick="openFeeOverrideModal('${room.id}','${status}')">🔧 Fee</button>
-            </div>
+    list.innerHTML = rooms.map(r => `
+      <div class="property-row">
+        <div class="prop-info">
+          <span class="prop-title">${r.title}</span>
+          <div class="prop-meta">
+            <span>📍 ${r.location}</span>
+            <span>🏠 ${r.type}</span>
           </div>
-        </div>`;
-    }).join('');
+        </div>
+        <div style="display: flex; align-items: center; gap: 24px;">
+          <span class="prop-price">${money(r.amount)}</span>
+          <div class="actions">
+            <button class="btn btn-view" onclick='openModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>View</button>
+            ${status === 'pending' ? `<button class="btn btn-approve" onclick="doAction('move', '${r.id}', 'approved')">Approve</button>` : ''}
+            ${status === 'approved' ? `<button class="btn btn-take" onclick="markAsTaken('${r.id}')">Mark Taken</button>` : ''}
+            ${status !== 'pending' ? `<button class="btn btn-delete" onclick="doAction('delete', '${r.id}')">Delete</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
   }
 
-  function escapeHTML(s){
-    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  function escapeAttr(s){
-    return String(s ?? '').replace(/'/g, '%27').replace(/"/g, '%22');
-  }
-
-  async function doAction(action, id, from, to) {
-    if (action === 'delete' && !confirm('Delete this room permanently?')) return;
+  // 5. ACTIONS (Approve, Delete)
+  async function doAction(action, id, to = null) {
+    if (action === 'delete' && !confirm('Are you sure you want to delete this property?')) return;
+    
     const token = localStorage.getItem('adminToken');
     try {
       await fetch('/api/admin/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action, section: 'rooms', from, to, id })
+        body: JSON.stringify({ action, id, to })
       });
-      logAct(`Moved room ${from} → ${to}`);
-      loadData();
-    } catch (e) { alert('Action failed'); }
+      fetchData(); // Refresh data
+    } catch (e) {
+      alert('Action failed');
+    }
   }
 
-  function openEditModal(id, from) {
-    const room = allData.rooms[from].find(r => r.id === id);
+  // 6. MARK AS TAKEN (Revenue logic)
+  async function markAsTaken(id) {
+    // We need to find the property to ask for the fee amount
+    const room = allData.rooms.approved.find(r => r.id === id);
     if (!room) return;
 
-    $('#editRoomId').value = id;
-    $('#editRoomFrom').value = from;
-    $('#editRoomTitle').value = room.title || '';
-    $('#editRoomPurpose').value = (room.purpose || 'rent');
-    $('#editRoomType').value = (room.type || room.roomType || 'room').toLowerCase();
-    $('#editRoomLocation').value = room.location || '';
-    $('#editRoomSuburb').value = room.alexandraSuburb || '';
-    $('#editRoomAddress').value = room.address || '';
-    $('#editRoomAmount').value = room.amount || '';
-    $('#editRoomDeposit').value = room.deposit || '';
-    $('#editRoomPosterName').value = room.posterName || '';
-    $('#editRoomPosterContact').value = room.posterContact || '';
-    $('#editRoomNotes').value = room.notes || '';
-    $('#editFeeOverride').value = room.agentFeeOverride || '';
-
-    refreshFeePreview();
-    $('#editRoomModal').classList.add('show');
-  }
-
-  function closeEditModal() { $('#editRoomModal').classList.remove('show'); }
-
-  async function refreshFeePreview() {
-    const body = {
-      amount: $('#editRoomAmount').value,
-      purpose: $('#editRoomPurpose').value,
-      location: $('#editRoomLocation').value,
-      alexandraSuburb: $('#editRoomSuburb').value,
-      agentFeeOverride: $('#editFeeOverride').value
-    };
-    try {
-      const res = await fetch('/api/fee-preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      const f = data.fee;
-      const box = $('#feePreviewModal');
-      box.className = 'fee-preview-modal' + (f.manual ? ' manual' : '');
-      box.innerHTML = `
-        <div class="label">${f.manual ? '🔧 MANUAL OVERRIDE' : 'System-calculated fee'}</div>
-        <div class="total">${money(f.total)}</div>
-        <div class="sub">${escapeHTML(f.breakdown || '')}</div>
-        ${!f.manual && f.surcharge ? `<div class="sub" style="color:#b8493b">+ R${f.surcharge} non-Alexandra surcharge</div>` : ''}
-      `;
-    } catch (_) {}
-  }
-
-  async function applyFeeOverride() {
-    const token = localStorage.getItem('adminToken');
-    const id = $('#editRoomId').value;
-    const from = $('#editRoomFrom').value;
-    const val = $('#editFeeOverride').value;
-    const n = Number(val);
-    if (!Number.isFinite(n) || n <= 0) { alert('Enter a positive amount, or click Clear to remove the override.'); return; }
-    try {
-      await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action: 'set-fee-override', section: 'rooms', from, id, data: { agentFeeOverride: n } })
-      });
-      logAct(`Manual fee override set to R${n}`);
-      alert(`✅ Manual agent fee set to R${n}`);
-      await loadData();
-      openEditModal(id, from);
-    } catch (e) { alert('Failed to apply override'); }
-  }
-
-  async function clearFeeOverride() {
-    const token = localStorage.getItem('adminToken');
-    const id = $('#editRoomId').value;
-    const from = $('#editRoomFrom').value;
-    try {
-      await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action: 'clear-fee-override', section: 'rooms', from, id })
-      });
-      logAct('Manual fee override cleared');
-      alert('✅ Override cleared — back to system-calculated fee');
-      $('#editFeeOverride').value = '';
-      await loadData();
-      openEditModal(id, from);
-    } catch (e) { alert('Failed to clear override'); }
-  }
-
-  async function openFeeOverrideModal(id, from) {
-    const room = allData.rooms[from].find(r => r.id === id);
-    if (!room) return;
-    const current = room.agentFeeOverride;
-    const val = prompt(
-      current
-        ? `Current manual override: R${current}\n\nType a new amount in Rands, or leave empty and press OK to clear the override:`
-        : `System fee: R${room.agentFee ? room.agentFee.total : '?'}\n\nType a manual agent fee in Rands (e.g. 450):`,
-      current ? String(current) : ''
-    );
-    if (val === null) return;
-    const token = localStorage.getItem('adminToken');
-    try {
-      if (String(val).trim() === '') {
-        await fetch('/api/admin/action', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-          body: JSON.stringify({ action: 'clear-fee-override', section: 'rooms', from, id })
-        });
-        logAct('Cleared fee override');
-      } else {
-        const n = Number(val);
-        if (!Number.isFinite(n) || n <= 0) { alert('Invalid amount'); return; }
-        await fetch('/api/admin/action', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-          body: JSON.stringify({ action: 'set-fee-override', section: 'rooms', from, id, data: { agentFeeOverride: n } })
-        });
-        logAct(`Set fee override R${n}`);
-      }
-      loadData();
-    } catch (e) { alert('Failed to update override'); }
-  }
-
-  $('#editRoomForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('adminToken');
-    const id = $('#editRoomId').value;
-    const from = $('#editRoomFrom').value;
-
-    const data = {
-      title: $('#editRoomTitle').value,
-      purpose: $('#editRoomPurpose').value,
-      type: $('#editRoomType').value,
-      location: $('#editRoomLocation').value,
-      alexandraSuburb: $('#editRoomSuburb').value,
-      address: $('#editRoomAddress').value,
-      amount: $('#editRoomAmount').value,
-      deposit: $('#editRoomDeposit').value,
-      posterName: $('#editRoomPosterName').value,
-      posterContact: $('#editRoomPosterContact').value,
-      notes: $('#editRoomNotes').value
-    };
-
-    const overrideVal = $('#editFeeOverride').value.trim();
-    if (overrideVal !== '') {
-      const n = Number(overrideVal);
-      if (Number.isFinite(n) && n > 0) data.agentFeeOverride = n;
-      else data.agentFeeOverride = '';
+    const feeInput = prompt(`Property: ${room.title}\n\nEnter the Agent Fee you collected (in Rands):`, room.amount);
+    if (feeInput === null) return; // User cancelled
+    
+    const fee = Number(feeInput);
+    if (isNaN(fee) || fee < 0) {
+      alert('Please enter a valid number for the fee.');
+      return;
     }
 
+    const token = localStorage.getItem('adminToken');
     try {
+      // We update the status AND the amount (to record the actual fee collected)
       await fetch('/api/admin/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action: 'edit', section: 'rooms', from, id, data })
+        body: JSON.stringify({ action: 'move', id, to: 'taken', amount: fee })
       });
-      logAct(`Edited room details`);
-      alert('✅ Room updated!');
-      closeEditModal();
-      loadData();
-    } catch (err) { alert('Failed to save changes'); }
-  });
-
-  async function uploadAdminImage() {
-    const fileInput = $('#adminNewImage');
-    if (!fileInput.files || fileInput.files.length === 0) { alert('Select an image first.'); return; }
-    const formData = new FormData();
-    formData.append('images', fileInput.files[0]);
-
-    const token = localStorage.getItem('adminToken');
-    const id = $('#editRoomId').value;
-    const from = $('#editRoomFrom').value;
-
-    try {
-      const uploadRes = await fetch('/api/admin/upload', { method: 'POST', body: formData });
-      const uploadData = await uploadRes.json();
-      if (!uploadData.success) throw new Error('Upload failed');
-      const newUrl = uploadData.urls[0];
-
-      await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action: 'add-images', section: 'rooms', from, id, data: { images: [newUrl] } })
-      });
-      logAct('Uploaded new image');
-      alert('✅ Image uploaded to post!');
-      fileInput.value = '';
-      loadData();
-    } catch (err) { alert('Failed to upload image.'); }
-  }
-
-  async function wipeDatabase() {
-    if (!confirm('⚠️ ARE YOU SURE? This will delete ALL posts and the ledger.')) return;
-    const token = localStorage.getItem('adminToken');
-    try {
-      await fetch('/api/admin/reset-everything', { headers: { Authorization: 'Bearer ' + token } });
-      logAct('Wiped database');
-      alert('✅ All data wiped.');
-      loadData();
-    } catch (e) { alert('❌ Failed'); }
-  }
-
-  /* ============================================================
-     MEDIA VIEWER — supports images AND videos with fullscreen
-     ============================================================ */
-  function viewMedia(type, src) {
-    const viewer = $('#mediaViewer');
-    const content = $('#mediaContent');
-    const fsBtn = $('#mediaFullscreenBtn');
-    currentMediaType = type;
-
-    if (type === 'video') {
-      content.innerHTML = `<video id="viewerVideo" src="${src}" controls autoplay playsinline></video>`;
-      fsBtn.classList.add('show');
-      const v = document.getElementById('viewerVideo');
-      if (v) { const p = v.play(); if (p && p.catch) p.catch(()=>{}); }
-    } else {
-      content.innerHTML = `<img src="${src}" alt="">`;
-      fsBtn.classList.remove('show');
+      fetchData();
+    } catch (e) {
+      alert('Failed to record fee');
     }
-    viewer.classList.add('show');
-    document.body.style.overflow = 'hidden';
   }
 
-  function closeMediaViewer() {
-    const viewer = $('#mediaViewer');
-    const content = $('#mediaContent');
-    const v = document.getElementById('viewerVideo');
-    if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
-    content.innerHTML = '';
-    viewer.classList.remove('show');
-    document.body.style.overflow = '';
-    currentMediaType = null;
+  // 7. RENDER REVENUE HISTORY
+  function loadRevenue() {
+    const tbody = $('#revenueList');
+    const taken = allData.rooms.taken || [];
+    
+    if (taken.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No revenue recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = taken.map(r => `
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px;">${new Date().toLocaleDateString()}</td>
+        <td style="padding: 12px; font-weight: 600;">${r.title}</td>
+        <td style="padding: 12px; color: var(--gold-dark); font-weight: 800;">${money(r.amount)}</td>
+        <td style="padding: 12px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">Collected</span></td>
+      </tr>
+    `).join('');
   }
 
-  function goFullscreen() {
-    if (currentMediaType !== 'video') return;
-    const v = document.getElementById('viewerVideo');
-    if (!v) return;
-    if (v.requestFullscreen) v.requestFullscreen();
-    else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen();
-    else if (v.msRequestFullscreen) v.msRequestFullscreen();
-    else v.play();
+  // 8. MODAL LOGIC
+  function openModal(room) {
+    $('#modalTitle').textContent = room.title;
+    $('#modalLocation').textContent = room.location;
+    $('#modalPrice').textContent = money(room.amount);
+    $('#modalType').textContent = room.type;
+    $('#modalContact').textContent = `${room.posterName} (${room.posterContact})`;
+    $('#modalDesc').textContent = room.notes || 'No description provided.';
+    
+    let mediaHtml = '';
+    if (room.images && room.images.length) {
+      room.images.forEach(img => mediaHtml += `<img src="${img}">`);
+    }
+    if (room.video) {
+      mediaHtml += `<video src="${room.video}" controls></video>`;
+    }
+    $('#modalMedia').innerHTML = mediaHtml || '<p style="color: var(--text-muted);">No images uploaded.</p>';
+    
+    $('#propertyModal').classList.add('show');
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && $('#mediaViewer').classList.contains('show')) closeMediaViewer();
-  });
+  function closeModal() {
+    $('#propertyModal').classList.remove('show');
+  }
 
+  // INIT
   if (localStorage.getItem('adminToken')) {
     $('#loginScreen').style.display = 'none';
-    $('#adminPanel').classList.add('show');
-    loadData();
+    $('#dashboard').style.display = 'flex';
+    fetchData();
   }
 </script>
 </body>
