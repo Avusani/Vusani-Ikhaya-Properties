@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin | VUSANI IKHAYA PROPERTIES</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Load Chart.js for the revenue graph -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root {
     --green-dark: #0E382A;
@@ -43,14 +43,16 @@
   .user-profile { display: flex; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
   .user-profile .avatar { width: 36px; height: 36px; background: var(--gold); color: var(--green-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
 
-  /* DASHBOARD CARDS & CHARTS */
+  /* CARDS & CHARTS */
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
   .stat-card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; position: relative; overflow: hidden; }
   .stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--green-dark); }
   .stat-card.revenue::before { background: var(--gold); }
+  .stat-card.expense::before { background: #f26d6d; }
   .stat-card h3 { font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
   .stat-card .value { font-size: 32px; font-weight: 800; color: var(--green-dark); margin-top: 8px; }
   .stat-card.revenue .value { color: var(--gold-dark); }
+  .stat-card.expense .value { color: #b91c1c; }
   .stat-card .icon { position: absolute; right: 24px; top: 24px; font-size: 24px; opacity: 0.2; }
 
   .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 32px; }
@@ -59,7 +61,7 @@
   .chart-container { position: relative; height: 300px; width: 100%; }
 
   /* DATA SECTION */
-  .data-section { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 24px; }
+  .data-section { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 24px; margin-bottom: 24px; }
   .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .section-header h3 { font-size: 20px; font-weight: 800; color: var(--green-dark); }
   
@@ -68,9 +70,8 @@
   .tab:hover { background: var(--bg-color); }
   .tab.active { background: var(--green-dark); color: white; }
 
-  .property-list { display: flex; flex-direction: column; gap: 16px; }
-  .property-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
-  .property-row:hover { border-color: var(--green-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .property-list, .expense-list { display: flex; flex-direction: column; gap: 16px; }
+  .property-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
   .prop-info { display: flex; flex-direction: column; gap: 4px; }
   .prop-title { font-weight: 700; font-size: 16px; color: var(--text-main); }
   .prop-meta { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
@@ -86,34 +87,40 @@
   .btn-take:hover { background: var(--gold-dark); }
   .btn-delete { background: #333; color: white; }
   .btn-view { background: #e0e7ff; color: #3730a3; }
-  .btn-view:hover { background: #c7d2fe; }
   .btn-edit { background: #f3f4f6; color: #4b5563; }
-  .btn-edit:hover { background: #e5e7eb; }
+  .btn-receipt { background: #10b981; color: white; }
 
   .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
 
-  /* LOGIN SCREEN */
+  /* LOGIN & MODALS */
   #loginScreen { position: fixed; inset: 0; background: var(--green-dark); display: flex; align-items: center; justify-content: center; z-index: 9999; }
   .login-box { background: white; padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; }
   .login-box svg { width: 80px; height: 80px; margin-bottom: 20px; }
   .login-box h2 { color: var(--green-dark); font-weight: 800; margin-bottom: 8px; }
-  .login-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
   .form-group { margin-bottom: 16px; text-align: left; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
   .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; }
-  .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--green-dark); }
-  .btn-login { width: 100%; padding: 14px; background: var(--green-dark); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-  .btn-login:hover { background: var(--green-light); }
+  .btn-login { width: 100%; padding: 14px; background: var(--green-dark); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
 
-  /* MODALS */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.show { display: flex; }
   .modal-box { background: white; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 32px; position: relative; }
   .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
-  .modal-box h2 { color: var(--green-dark); margin-bottom: 20px; }
   .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   .modal-media { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
   .modal-media img, .modal-media video { width: 150px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
+
+  /* RECEIPT STYLES */
+  #receiptArea { background: white; padding: 40px; font-family: 'Inter', sans-serif; color: #333; position: relative; overflow: hidden; }
+  .receipt-header { text-align: center; border-bottom: 2px solid var(--green-dark); padding-bottom: 20px; margin-bottom: 20px; position: relative; z-index: 2; }
+  .receipt-header h1 { color: var(--green-dark); font-size: 24px; margin-bottom: 4px; }
+  .receipt-header p { font-size: 12px; color: var(--text-muted); }
+  .receipt-stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); opacity: 0.05; z-index: 1; pointer-events: none; }
+  .receipt-stamp svg { width: 400px; height: 400px; }
+  .receipt-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; position: relative; z-index: 2; }
+  .receipt-row strong { color: var(--green-dark); }
+  .receipt-total { border-top: 2px dashed #ccc; margin-top: 20px; padding-top: 20px; font-size: 18px; font-weight: 800; color: var(--green-dark); display: flex; justify-content: space-between; position: relative; z-index: 2; }
+  .receipt-footer { margin-top: 40px; text-align: center; font-size: 11px; color: var(--text-muted); position: relative; z-index: 2; }
 
   @media (max-width: 768px) {
     body { flex-direction: column; }
@@ -140,149 +147,103 @@
     <h2>Admin Portal</h2>
     <p>Vusani Ikhaya Properties</p>
     <form id="loginForm">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="adminUsername" required placeholder="Enter username">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="adminPassword" required placeholder="Enter password">
-      </div>
+      <div class="form-group"><label>Username</label><input type="text" id="adminUsername" required></div>
+      <div class="form-group"><label>Password</label><input type="password" id="adminPassword" required></div>
       <button type="submit" class="btn-login">Log In</button>
     </form>
   </div>
 </div>
 
-<!-- MAIN DASHBOARD -->
+<!-- DASHBOARD -->
 <div id="dashboard" style="display: none; width: 100%; display: flex;">
-  
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="45" r="38" stroke="#D4AF37" stroke-width="2" fill="none"/>
-        <path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#D4AF37"/>
-        <rect x="42" y="45" width="16" height="20" fill="#0E382A"/>
-        <path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/>
-        <circle cx="20" cy="60" r="10" fill="#fff"/>
-      </svg>
-      <div>
-        <h1>VUSANI IKHAYA</h1>
-        <span>Admin System</span>
-      </div>
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="45" r="38" stroke="#D4AF37" stroke-width="2" fill="none"/><path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#D4AF37"/><rect x="42" y="45" width="16" height="20" fill="#0E382A"/><path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/><circle cx="20" cy="60" r="10" fill="#fff"/></svg>
+      <div><h1>VUSANI IKHAYA</h1><span>Admin System</span></div>
     </div>
     <nav class="nav-menu">
-      <a class="nav-item active" onclick="switchTab('dashboard', this)">
-        <span>📊</span> Dashboard
-      </a>
-      <a class="nav-item" onclick="switchTab('properties', this)">
-        <span>🏠</span> Manage Properties
-      </a>
-      <a class="nav-item" onclick="switchTab('revenue', this)">
-        <span>💰</span> Revenue & Fees
-      </a>
+      <a class="nav-item active" onclick="switchTab('dashboard', this)"><span>📊</span> Dashboard</a>
+      <a class="nav-item" onclick="switchTab('properties', this)"><span>🏠</span> Properties</a>
+      <a class="nav-item" onclick="switchTab('expenses', this)"><span>💸</span> Expenses</a>
+      <a class="nav-item" onclick="switchTab('receipts', this)"><span>🧾</span> Receipts</a>
     </nav>
-    <div class="sidebar-footer">
-      <a href="#" onclick="logout()"><span>🚪</span> Logout</a>
-    </div>
+    <div class="sidebar-footer"><a href="#" onclick="logout()"><span>🚪</span> Logout</a></div>
   </aside>
 
   <main class="main-content">
     <header class="top-header">
-      <div>
-        <h2 id="pageTitle">Dashboard Overview</h2>
-        <p id="pageSubtitle">Welcome back, Vusani.</p>
-      </div>
-      <div class="user-profile">
-        <div class="avatar">V</div>
-        <div style="font-weight: 600; font-size: 14px;">Vusani24</div>
-      </div>
+      <div><h2 id="pageTitle">Dashboard Overview</h2><p id="pageSubtitle">Welcome back, Vusani.</p></div>
+      <div class="user-profile"><div class="avatar">V</div><div style="font-weight: 600; font-size: 14px;">Vusani24</div></div>
     </header>
 
     <!-- DASHBOARD TAB -->
     <div id="tab-dashboard" class="tab-content">
       <div class="stats-grid">
-        <div class="stat-card">
-          <h3>Pending Approval</h3>
-          <div class="value" id="stat-pending">0</div>
-          <span class="icon">⏳</span>
-        </div>
-        <div class="stat-card">
-          <h3>Available Properties</h3>
-          <div class="value" id="stat-approved">0</div>
-          <span class="icon">🏠</span>
-        </div>
-        <div class="stat-card">
-          <h3>Properties Taken</h3>
-          <div class="value" id="stat-taken">0</div>
-          <span class="icon">🔑</span>
-        </div>
-        <div class="stat-card revenue">
-          <h3>Total Revenue (Fees)</h3>
-          <div class="value" id="stat-revenue">R0</div>
-          <span class="icon">💰</span>
-        </div>
+        <div class="stat-card"><h3>Pending Approval</h3><div class="value" id="stat-pending">0</div><span class="icon">⏳</span></div>
+        <div class="stat-card"><h3>Properties Taken</h3><div class="value" id="stat-taken">0</div><span class="icon">🔑</span></div>
+        <div class="stat-card revenue"><h3>Total Revenue</h3><div class="value" id="stat-revenue">R0</div><span class="icon">💰</span></div>
+        <div class="stat-card expense"><h3>Total Expenses</h3><div class="value" id="stat-expenses">R0</div><span class="icon">💸</span></div>
+        <div class="stat-card"><h3>Website Visitors</h3><div class="value" id="stat-visitors">0</div><span class="icon">👁️</span></div>
       </div>
 
-      <!-- CHARTS SECTION -->
       <div class="charts-grid">
-        <div class="chart-card">
-          <h3>Revenue vs Expenses (Weekly)</h3>
-          <div class="chart-container">
-            <canvas id="revenueChart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <h3>Revenue Breakdown</h3>
-          <div class="chart-container">
-            <canvas id="doughnutChart"></canvas>
-          </div>
-        </div>
+        <div class="chart-card"><h3>Revenue vs Expenses (Real Data)</h3><div class="chart-container"><canvas id="financialChart"></canvas></div></div>
+        <div class="chart-card"><h3>Website Traffic (Last 7 Days)</h3><div class="chart-container"><canvas id="trafficChart"></canvas></div></div>
       </div>
-
     </div>
 
     <!-- PROPERTIES TAB -->
     <div id="tab-properties" class="tab-content" style="display: none;">
       <div class="data-section">
-        <div class="section-header">
-          <h3>All Properties</h3>
-        </div>
-        
+        <div class="section-header"><h3>All Properties</h3></div>
         <div class="tabs">
           <button class="tab active" onclick="loadProperties('pending', this)">Pending</button>
           <button class="tab" onclick="loadProperties('approved', this)">Available</button>
           <button class="tab" onclick="loadProperties('taken', this)">Taken</button>
           <button class="tab" onclick="loadProperties('declined', this)">Declined</button>
         </div>
-
         <div class="property-list" id="propertyList"></div>
       </div>
     </div>
 
-    <!-- REVENUE TAB -->
-    <div id="tab-revenue" class="tab-content" style="display: none;">
+    <!-- EXPENSES TAB -->
+    <div id="tab-expenses" class="tab-content" style="display: none;">
       <div class="data-section">
         <div class="section-header">
-          <h3>Fee Collection History</h3>
+          <h3>Record Expense</h3>
         </div>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
-          <thead>
-            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
-              <th style="padding: 12px; color: var(--text-muted);">Date</th>
-              <th style="padding: 12px; color: var(--text-muted);">Property</th>
-              <th style="padding: 12px; color: var(--text-muted);">Fee Amount</th>
-              <th style="padding: 12px; color: var(--text-muted);">Status</th>
-            </tr>
-          </thead>
-          <tbody id="revenueList"></tbody>
-        </table>
+        <form id="expenseForm" style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+          <select id="expCategory" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); flex: 1;">
+            <option value="Transport">Transport</option>
+            <option value="Domain & Hosting">Domain & Hosting</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Data">Data</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="expDesc" placeholder="Description" required style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); flex: 2;">
+          <input type="number" id="expAmount" placeholder="Amount (R)" required style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); flex: 1;">
+          <button type="submit" class="btn btn-approve" style="padding: 10px 20px;">Add Expense</button>
+        </form>
+
+        <div class="section-header"><h3>Expense History</h3></div>
+        <div class="expense-list" id="expenseList"></div>
+      </div>
+    </div>
+
+    <!-- RECEIPTS TAB -->
+    <div id="tab-receipts" class="tab-content" style="display: none;">
+      <div class="data-section">
+        <div class="section-header"><h3>Generated Receipts (From Taken Properties)</h3></div>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Go to "Properties -> Taken" to generate a receipt for a tenant.</p>
+        <div class="property-list" id="receiptList"></div>
       </div>
     </div>
 
   </main>
 </div>
 
-<!-- MODALS (View, Edit, Media) same as before -->
+<!-- MODALS -->
 <div class="modal-overlay" id="propertyModal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('propertyModal')">✕</button>
@@ -298,247 +259,193 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="editModal">
+<div class="modal-overlay" id="takeModal">
   <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('editModal')">✕</button>
-    <h2>✏️ Edit Property</h2>
-    <form id="editForm">
-      <input type="hidden" id="editId">
-      <div class="form-group">
-        <label>Property Title</label>
-        <input type="text" id="editTitle" required>
-      </div>
+    <button class="modal-close" onclick="closeModal('takeModal')">✕</button>
+    <h2>✅ Record Tenant & Agent Fee</h2>
+    <form id="takeForm">
+      <input type="hidden" id="takeId">
       <div class="modal-grid">
-        <div class="form-group">
-          <label>Price (R)</label>
-          <input type="number" id="editAmount" required>
-        </div>
-        <div class="form-group">
-          <label>Type</label>
-          <select id="editType">
-            <option value="room">Room</option>
-            <option value="bachelor">Bachelor</option>
-            <option value="house">House</option>
-            <option value="flat">Flat</option>
-          </select>
-        </div>
+        <div class="form-group"><label>Tenant Name</label><input type="text" id="takeTenant" required></div>
+        <div class="form-group"><label>House Number</label><input type="text" id="takeHouse" required></div>
+        <div class="form-group"><label>Rent Amount (R)</label><input type="number" id="takeRent" required></div>
+        <div class="form-group"><label>Deposit Amount (R)</label><input type="number" id="takeDeposit" required></div>
+        <div class="form-group" style="grid-column: 1 / -1;"><label>Agent Fee Collected (R) *</label><input type="number" id="takeFee" required style="border-color: var(--gold);"></div>
       </div>
-      <div class="form-group">
-        <label>Location</label>
-        <input type="text" id="editLocation" required>
-      </div>
-      <div class="form-group">
-        <label>Description / Notes</label>
-        <textarea id="editNotes" rows="4"></textarea>
-      </div>
-      <button type="submit" class="btn btn-approve" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 10px;">Save Changes</button>
+      <button type="submit" class="btn btn-approve" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 10px;">Mark as Taken & Generate Receipt</button>
     </form>
   </div>
 </div>
 
-<div class="modal-overlay" id="mediaModal" style="background: rgba(0,0,0,0.95);" onclick="closeModal('mediaModal')">
-  <button class="modal-close" style="color: white; z-index: 10;">✕</button>
-  <div id="mediaViewerContent" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"></div>
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal-box" style="max-width: 600px;">
+    <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+      <button class="btn btn-approve" onclick="downloadReceipt()" style="flex: 1;">📥 Download PDF</button>
+      <button class="btn btn-receipt" onclick="sendWhatsApp()" style="flex: 1; background: #25D366;">💬 Send WhatsApp</button>
+      <button class="btn btn-take" onclick="sendEmail()" style="flex: 1;">📧 Send Email</button>
+    </div>
+    
+    <!-- THIS IS THE RECEIPT THAT GETS DOWNLOADED -->
+    <div id="receiptArea">
+      <div class="receipt-stamp">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="45" r="38" stroke="#0E382A" stroke-width="2" fill="none"/><path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#0E382A"/><rect x="42" y="45" width="16" height="20" fill="#fff"/><path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/><circle cx="20" cy="60" r="10" fill="#D4AF37"/></svg>
+      </div>
+      
+      <div class="receipt-header">
+        <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 10px;"><circle cx="50" cy="45" r="38" stroke="#0E382A" stroke-width="2" fill="none"/><path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#0E382A"/><rect x="42" y="45" width="16" height="20" fill="#fff"/><path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/><circle cx="20" cy="60" r="10" fill="#D4AF37"/></svg>
+        <h1>VUSANI IKHAYA PROPERTIES</h1>
+        <p>CIPC No. 2026/537275/07</p>
+        <p>www.vusaniikhayaproperties.co.za | 068 535 3186</p>
+      </div>
+
+      <h2 style="text-align: center; color: var(--gold-dark); margin-bottom: 24px; letter-spacing: 2px;">OFFICIAL RECEIPT</h2>
+
+      <div class="receipt-row"><span>Date Issued:</span> <strong id="r-date"></strong></div>
+      <div class="receipt-row"><span>Receipt No:</span> <strong id="r-number"></strong></div>
+      <div class="receipt-row"><span>Received From (Tenant):</span> <strong id="r-tenant"></strong></div>
+      <div class="receipt-row"><span>Property Address:</span> <strong id="r-house"></strong></div>
+      
+      <div style="border-top: 1px solid #eee; margin: 20px 0;"></div>
+
+      <div class="receipt-row"><span>Monthly Rent:</span> <span id="r-rent"></span></div>
+      <div class="receipt-row"><span>Deposit Paid:</span> <span id="r-deposit"></span></div>
+      <div class="receipt-row" style="margin-top: 10px; color: var(--gold-dark);"><span>Admin / Agent Fee:</span> <strong id="r-fee"></strong></div>
+
+      <div class="receipt-total">
+        <span>Total Paid:</span>
+        <span id="r-total"></span>
+      </div>
+
+      <div class="receipt-footer">
+        <p>Thank you for choosing Vusani Ikhaya Properties.</p>
+        <p>This is a computer-generated receipt and is valid without a signature.</p>
+        <p style="margin-top: 10px;">Generated by Admin System on <span id="r-sysdate"></span></p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
   const $ = (s) => document.querySelector(s);
   const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA', { maximumFractionDigits: 2 });
   
-  let allData = { rooms: { pending: [], approved: [], taken: [], declined: [] } };
+  let allData = { rooms: { pending: [], approved: [], taken: [], declined: [] }, expenses: [], traffic: [] };
   let currentStatus = 'pending';
-  let revenueChartInstance = null;
-  let doughnutChartInstance = null;
+  let financeChart = null, trafficChart = null;
   let inactivityTimer;
+  let currentReceiptData = null;
 
-  // --- SECURITY: 2 MINUTE INACTIVITY LOGOUT ---
   function resetTimer() {
     clearTimeout(inactivityTimer);
-    // 120000 milliseconds = 2 minutes
-    inactivityTimer = setTimeout(() => {
-      alert("Session timed out due to inactivity. Please log in again.");
-      logout();
-    }, 120000); 
+    inactivityTimer = setTimeout(() => { alert("Session timed out."); logout(); }, 120000); 
   }
+  ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => document.addEventListener(evt, resetTimer, true));
 
-  // Listen for user activity
-  ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
-    document.addEventListener(evt, resetTimer, true);
-  });
+  function logout() { localStorage.removeItem('adminToken'); location.reload(); }
 
-  function logout() {
-    localStorage.removeItem('adminToken');
-    location.reload();
-  }
-
-  // 1. LOGIN LOGIC
   $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const user = $('#adminUsername').value;
-    const pass = $('#adminPassword').value;
-    
     try {
       const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, password: pass })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: $('#adminUsername').value, password: $('#adminPassword').value })
       });
       const data = await res.json();
-      
       if (data.token) {
         localStorage.setItem('adminToken', data.token);
         $('#loginScreen').style.display = 'none';
         $('#dashboard').style.display = 'flex';
-        resetTimer(); // Start security timer
+        resetTimer();
         fetchData();
-      } else {
-        alert('Invalid credentials');
-      }
-    } catch (err) {
-      alert('Server error connecting to database');
-    }
+      } else { alert('Invalid credentials'); }
+    } catch (err) { alert('Server error'); }
   });
 
-  // 2. FETCH DATA
   async function fetchData() {
     const token = localStorage.getItem('adminToken');
     if (!token) return logout();
-
     try {
       const res = await fetch('/api/admin/data', { headers: { Authorization: 'Bearer ' + token } });
       if (res.status === 401) return logout();
-      
       allData = await res.json();
       
+      // Stats
+      let revenue = 0;
+      (allData.rooms.taken || []).forEach(r => revenue += Number(r.amount || 0));
+      let expenses = 0;
+      (allData.expenses || []).forEach(e => expenses += Number(e.amount || 0));
+      let visitors = 0;
+      (allData.traffic || []).forEach(t => visitors += Number(t.count || 0));
+
       $('#stat-pending').textContent = (allData.rooms.pending || []).length;
-      $('#stat-approved').textContent = (allData.rooms.approved || []).length;
       $('#stat-taken').textContent = (allData.rooms.taken || []).length;
-      
-      let totalRevenue = 0;
-      (allData.rooms.taken || []).forEach(r => totalRevenue += Number(r.amount || 0));
-      $('#stat-revenue').textContent = money(totalRevenue);
+      $('#stat-revenue').textContent = money(revenue);
+      $('#stat-expenses').textContent = money(expenses);
+      $('#stat-visitors').textContent = visitors;
 
       loadProperties(currentStatus);
-      loadRevenue();
-      renderCharts(totalRevenue);
-    } catch (err) {
-      console.error('Failed to load data', err);
-    }
+      renderExpenses();
+      loadReceipts();
+      renderCharts(revenue, expenses);
+    } catch (err) { console.error(err); }
   }
 
-  // 3. CHARTS LOGIC (Matches the screenshot)
-  function renderCharts(totalRevenue) {
-    // Revenue vs Expenses Chart
-    const ctxRev = document.getElementById('revenueChart').getContext('2d');
-    if (revenueChartInstance) revenueChartInstance.destroy();
-
-    // For demonstration of the chart style, we distribute total revenue over weeks
-    // In a real app, you'd group by actual date from database
-    const week1 = totalRevenue * 0.3;
-    const week2 = totalRevenue * 0.5;
-    const week3 = 0;
-    const week4 = totalRevenue * 0.2;
-    // Fake expense data just to match the screenshot visual
-    const expenses = [50, 1500, 0, 450]; 
-
-    revenueChartInstance = new Chart(ctxRev, {
+  function renderCharts(revenue, expenses) {
+    // Financial Chart
+    const ctxF = document.getElementById('financialChart').getContext('2d');
+    if (financeChart) financeChart.destroy();
+    financeChart = new Chart(ctxF, {
       type: 'bar',
       data: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        labels: ['Current Totals'],
         datasets: [
-          {
-            label: 'Revenue (Fees)',
-            data: [week1, week2, week3, week4],
-            backgroundColor: '#4f72e3', // Blue matching screenshot
-            borderRadius: 4,
-            barPercentage: 0.6
-          },
-          {
-            label: 'Expenses',
-            data: expenses,
-            backgroundColor: '#f26d6d', // Red matching screenshot
-            borderRadius: 4,
-            barPercentage: 0.6
-          }
+          { label: 'Revenue', data: [revenue], backgroundColor: '#0E382A', borderRadius: 4 },
+          { label: 'Expenses', data: [expenses], backgroundColor: '#f26d6d', borderRadius: 4 }
         ]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top' }
-        },
-        scales: {
-          y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-          x: { grid: { display: false } }
-        }
-      }
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
 
-    // Doughnut Chart
-    const ctxDough = document.getElementById('doughnutChart').getContext('2d');
-    if (doughnutChartInstance) doughnutChartInstance.destroy();
+    // Traffic Chart (Last 7 Days)
+    const ctxT = document.getElementById('trafficChart').getContext('2d');
+    if (trafficChart) trafficChart.destroy();
+    const trafficLabels = allData.traffic.slice(0, 7).map(t => t.date).reverse();
+    const trafficData = allData.traffic.slice(0, 7).map(t => t.count).reverse();
     
-    doughnutChartInstance = new Chart(ctxDough, {
-      type: 'doughnut',
+    trafficChart = new Chart(ctxT, {
+      type: 'line',
       data: {
-        labels: ['Revenue', 'Expenses'],
-        datasets: [{
-          data: [totalRevenue, 2000], // 2000 is dummy expense
-          backgroundColor: ['#0E382A', '#D4AF37'], // Brand colors
-          borderWidth: 0
-        }]
+        labels: trafficLabels.length ? trafficLabels : ['No Data'],
+        datasets: [{ label: 'Visitors', data: trafficData.length ? trafficData : [0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4 }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '75%',
-        plugins: { legend: { position: 'bottom' } }
-      }
+      options: { responsive: true, maintainAspectRatio: false }
     });
   }
 
-  // 4. TABS
   function switchTab(tabId, el) {
     document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
     $(`#tab-${tabId}`).style.display = 'block';
     el.classList.add('active');
-
-    const titles = {
-      dashboard: ['Dashboard Overview', 'Welcome back, Vusani.'],
-      properties: ['Manage Properties', 'Review, approve, and track your listings.'],
-      revenue: ['Revenue & Fees', 'Track your agent fee collections.']
-    };
+    const titles = { dashboard: ['Dashboard Overview', 'Real-time business data.'], properties: ['Properties', 'Manage your listings.'], expenses: ['Expenses', 'Track your business costs.'], receipts: ['Receipts', 'View and download tenant receipts.'] };
     $('#pageTitle').textContent = titles[tabId][0];
     $('#pageSubtitle').textContent = titles[tabId][1];
   }
 
-  // 5. RENDER PROPERTIES
+  // PROPERTIES LOGIC
   function loadProperties(status, btn = null) {
     currentStatus = status;
-    if (btn) {
-      document.querySelectorAll('.tabs .tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-
+    if (btn) { document.querySelectorAll('.tabs .tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
     const list = $('#propertyList');
     const rooms = allData.rooms[status] || [];
-
-    if (rooms.length === 0) {
-      list.innerHTML = `<div class="empty-state">No properties found in this section.</div>`;
-      return;
-    }
-
+    if (!rooms.length) return list.innerHTML = `<div class="empty-state">No properties found.</div>`;
+    
     list.innerHTML = rooms.map(r => `
       <div class="property-row">
         <div class="prop-info">
           <span class="prop-title">${r.title}</span>
-          <div class="prop-meta">
-            <span>📍 ${r.location}</span>
-            <span>🏠 ${r.type}</span>
-          </div>
+          <div class="prop-meta"><span>📍 ${r.location}</span><span>🏠 ${r.type}</span></div>
         </div>
         <div style="display: flex; align-items: center; gap: 24px;">
           <span class="prop-price">${money(r.amount)}</span>
@@ -546,8 +453,7 @@
             <button class="btn btn-view" onclick='openViewModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>View</button>
             ${status === 'pending' ? `<button class="btn btn-approve" onclick="doAction('move', '${r.id}', 'approved')">Approve</button>` : ''}
             ${status === 'pending' ? `<button class="btn btn-decline" onclick="doAction('move', '${r.id}', 'declined')">Decline</button>` : ''}
-            ${status === 'approved' ? `<button class="btn btn-take" onclick="markAsTaken('${r.id}')">Mark Taken</button>` : ''}
-            <button class="btn btn-edit" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Edit</button>
+            ${status === 'approved' ? `<button class="btn btn-take" onclick="openTakeModal('${r.id}')">Mark Taken</button>` : ''}
             ${status !== 'pending' ? `<button class="btn btn-delete" onclick="doAction('delete', '${r.id}')">Delete</button>` : ''}
           </div>
         </div>
@@ -555,132 +461,141 @@
     `).join('');
   }
 
-  // 6. ACTIONS
   async function doAction(action, id, to = null) {
-    if (action === 'delete' && !confirm('Are you sure you want to delete this property permanently?')) return;
-    
-    const token = localStorage.getItem('adminToken');
-    try {
-      await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action, id, to })
-      });
-      fetchData();
-    } catch (e) { alert('Action failed'); }
+    if (action === 'delete' && !confirm('Delete this property?')) return;
+    await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify({ action, id, to }) });
+    fetchData();
   }
 
-  async function markAsTaken(id) {
-    const room = allData.rooms.approved.find(r => r.id === id);
-    if (!room) return;
-
-    const feeInput = prompt(`Property: ${room.title}\n\nEnter the Agent Fee you collected (in Rands):`, room.amount);
-    if (feeInput === null) return;
-    
-    const fee = Number(feeInput);
-    if (isNaN(fee) || fee < 0) return alert('Please enter a valid number.');
-
-    const token = localStorage.getItem('adminToken');
-    try {
-      await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action: 'move', id, to: 'taken', amount: fee })
-      });
-      fetchData();
-    } catch (e) { alert('Failed to record fee'); }
+  function openTakeModal(id) {
+    $('#takeId').value = id;
+    $('#takeForm').reset();
+    $('#takeModal').classList.add('show');
   }
 
-  // 7. EDIT LOGIC
-  function openEditModal(room) {
-    $('#editId').value = room.id;
-    $('#editTitle').value = room.title;
-    $('#editAmount').value = room.amount;
-    $('#editType').value = room.type;
-    $('#editLocation').value = room.location;
-    $('#editNotes').value = room.notes || '';
-    $('#editModal').classList.add('show');
-  }
-
-  $('#editForm').addEventListener('submit', async (e) => {
+  $('#takeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('adminToken');
-    const id = $('#editId').value;
-    
-    const data = {
-      title: $('#editTitle').value,
-      amount: $('#editAmount').value,
-      type: $('#editType').value,
-      location: $('#editLocation').value,
-      notes: $('#editNotes').value
+    const payload = {
+      id: $('#takeId').value,
+      tenantName: $('#takeTenant').value,
+      houseNumber: $('#takeHouse').value,
+      rent: $('#takeRent').value,
+      deposit: $('#takeDeposit').value,
+      fee: $('#takeFee').value
     };
-
-    try {
-      await fetch('/api/admin/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ action: 'edit', id, data })
-      });
-      closeModal('editModal');
-      fetchData();
-    } catch (e) { alert('Failed to save changes'); }
+    await fetch('/api/admin/take', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify(payload) });
+    closeModal('takeModal');
+    fetchData();
   });
 
-  // 8. VIEW LOGIC
+  // EXPENSES LOGIC
+  $('#expenseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await fetch('/api/admin/expense', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') },
+      body: JSON.stringify({ category: $('#expCategory').value, description: $('#expDesc').value, amount: $('#expAmount').value })
+    });
+    $('#expenseForm').reset();
+    fetchData();
+  });
+
+  function renderExpenses() {
+    const list = $('#expenseList');
+    if (!allData.expenses.length) return list.innerHTML = `<div class="empty-state">No expenses recorded yet.</div>`;
+    list.innerHTML = allData.expenses.map(e => `
+      <div class="property-row">
+        <div class="prop-info">
+          <span class="prop-title">${e.category}: ${e.description}</span>
+          <div class="prop-meta"><span>📅 ${e.date} at ${e.time}</span></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 24px;">
+          <span class="prop-price" style="color: #b91c1c;">${money(e.amount)}</span>
+          <button class="btn btn-delete" onclick="deleteExpense('${e.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function deleteExpense(id) {
+    if(!confirm('Delete this expense?')) return;
+    await fetch('/api/admin/expense/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify({ id }) });
+    fetchData();
+  }
+
+  // RECEIPTS LOGIC
+  function loadReceipts() {
+    const list = $('#receiptList');
+    const taken = allData.rooms.taken || [];
+    if (!taken.length) return list.innerHTML = `<div class="empty-state">No tenants placed yet.</div>`;
+    list.innerHTML = taken.map(r => `
+      <div class="property-row">
+        <div class="prop-info">
+          <span class="prop-title">${r.tenantName} - ${r.title}</span>
+          <div class="prop-meta"><span>📍 ${r.houseNumber}</span><span>💰 Fee: ${money(r.amount)}</span></div>
+        </div>
+        <button class="btn btn-receipt" onclick='generateReceipt(${JSON.stringify(r).replace(/'/g, "&#39;")})'>View Receipt</button>
+      </div>
+    `).join('');
+  }
+
+  function generateReceipt(room) {
+    currentReceiptData = room;
+    const date = new Date().toLocaleDateString('en-ZA');
+    const receiptNo = `VIP-${room.id.slice(-6)}`;
+    
+    $('#r-date').textContent = date;
+    $('#r-number').textContent = receiptNo;
+    $('#r-tenant').textContent = room.tenantName;
+    $('#r-house').textContent = `${room.houseNumber}, ${room.location}`;
+    $('#r-rent').textContent = money(room.rent);
+    $('#r-deposit').textContent = money(room.deposit);
+    $('#r-fee').textContent = money(room.amount);
+    $('#r-total').textContent = money(Number(room.rent) + Number(room.deposit) + Number(room.amount));
+    $('#r-sysdate').textContent = new Date().toLocaleString('en-ZA');
+
+    $('#receiptModal').classList.add('show');
+  }
+
+  function downloadReceipt() {
+    const element = document.getElementById('receiptArea');
+    const opt = {
+      margin:       0.5,
+      filename:     `Receipt-${currentReceiptData.tenantName.replace(/\s/g, '_')}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+
+  function sendWhatsApp() {
+    const text = `*VUSANI IKHAYA PROPERTIES*\n*Official Receipt*\n\nDate: ${$('#r-date').textContent}\nReceipt No: ${$('#r-number').textContent}\nTenant: ${$('#r-tenant').textContent}\nProperty: ${$('#r-house').textContent}\n\nRent: ${$('#r-rent').textContent}\nDeposit: ${$('#r-deposit').textContent}\nAdmin Fee: ${$('#r-fee').textContent}\n*Total Paid: ${$('#r-total').textContent}*\n\nThank you for choosing us!`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  function sendEmail() {
+    const subject = `Official Receipt - Vusani Ikhaya Properties`;
+    const body = `Dear ${$('#r-tenant').textContent},\n\nPlease find your official receipt details below:\n\nDate: ${$('#r-date').textContent}\nReceipt No: ${$('#r-number').textContent}\nProperty: ${$('#r-house').textContent}\n\nRent: ${$('#r-rent').textContent}\nDeposit: ${$('#r-deposit').textContent}\nAdmin Fee: ${$('#r-fee').textContent}\nTotal Paid: ${$('#r-total').textContent}\n\nThank you,\nVusani Ikhaya Properties`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  // VIEW / MODAL LOGIC
   function openViewModal(room) {
     $('#modalTitle').textContent = room.title;
     $('#modalLocation').textContent = room.location;
     $('#modalPrice').textContent = money(room.amount);
     $('#modalType').textContent = room.type;
     $('#modalContact').textContent = `${room.posterName} (${room.posterContact})`;
-    $('#modalDesc').textContent = room.notes || 'No description provided.';
+    $('#modalDesc').textContent = room.notes || 'No description.';
     
     let mediaHtml = '';
-    if (room.images && room.images.length) {
-      room.images.forEach(img => mediaHtml += `<img src="${img}" onclick="openFullscreenMedia('image', '${img}')">`);
-    }
-    if (room.video) {
-      mediaHtml += `<video src="${room.video}" onclick="openFullscreenMedia('video', '${room.video}')"></video>`;
-    }
-    $('#modalMedia').innerHTML = mediaHtml || '<p style="color: var(--text-muted);">No images uploaded.</p>';
-    
+    if (room.images && room.images.length) room.images.forEach(img => mediaHtml += `<img src="${img}">`);
+    if (room.video) mediaHtml += `<video src="${room.video}" controls></video>`;
+    $('#modalMedia').innerHTML = mediaHtml || '<p>No media.</p>';
     $('#propertyModal').classList.add('show');
   }
 
-  function openFullscreenMedia(type, src) {
-    const content = $('#mediaViewerContent');
-    if (type === 'image') {
-      content.innerHTML = `<img src="${src}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-    } else {
-      content.innerHTML = `<video src="${src}" controls autoplay style="max-width: 100%; max-height: 100%;"></video>`;
-    }
-    $('#mediaModal').classList.add('show');
-  }
-
-  function closeModal(id) {
-    $(`#${id}`).classList.remove('show');
-    if (id === 'mediaModal') $('#mediaViewerContent').innerHTML = '';
-  }
-
-  // 9. REVENUE LOGIC
-  function loadRevenue() {
-    const tbody = $('#revenueList');
-    const taken = allData.rooms.taken || [];
-    
-    if (taken.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No revenue recorded yet.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = taken.map(r => `
-      <tr style="border-bottom: 1px solid var(--border);">
-        <td style="padding: 12px;">${new Date().toLocaleDateString()}</td>
-        <td style="padding: 12px; font-weight: 600;">${r.title}</td>
-        <td style="padding: 12px; color: var(--gold-dark); font-weight: 800;">${money(r.amount)}</td>
-        <td style="padding: 12px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">Collected</span></td>
-      </tr>
-    `).join('');
-  }
+  function closeModal(id) { $(`#${id}`).classList.remove('show'); }
 
   // INIT
   if (localStorage.getItem('adminToken')) {
