@@ -5,5 +5,12 @@
   "assets": {
     "directory": "./",
     "not_found_handling": "single-page-application"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vusani-db",
+      "database_id": "689a28ae-69db-48e1-8112-f4b260be5b23"
+    }
+  ]
 }
