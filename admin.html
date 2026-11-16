@@ -258,10 +258,12 @@
     <h2>✏️ Edit Property</h2>
     <form id="editForm">
       <input type="hidden" id="editId">
+      
       <div class="form-group">
         <label>Property Title</label>
         <input type="text" id="editTitle" required>
       </div>
+      
       <div class="modal-grid">
         <div class="form-group">
           <label>Price (R)</label>
@@ -272,15 +274,80 @@
           <input type="number" id="editDeposit">
         </div>
       </div>
+      
       <div class="form-group">
         <label>Location</label>
         <input type="text" id="editLocation" required>
       </div>
+      
       <div class="form-group">
         <label>Description / Notes</label>
-        <textarea id="editNotes" rows="4"></textarea>
+        <textarea id="editNotes" rows="3"></textarea>
       </div>
-      
+
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Child Friendly?</label>
+          <select id="editChild"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div class="form-group">
+          <label>Max Kids Allowed</label>
+          <input type="number" id="editMaxKids" min="0">
+        </div>
+        <div class="form-group">
+          <label>Parking Available?</label>
+          <select id="editParking"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div class="form-group">
+          <label>Max Cars Allowed</label>
+          <input type="number" id="editMaxCars" min="0">
+        </div>
+        <div class="form-group">
+          <label>Pets Friendly?</label>
+          <select id="editPets"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div class="form-group">
+          <label>Has Ceiling?</label>
+          <select id="editCeiling"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div class="form-group">
+          <label>Has Tiles?</label>
+          <select id="editTiles"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div class="form-group">
+          <label>Toilet Type</label>
+          <select id="editToilet">
+            <option value="Shared Toilet">Shared Toilet</option>
+            <option value="Own Toilet">Own Toilet</option>
+            <option value="Own Toilet & Shower">Own Toilet & Shower</option>
+            <option value="Inside Toilet">Inside Toilet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kitchen Type</label>
+          <select id="editKitchen">
+            <option value="No Kitchen">No Kitchen</option>
+            <option value="Shared Kitchen">Shared Kitchen</option>
+            <option value="Own Kitchen">Own Kitchen</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Furniture Status</label>
+          <select id="editFurniture">
+            <option value="Unfurnished">Unfurnished</option>
+            <option value="Furnished">Furnished</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Wardrobe Available?</label>
+          <select id="editWardrobe"><option value="Not Available">Not Available</option><option value="Available">Available</option></select>
+        </div>
+        <div class="form-group">
+          <label>Kitchen Unit Available?</label>
+          <select id="editKitchenUnit"><option value="Not Available">Not Available</option><option value="Available">Available</option></select>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Current Images & Video</label>
         <div id="editMediaPreview" class="modal-media"></div>
@@ -288,7 +355,7 @@
       
       <div class="form-group">
         <label>Add New Pictures (Select in order 1, 2, 3...)</label>
-        <input type="file" id="editImages" multiple accept="image/*">
+        <input type="file" id="editImages" multiple accept="image/*" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%;">
       </div>
       
       <button type="submit" class="btn btn-approve" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 10px;">Save Changes</button>
@@ -491,6 +558,19 @@
     $('#editLocation').value = room.location;
     $('#editNotes').value = room.notes || '';
     
+    $('#editChild').value = room.childFriendly || 'No';
+    $('#editMaxKids').value = room.maxKids || '0';
+    $('#editParking').value = room.parking || 'No';
+    $('#editMaxCars').value = room.maxCars || '0';
+    $('#editPets').value = room.petsFriendly || 'No';
+    $('#editCeiling').value = room.ceiling || 'No';
+    $('#editTiles').value = room.tiles || 'No';
+    $('#editToilet').value = room.toiletType || 'Shared Toilet';
+    $('#editKitchen').value = room.kitchenType || 'No Kitchen';
+    $('#editFurniture').value = room.furniture || 'Unfurnished';
+    $('#editWardrobe').value = room.wardrobe || 'Not Available';
+    $('#editKitchenUnit').value = room.kitchenUnit || 'Not Available';
+    
     let mediaHtml = '';
     if (room.images && room.images.length) {
       room.images.forEach((img, i) => mediaHtml += `<img src="${img}" title="Image ${i+1}">`);
@@ -500,7 +580,7 @@
     }
     $('#editMediaPreview').innerHTML = mediaHtml || '<p style="color: var(--text-muted);">No media.</p>';
     
-    $('#editImages').value = ''; // clear file input
+    $('#editImages').value = '';
     $('#editModal').classList.add('show');
   }
 
@@ -513,7 +593,6 @@
     const id = $('#editId').value;
     const token = localStorage.getItem('adminToken');
     
-    // Find original room data to preserve video and old images
     let originalRoom = null;
     for (const status in allData.rooms) {
       const found = allData.rooms[status].find(r => r.id === id);
@@ -521,8 +600,6 @@
     }
 
     let finalImages = originalRoom.images || [];
-    
-    // Upload NEW images if selected
     const fileInput = document.getElementById('editImages');
     const files = Array.from(fileInput.files);
     
@@ -535,7 +612,6 @@
         const data = await res.json();
         if (data.success) newUploadedUrls.push(data.urls[0]);
       }
-      // Append new images to old ones
       finalImages = finalImages.concat(newUploadedUrls);
     }
 
@@ -549,8 +625,20 @@
         location: $('#editLocation').value,
         notes: $('#editNotes').value,
         type: originalRoom.type,
-        images: finalImages, // The combined list
-        video: originalRoom.video || ''
+        images: finalImages,
+        video: originalRoom.video || '',
+        childFriendly: $('#editChild').value,
+        maxKids: $('#editMaxKids').value,
+        parking: $('#editParking').value,
+        maxCars: $('#editMaxCars').value,
+        petsFriendly: $('#editPets').value,
+        ceiling: $('#editCeiling').value,
+        tiles: $('#editTiles').value,
+        kitchenType: $('#editKitchen').value,
+        furniture: $('#editFurniture').value,
+        wardrobe: $('#editWardrobe').value,
+        kitchenUnit: $('#editKitchenUnit').value,
+        toiletType: $('#editToilet').value
       }
     };
 
