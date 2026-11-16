@@ -1,5 +1,6 @@
 {
   "name": "vusani-ikhaya-properties",
+  "main": "worker.js",
   "compatibility_date": "2024-11-01",
   "assets": {
     "directory": "./",
