@@ -11,10 +11,9 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // 1. PUBLIC API (Track Traffic + Load Rooms)
+    // 1. PUBLIC API
     if (path === "/api/public" && request.method === "GET") {
       try {
-        // Track traffic silently
         const today = new Date().toISOString().split('T')[0];
         await env.DB.prepare(`
             INSERT INTO traffic (id, date, page, count) VALUES (?, 'home', 1)
@@ -38,7 +37,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 3. ADMIN DATA (Rooms, Expenses, Traffic)
+    // 3. ADMIN DATA
     if (path === "/api/admin/data" && request.method === "GET") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
@@ -95,7 +94,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 6. RECORD TAKEN (With full receipt details)
+    // 6. RECORD TAKEN
     if (path === "/api/admin/take" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
@@ -109,7 +108,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 7. UPLOAD TO R2 (UPDATED WITH YOUR ACTUAL URL)
+    // 7. UPLOAD TO R2
     if (path === "/api/upload" && request.method === "POST") {
         try {
             const formData = await request.formData();
@@ -117,15 +116,12 @@ export default {
             if (!file) return Response.json({ success: false, error: "No file" }, { status: 400, headers: corsHeaders });
             const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
             await env.BUCKET.put(filename, file.stream(), { httpMetadata: { contentType: file.type } });
-            
-            // Your actual public R2 URL is inserted here
             const publicUrl = `https://pub-a1fed41b33a448038bb13c22ff962e9b.r2.dev/${filename}`; 
-            
             return Response.json({ success: true, urls: [publicUrl] }, { headers: corsHeaders });
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 8. SUBMIT (Keep existing)
+    // 8. SUBMIT PROPERTY
     if (path === "/api/submit" && request.method === "POST") {
         try {
             const body = await request.json();
