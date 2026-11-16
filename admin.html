@@ -56,8 +56,8 @@
   .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .section-header h3 { font-size: 20px; font-weight: 800; color: var(--green-dark); }
   
-  .tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-  .tab { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--text-muted); background: none; border: none; transition: all 0.2s; }
+  .tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto; }
+  .tab { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--text-muted); background: none; border: none; transition: all 0.2s; white-space: nowrap; }
   .tab:hover { background: var(--bg-color); }
   .tab.active { background: var(--green-dark); color: white; }
 
@@ -69,16 +69,19 @@
   .prop-meta { font-size: 13px; color: var(--text-muted); display: flex; gap: 16px; }
   .prop-price { font-weight: 800; color: var(--green-dark); font-size: 18px; }
   
-  .actions { display: flex; gap: 8px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
   .btn-approve { background: var(--green-dark); color: white; }
   .btn-approve:hover { background: var(--green-light); }
+  .btn-decline { background: #fee2e2; color: #b91c1c; }
+  .btn-decline:hover { background: #fecaca; }
   .btn-take { background: var(--gold); color: var(--green-dark); }
   .btn-take:hover { background: var(--gold-dark); }
-  .btn-delete { background: #fee2e2; color: #b91c1c; }
-  .btn-delete:hover { background: #fecaca; }
+  .btn-delete { background: #333; color: white; }
   .btn-view { background: #e0e7ff; color: #3730a3; }
   .btn-view:hover { background: #c7d2fe; }
+  .btn-edit { background: #f3f4f6; color: #4b5563; }
+  .btn-edit:hover { background: #e5e7eb; }
 
   .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
 
@@ -90,26 +93,27 @@
   .login-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
   .form-group { margin-bottom: 16px; text-align: left; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
-  .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; }
-  .form-group input:focus { outline: none; border-color: var(--green-dark); }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; }
+  .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--green-dark); }
   .btn-login { width: 100%; padding: 14px; background: var(--green-dark); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
   .btn-login:hover { background: var(--green-light); }
 
-  /* MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.show { display: flex; }
   .modal-box { background: white; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 32px; position: relative; }
   .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
   .modal-box h2 { color: var(--green-dark); margin-bottom: 20px; }
   .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   .modal-media { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-  .modal-media img, .modal-media video { width: 120px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+  .modal-media img, .modal-media video { width: 150px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
 
   @media (max-width: 768px) {
     body { flex-direction: column; }
     .sidebar { width: 100%; height: auto; position: relative; }
     .main-content { margin-left: 0; padding: 20px; }
     .modal-grid { grid-template-columns: 1fr; }
+    .property-row { flex-direction: column; align-items: flex-start; gap: 16px; }
   }
 </style>
 </head>
@@ -145,7 +149,6 @@
 <!-- MAIN DASHBOARD -->
 <div id="dashboard" style="display: none; width: 100%; display: flex;">
   
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -176,7 +179,6 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main-content">
     <header class="top-header">
       <div>
@@ -235,11 +237,10 @@
           <button class="tab active" onclick="loadProperties('pending', this)">Pending</button>
           <button class="tab" onclick="loadProperties('approved', this)">Available</button>
           <button class="tab" onclick="loadProperties('taken', this)">Taken</button>
+          <button class="tab" onclick="loadProperties('declined', this)">Declined</button>
         </div>
 
-        <div class="property-list" id="propertyList">
-          <!-- Properties will be injected here -->
-        </div>
+        <div class="property-list" id="propertyList"></div>
       </div>
     </div>
 
@@ -258,9 +259,7 @@
               <th style="padding: 12px; color: var(--text-muted);">Status</th>
             </tr>
           </thead>
-          <tbody id="revenueList">
-            <!-- Revenue rows will be injected here -->
-          </tbody>
+          <tbody id="revenueList"></tbody>
         </table>
       </div>
     </div>
@@ -271,7 +270,7 @@
 <!-- MODAL FOR VIEWING PROPERTY -->
 <div class="modal-overlay" id="propertyModal">
   <div class="modal-box">
-    <button class="modal-close" onclick="closeModal()">✕</button>
+    <button class="modal-close" onclick="closeModal('propertyModal')">✕</button>
     <h2 id="modalTitle">Property Details</h2>
     <div class="modal-grid">
       <div><strong>Location:</strong> <span id="modalLocation"></span></div>
@@ -284,11 +283,56 @@
   </div>
 </div>
 
+<!-- MODAL FOR EDITING PROPERTY -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    <h2>✏️ Edit Property</h2>
+    <form id="editForm">
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label>Property Title</label>
+        <input type="text" id="editTitle" required>
+      </div>
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Price (R)</label>
+          <input type="number" id="editAmount" required>
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select id="editType">
+            <option value="room">Room</option>
+            <option value="bachelor">Bachelor</option>
+            <option value="house">House</option>
+            <option value="flat">Flat</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="editLocation" required>
+      </div>
+      <div class="form-group">
+        <label>Description / Notes</label>
+        <textarea id="editNotes" rows="4"></textarea>
+      </div>
+      <button type="submit" class="btn btn-approve" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 10px;">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- FULLSCREEN MEDIA VIEWER -->
+<div class="modal-overlay" id="mediaModal" style="background: rgba(0,0,0,0.95);" onclick="closeModal('mediaModal')">
+  <button class="modal-close" style="color: white; z-index: 10;">✕</button>
+  <div id="mediaViewerContent" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"></div>
+</div>
+
 <script>
   const $ = (s) => document.querySelector(s);
   const money = (n) => 'R' + Number(n || 0).toLocaleString('en-ZA', { maximumFractionDigits: 2 });
   
-  let allData = { rooms: { pending: [], approved: [], taken: [] } };
+  let allData = { rooms: { pending: [], approved: [], taken: [], declined: [] } };
   let currentStatus = 'pending';
 
   // 1. LOGIN LOGIC
@@ -323,7 +367,7 @@
     location.reload();
   }
 
-  // 2. FETCH DATA FROM CLOUDFLARE
+  // 2. FETCH DATA
   async function fetchData() {
     const token = localStorage.getItem('adminToken');
     if (!token) return logout();
@@ -334,12 +378,10 @@
       
       allData = await res.json();
       
-      // Update Stats
       $('#stat-pending').textContent = (allData.rooms.pending || []).length;
       $('#stat-approved').textContent = (allData.rooms.approved || []).length;
       $('#stat-taken').textContent = (allData.rooms.taken || []).length;
       
-      // Calculate Revenue (Assuming fee is stored in 'amount' field for taken properties)
       let totalRevenue = 0;
       (allData.rooms.taken || []).forEach(r => totalRevenue += Number(r.amount || 0));
       $('#stat-revenue').textContent = money(totalRevenue);
@@ -396,9 +438,11 @@
         <div style="display: flex; align-items: center; gap: 24px;">
           <span class="prop-price">${money(r.amount)}</span>
           <div class="actions">
-            <button class="btn btn-view" onclick='openModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>View</button>
+            <button class="btn btn-view" onclick='openViewModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>View</button>
             ${status === 'pending' ? `<button class="btn btn-approve" onclick="doAction('move', '${r.id}', 'approved')">Approve</button>` : ''}
+            ${status === 'pending' ? `<button class="btn btn-decline" onclick="doAction('move', '${r.id}', 'declined')">Decline</button>` : ''}
             ${status === 'approved' ? `<button class="btn btn-take" onclick="markAsTaken('${r.id}')">Mark Taken</button>` : ''}
+            <button class="btn btn-edit" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Edit</button>
             ${status !== 'pending' ? `<button class="btn btn-delete" onclick="doAction('delete', '${r.id}')">Delete</button>` : ''}
           </div>
         </div>
@@ -406,9 +450,9 @@
     `).join('');
   }
 
-  // 5. ACTIONS (Approve, Delete)
+  // 5. ACTIONS
   async function doAction(action, id, to = null) {
-    if (action === 'delete' && !confirm('Are you sure you want to delete this property?')) return;
+    if (action === 'delete' && !confirm('Are you sure you want to delete this property permanently?')) return;
     
     const token = localStorage.getItem('adminToken');
     try {
@@ -417,42 +461,104 @@
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ action, id, to })
       });
-      fetchData(); // Refresh data
-    } catch (e) {
-      alert('Action failed');
-    }
+      fetchData();
+    } catch (e) { alert('Action failed'); }
   }
 
-  // 6. MARK AS TAKEN (Revenue logic)
   async function markAsTaken(id) {
-    // We need to find the property to ask for the fee amount
     const room = allData.rooms.approved.find(r => r.id === id);
     if (!room) return;
 
     const feeInput = prompt(`Property: ${room.title}\n\nEnter the Agent Fee you collected (in Rands):`, room.amount);
-    if (feeInput === null) return; // User cancelled
+    if (feeInput === null) return;
     
     const fee = Number(feeInput);
-    if (isNaN(fee) || fee < 0) {
-      alert('Please enter a valid number for the fee.');
-      return;
-    }
+    if (isNaN(fee) || fee < 0) return alert('Please enter a valid number.');
 
     const token = localStorage.getItem('adminToken');
     try {
-      // We update the status AND the amount (to record the actual fee collected)
       await fetch('/api/admin/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ action: 'move', id, to: 'taken', amount: fee })
       });
       fetchData();
-    } catch (e) {
-      alert('Failed to record fee');
-    }
+    } catch (e) { alert('Failed to record fee'); }
   }
 
-  // 7. RENDER REVENUE HISTORY
+  // 6. EDIT LOGIC
+  function openEditModal(room) {
+    $('#editId').value = room.id;
+    $('#editTitle').value = room.title;
+    $('#editAmount').value = room.amount;
+    $('#editType').value = room.type;
+    $('#editLocation').value = room.location;
+    $('#editNotes').value = room.notes || '';
+    $('#editModal').classList.add('show');
+  }
+
+  $('#editForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const id = $('#editId').value;
+    
+    const data = {
+      title: $('#editTitle').value,
+      amount: $('#editAmount').value,
+      type: $('#editType').value,
+      location: $('#editLocation').value,
+      notes: $('#editNotes').value
+    };
+
+    try {
+      await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action: 'edit', id, data })
+      });
+      closeModal('editModal');
+      fetchData();
+    } catch (e) { alert('Failed to save changes'); }
+  });
+
+  // 7. VIEW LOGIC
+  function openViewModal(room) {
+    $('#modalTitle').textContent = room.title;
+    $('#modalLocation').textContent = room.location;
+    $('#modalPrice').textContent = money(room.amount);
+    $('#modalType').textContent = room.type;
+    $('#modalContact').textContent = `${room.posterName} (${room.posterContact})`;
+    $('#modalDesc').textContent = room.notes || 'No description provided.';
+    
+    let mediaHtml = '';
+    if (room.images && room.images.length) {
+      room.images.forEach(img => mediaHtml += `<img src="${img}" onclick="openFullscreenMedia('image', '${img}')">`);
+    }
+    if (room.video) {
+      mediaHtml += `<video src="${room.video}" onclick="openFullscreenMedia('video', '${room.video}')"></video>`;
+    }
+    $('#modalMedia').innerHTML = mediaHtml || '<p style="color: var(--text-muted);">No images uploaded.</p>';
+    
+    $('#propertyModal').classList.add('show');
+  }
+
+  // 8. FULLSCREEN MEDIA
+  function openFullscreenMedia(type, src) {
+    const content = $('#mediaViewerContent');
+    if (type === 'image') {
+      content.innerHTML = `<img src="${src}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+    } else {
+      content.innerHTML = `<video src="${src}" controls autoplay style="max-width: 100%; max-height: 100%;"></video>`;
+    }
+    $('#mediaModal').classList.add('show');
+  }
+
+  function closeModal(id) {
+    $(`#${id}`).classList.remove('show');
+    if (id === 'mediaModal') $('#mediaViewerContent').innerHTML = '';
+  }
+
+  // 9. REVENUE LOGIC
   function loadRevenue() {
     const tbody = $('#revenueList');
     const taken = allData.rooms.taken || [];
@@ -470,31 +576,6 @@
         <td style="padding: 12px;"><span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">Collected</span></td>
       </tr>
     `).join('');
-  }
-
-  // 8. MODAL LOGIC
-  function openModal(room) {
-    $('#modalTitle').textContent = room.title;
-    $('#modalLocation').textContent = room.location;
-    $('#modalPrice').textContent = money(room.amount);
-    $('#modalType').textContent = room.type;
-    $('#modalContact').textContent = `${room.posterName} (${room.posterContact})`;
-    $('#modalDesc').textContent = room.notes || 'No description provided.';
-    
-    let mediaHtml = '';
-    if (room.images && room.images.length) {
-      room.images.forEach(img => mediaHtml += `<img src="${img}">`);
-    }
-    if (room.video) {
-      mediaHtml += `<video src="${room.video}" controls></video>`;
-    }
-    $('#modalMedia').innerHTML = mediaHtml || '<p style="color: var(--text-muted);">No images uploaded.</p>';
-    
-    $('#propertyModal').classList.add('show');
-  }
-
-  function closeModal() {
-    $('#propertyModal').classList.remove('show');
   }
 
   // INIT
