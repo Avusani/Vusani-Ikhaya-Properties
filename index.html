@@ -186,7 +186,7 @@ input,select,textarea{font-family:inherit;}
 .modal-slider{display:flex; height:100%; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .modal-slider::-webkit-scrollbar { display: none; }
 .modal-slide{flex:0 0 100%; scroll-snap-align:start; position:relative; display:flex; align-items:center; justify-content:center;}
-.modal-slide img{max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain;}
+.modal-slide img{max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain; cursor: zoom-in;}
 .modal-slide.video-slide{background:#000;padding:0;}
 
 .modal-video-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;}
@@ -794,7 +794,7 @@ function renderCard(p){
     if (m.type === 'empty') {
       return `<div class="pc-slide" style="background:#dfe4e8;display:flex;align-items:center;justify-content:center;color:#637268;">No Image</div>`;
     }
-    return `<div class="pc-slide"><img src="${escapeHTML(m.url)}" loading="lazy"></div>`;
+    return `<div class="pc-slide"><img src="${escapeHTML(m.url)}" loading="lazy" onclick="openProp('${escapeHTML(p.id)}')"></div>`;
   }).join('');
 
   const dots = mediaItems.length > 1
@@ -976,7 +976,7 @@ function openProp(id){
       </div>`;
     }
     if (m.type === 'empty') return `<div class="modal-slide" style="color:#fff;">No Image</div>`;
-    return `<div class="modal-slide"><img src="${escapeHTML(m.url)}" loading="lazy"></div>`;
+    return `<div class="modal-slide"><img src="${escapeHTML(m.url)}" loading="lazy" onclick="openVideoFullscreen('${escapeHTML(m.url)}')"></div>`;
   }).join('');
 
   const price = formatPrice(p.amount);
