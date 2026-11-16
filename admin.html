@@ -9,15 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root {
-    --green-dark: #0E382A;
-    --green-light: #1a4f3a;
-    --gold: #D4AF37;
-    --gold-dark: #B5952F;
-    --bg-color: #f4f7f6;
-    --white: #ffffff;
-    --text-main: #1a1d23;
-    --text-muted: #637268;
-    --border: #e2e8f0;
+    --green-dark: #0E382A; --green-light: #1a4f3a; --gold: #D4AF37; --gold-dark: #B5952F;
+    --bg-color: #f4f7f6; --white: #ffffff; --text-main: #1a1d23; --text-muted: #637268; --border: #e2e8f0;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
@@ -50,7 +43,7 @@
   .stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--green-dark); }
   .stat-card.revenue::before { background: var(--gold); }
   .stat-card.expense::before { background: #f26d6d; }
-  .stat-card h3 { font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card h3 { font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
   .stat-card .value { font-size: 28px; font-weight: 800; color: var(--green-dark); margin-top: 8px; }
   .stat-card.revenue .value { color: var(--gold-dark); }
   .stat-card.expense .value { color: #b91c1c; }
@@ -81,15 +74,13 @@
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; }
   .btn-approve { background: var(--green-dark); color: white; }
-  .btn-approve:hover { background: var(--green-light); }
   .btn-decline { background: #fee2e2; color: #b91c1c; }
-  .btn-decline:hover { background: #fecaca; }
   .btn-take { background: var(--gold); color: var(--green-dark); }
-  .btn-take:hover { background: var(--gold-dark); }
   .btn-delete { background: #333; color: white; }
   .btn-view { background: #e0e7ff; color: #3730a3; }
   .btn-edit { background: #f3f4f6; color: #4b5563; }
   .btn-receipt { background: #10b981; color: white; }
+  .btn-repost { background: #6b7280; color: white; }
 
   .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
 
@@ -169,7 +160,6 @@
       <a class="nav-item" onclick="switchTab('receipts', this)"><span>🧾</span> Receipts</a>
     </nav>
     <div class="sidebar-footer">
-      <!-- RETURN TO WEBSITE LINK -->
       <a href="/" target="_blank" style="color: var(--gold); margin-bottom: 12px; display: block;"><span>🌐</span> View Public Website</a>
       <a href="#" onclick="logout()"><span>🚪</span> Logout</a>
     </div>
@@ -215,9 +205,7 @@
     <!-- EXPENSES TAB -->
     <div id="tab-expenses" class="tab-content" style="display: none;">
       <div class="data-section">
-        <div class="section-header">
-          <h3>Record Expense</h3>
-        </div>
+        <div class="section-header"><h3>Record Expense</h3></div>
         <form id="expenseForm" style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
           <select id="expCategory" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); flex: 1;">
             <option value="Transport">Transport</option>
@@ -231,7 +219,6 @@
           <input type="number" id="expAmount" placeholder="Amount (R)" required style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); flex: 1;">
           <button type="submit" class="btn btn-approve" style="padding: 10px 20px;">Add Expense</button>
         </form>
-
         <div class="section-header"><h3>Expense History</h3></div>
         <div class="expense-list" id="expenseList"></div>
       </div>
@@ -240,8 +227,7 @@
     <!-- RECEIPTS TAB -->
     <div id="tab-receipts" class="tab-content" style="display: none;">
       <div class="data-section">
-        <div class="section-header"><h3>Generated Receipts (From Taken Properties)</h3></div>
-        <p style="color: var(--text-muted); margin-bottom: 20px;">Go to "Properties -> Taken" to generate a receipt for a tenant.</p>
+        <div class="section-header"><h3>Generated Receipts</h3></div>
         <div class="property-list" id="receiptList"></div>
       </div>
     </div>
@@ -249,7 +235,7 @@
   </main>
 </div>
 
-<!-- MODALS -->
+<!-- MODAL: VIEW PROPERTY -->
 <div class="modal-overlay" id="propertyModal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('propertyModal')">✕</button>
@@ -265,6 +251,52 @@
   </div>
 </div>
 
+<!-- MODAL: EDIT PROPERTY -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    <h2>✏️ Edit Property</h2>
+    <form id="editForm">
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label>Property Title</label>
+        <input type="text" id="editTitle" required>
+      </div>
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Price (R)</label>
+          <input type="number" id="editAmount" required>
+        </div>
+        <div class="form-group">
+          <label>Deposit (R)</label>
+          <input type="number" id="editDeposit">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="editLocation" required>
+      </div>
+      <div class="form-group">
+        <label>Description / Notes</label>
+        <textarea id="editNotes" rows="4"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Current Images & Video</label>
+        <div id="editMediaPreview" class="modal-media"></div>
+      </div>
+      
+      <div class="form-group">
+        <label>Add New Pictures (Select in order 1, 2, 3...)</label>
+        <input type="file" id="editImages" multiple accept="image/*">
+      </div>
+      
+      <button type="submit" class="btn btn-approve" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 10px;">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: TAKE PROPERTY -->
 <div class="modal-overlay" id="takeModal">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('takeModal')">✕</button>
@@ -278,11 +310,12 @@
         <div class="form-group"><label>Deposit Amount (R)</label><input type="number" id="takeDeposit" required></div>
         <div class="form-group" style="grid-column: 1 / -1;"><label>Agent Fee Collected (R) *</label><input type="number" id="takeFee" required style="border-color: var(--gold);"></div>
       </div>
-      <button type="submit" class="btn btn-approve" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 10px;">Mark as Taken & Generate Receipt</button>
+      <button type="submit" class="btn btn-approve" style="width: 100%; padding: 14px; font-size: 16px;">Mark as Taken & Generate Receipt</button>
     </form>
   </div>
 </div>
 
+<!-- MODAL: RECEIPT -->
 <div class="modal-overlay" id="receiptModal">
   <div class="modal-box" style="max-width: 600px;">
     <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
@@ -291,38 +324,24 @@
       <button class="btn btn-receipt" onclick="sendWhatsApp()" style="flex: 1; background: #25D366;">💬 Send WhatsApp</button>
       <button class="btn btn-take" onclick="sendEmail()" style="flex: 1;">📧 Send Email</button>
     </div>
-    
-    <!-- THIS IS THE RECEIPT THAT GETS DOWNLOADED -->
     <div id="receiptArea">
-      <div class="receipt-stamp">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="45" r="38" stroke="#0E382A" stroke-width="2" fill="none"/><path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#0E382A"/><rect x="42" y="45" width="16" height="20" fill="#fff"/><path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/><circle cx="20" cy="60" r="10" fill="#D4AF37"/></svg>
-      </div>
-      
+      <div class="receipt-stamp"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="45" r="38" stroke="#0E382A" stroke-width="2" fill="none"/><path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#0E382A"/><rect x="42" y="45" width="16" height="20" fill="#fff"/><path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/><circle cx="20" cy="60" r="10" fill="#D4AF37"/></svg></div>
       <div class="receipt-header">
         <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 10px;"><circle cx="50" cy="45" r="38" stroke="#0E382A" stroke-width="2" fill="none"/><path d="M50 15 L15 65 L25 65 L50 30 L75 65 L85 65 Z" fill="#0E382A"/><rect x="42" y="45" width="16" height="20" fill="#fff"/><path d="M15 60 L85 60" stroke="#fff" stroke-width="5"/><circle cx="20" cy="60" r="10" fill="#D4AF37"/></svg>
         <h1>VUSANI IKHAYA PROPERTIES</h1>
         <p>CIPC No. 2026/537275/07</p>
         <p>www.vusaniikhayaproperties.co.za | 068 535 3186</p>
       </div>
-
       <h2 style="text-align: center; color: var(--gold-dark); margin-bottom: 24px; letter-spacing: 2px;">OFFICIAL RECEIPT</h2>
-
       <div class="receipt-row"><span>Date Issued:</span> <strong id="r-date"></strong></div>
       <div class="receipt-row"><span>Receipt No:</span> <strong id="r-number"></strong></div>
       <div class="receipt-row"><span>Received From (Tenant):</span> <strong id="r-tenant"></strong></div>
       <div class="receipt-row"><span>Property Address:</span> <strong id="r-house"></strong></div>
-      
       <div style="border-top: 1px solid #eee; margin: 20px 0;"></div>
-
       <div class="receipt-row"><span>Monthly Rent:</span> <span id="r-rent"></span></div>
       <div class="receipt-row"><span>Deposit Paid:</span> <span id="r-deposit"></span></div>
       <div class="receipt-row" style="margin-top: 10px; color: var(--gold-dark);"><span>Admin / Agent Fee:</span> <strong id="r-fee"></strong></div>
-
-      <div class="receipt-total">
-        <span>Total Paid:</span>
-        <span id="r-total"></span>
-      </div>
-
+      <div class="receipt-total"><span>Total Paid:</span><span id="r-total"></span></div>
       <div class="receipt-footer">
         <p>Thank you for choosing Vusani Ikhaya Properties.</p>
         <p>This is a computer-generated receipt and is valid without a signature.</p>
@@ -402,13 +421,7 @@
     if (financeChart) financeChart.destroy();
     financeChart = new Chart(ctxF, {
       type: 'bar',
-      data: {
-        labels: ['Current Totals'],
-        datasets: [
-          { label: 'Revenue', data: [revenue], backgroundColor: '#0E382A', borderRadius: 4 },
-          { label: 'Expenses', data: [expenses], backgroundColor: '#f26d6d', borderRadius: 4 }
-        ]
-      },
+      data: { labels: ['Current Totals'], datasets: [{ label: 'Revenue', data: [revenue], backgroundColor: '#0E382A', borderRadius: 4 }, { label: 'Expenses', data: [expenses], backgroundColor: '#f26d6d', borderRadius: 4 }] },
       options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
 
@@ -416,13 +429,9 @@
     if (trafficChart) trafficChart.destroy();
     const trafficLabels = allData.traffic.slice(0, 7).map(t => t.date).reverse();
     const trafficData = allData.traffic.slice(0, 7).map(t => t.count).reverse();
-    
     trafficChart = new Chart(ctxT, {
       type: 'line',
-      data: {
-        labels: trafficLabels.length ? trafficLabels : ['No Data'],
-        datasets: [{ label: 'Visitors', data: trafficData.length ? trafficData : [0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4 }]
-      },
+      data: { labels: trafficLabels.length ? trafficLabels : ['No Data'], datasets: [{ label: 'Visitors', data: trafficData.length ? trafficData : [0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4 }] },
       options: { responsive: true, maintainAspectRatio: false }
     });
   }
@@ -454,9 +463,12 @@
           <span class="prop-price">${money(r.amount)}</span>
           <div class="actions">
             <button class="btn btn-view" onclick='openViewModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>View</button>
+            <button class="btn btn-edit" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Edit</button>
             ${status === 'pending' ? `<button class="btn btn-approve" onclick="doAction('move', '${r.id}', 'approved')">Approve</button>` : ''}
             ${status === 'pending' ? `<button class="btn btn-decline" onclick="doAction('move', '${r.id}', 'declined')">Decline</button>` : ''}
             ${status === 'approved' ? `<button class="btn btn-take" onclick="openTakeModal('${r.id}')">Mark Taken</button>` : ''}
+            ${status === 'taken' ? `<button class="btn btn-repost" onclick="doAction('move', '${r.id}', 'approved')">🔄 Repost</button>` : ''}
+            ${status === 'declined' ? `<button class="btn btn-repost" onclick="doAction('move', '${r.id}', 'pending')">🔄 Repost</button>` : ''}
             ${status !== 'pending' ? `<button class="btn btn-delete" onclick="doAction('delete', '${r.id}')">Delete</button>` : ''}
           </div>
         </div>
@@ -465,11 +477,111 @@
   }
 
   async function doAction(action, id, to = null) {
-    if (action === 'delete' && !confirm('Delete this property?')) return;
+    if (action === 'delete' && !confirm('Delete this property permanently?')) return;
     await fetch('/api/admin/action', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify({ action, id, to }) });
     fetchData();
   }
 
+  // EDIT LOGIC
+  function openEditModal(room) {
+    $('#editId').value = room.id;
+    $('#editTitle').value = room.title;
+    $('#editAmount').value = room.amount;
+    $('#editDeposit').value = room.deposit || '';
+    $('#editLocation').value = room.location;
+    $('#editNotes').value = room.notes || '';
+    
+    let mediaHtml = '';
+    if (room.images && room.images.length) {
+      room.images.forEach((img, i) => mediaHtml += `<img src="${img}" title="Image ${i+1}">`);
+    }
+    if (room.video) {
+      mediaHtml += `<video src="${room.video}" controls title="Video"></video>`;
+    }
+    $('#editMediaPreview').innerHTML = mediaHtml || '<p style="color: var(--text-muted);">No media.</p>';
+    
+    $('#editImages').value = ''; // clear file input
+    $('#editModal').classList.add('show');
+  }
+
+  $('#editForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    const id = $('#editId').value;
+    const token = localStorage.getItem('adminToken');
+    
+    // Find original room data to preserve video and old images
+    let originalRoom = null;
+    for (const status in allData.rooms) {
+      const found = allData.rooms[status].find(r => r.id === id);
+      if (found) { originalRoom = found; break; }
+    }
+
+    let finalImages = originalRoom.images || [];
+    
+    // Upload NEW images if selected
+    const fileInput = document.getElementById('editImages');
+    const files = Array.from(fileInput.files);
+    
+    if (files.length > 0) {
+      let newUploadedUrls = [];
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('images', files[i]);
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) newUploadedUrls.push(data.urls[0]);
+      }
+      // Append new images to old ones
+      finalImages = finalImages.concat(newUploadedUrls);
+    }
+
+    const payload = {
+      action: 'edit',
+      id: id,
+      data: {
+        title: $('#editTitle').value,
+        amount: $('#editAmount').value,
+        deposit: $('#editDeposit').value,
+        location: $('#editLocation').value,
+        notes: $('#editNotes').value,
+        type: originalRoom.type,
+        images: finalImages, // The combined list
+        video: originalRoom.video || ''
+      }
+    };
+
+    await fetch('/api/admin/action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(payload)
+    });
+    
+    btn.textContent = 'Save Changes';
+    btn.disabled = false;
+    closeModal('editModal');
+    fetchData();
+  });
+
+  // VIEW LOGIC
+  function openViewModal(room) {
+    $('#modalTitle').textContent = room.title;
+    $('#modalLocation').textContent = room.location;
+    $('#modalPrice').textContent = money(room.amount);
+    $('#modalType').textContent = room.type;
+    $('#modalContact').textContent = `${room.posterName} (${room.posterContact})`;
+    $('#modalDesc').textContent = room.notes || 'No description.';
+    
+    let mediaHtml = '';
+    if (room.images && room.images.length) room.images.forEach(img => mediaHtml += `<img src="${img}">`);
+    if (room.video) mediaHtml += `<video src="${room.video}" controls></video>`;
+    $('#modalMedia').innerHTML = mediaHtml || '<p>No media.</p>';
+    $('#propertyModal').classList.add('show');
+  }
+
+  // TAKE LOGIC
   function openTakeModal(id) {
     $('#takeId').value = id;
     $('#takeForm').reset();
@@ -479,18 +591,15 @@
   $('#takeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
-      id: $('#takeId').value,
-      tenantName: $('#takeTenant').value,
-      houseNumber: $('#takeHouse').value,
-      rent: $('#takeRent').value,
-      deposit: $('#takeDeposit').value,
-      fee: $('#takeFee').value
+      id: $('#takeId').value, tenantName: $('#takeTenant').value, houseNumber: $('#takeHouse').value,
+      rent: $('#takeRent').value, deposit: $('#takeDeposit').value, fee: $('#takeFee').value
     };
     await fetch('/api/admin/take', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('adminToken') }, body: JSON.stringify(payload) });
     closeModal('takeModal');
     fetchData();
   });
 
+  // EXPENSES LOGIC
   $('#expenseForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     await fetch('/api/admin/expense', {
@@ -524,6 +633,7 @@
     fetchData();
   }
 
+  // RECEIPTS LOGIC
   function loadReceipts() {
     const list = $('#receiptList');
     const taken = allData.rooms.taken || [];
@@ -559,13 +669,7 @@
 
   function downloadReceipt() {
     const element = document.getElementById('receiptArea');
-    const opt = {
-      margin:       0.5,
-      filename:     `Receipt-${currentReceiptData.tenantName.replace(/\s/g, '_')}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
+    const opt = { margin: 0.5, filename: `Receipt-${currentReceiptData.tenantName.replace(/\s/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
     html2pdf().set(opt).from(element).save();
   }
 
@@ -578,21 +682,6 @@
     const subject = `Official Receipt - Vusani Ikhaya Properties`;
     const body = `Dear ${$('#r-tenant').textContent},\n\nPlease find your official receipt details below:\n\nDate: ${$('#r-date').textContent}\nReceipt No: ${$('#r-number').textContent}\nProperty: ${$('#r-house').textContent}\n\nRent: ${$('#r-rent').textContent}\nDeposit: ${$('#r-deposit').textContent}\nAdmin Fee: ${$('#r-fee').textContent}\nTotal Paid: ${$('#r-total').textContent}\n\nThank you,\nVusani Ikhaya Properties`;
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }
-
-  function openViewModal(room) {
-    $('#modalTitle').textContent = room.title;
-    $('#modalLocation').textContent = room.location;
-    $('#modalPrice').textContent = money(room.amount);
-    $('#modalType').textContent = room.type;
-    $('#modalContact').textContent = `${room.posterName} (${room.posterContact})`;
-    $('#modalDesc').textContent = room.notes || 'No description.';
-    
-    let mediaHtml = '';
-    if (room.images && room.images.length) room.images.forEach(img => mediaHtml += `<img src="${img}">`);
-    if (room.video) mediaHtml += `<video src="${room.video}" controls></video>`;
-    $('#modalMedia').innerHTML = mediaHtml || '<p>No media.</p>';
-    $('#propertyModal').classList.add('show');
   }
 
   function closeModal(id) { $(`#${id}`).classList.remove('show'); }
