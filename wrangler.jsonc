@@ -12,5 +12,11 @@
       "database_name": "vusani-db",
       "database_id": "689a28ae-69db-48e1-8112-f4b260be5b23"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "vusani-images"
+    }
   ]
 }
