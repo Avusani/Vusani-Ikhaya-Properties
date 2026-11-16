@@ -741,17 +741,30 @@ const ICON_CAR  = '<svg viewBox="0 0 24 24"><path d="M5 17h14l-1.5-5.5a2 2 0 0 0
 const ICON_HEART= '<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
 const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 
+// FIXED BUILDFLAGS: Now ignores case and defaults to No/0
 function buildFlags(p){
   const out = [];
-  if (p.childFriendly === 'Yes') {
+  const isChildFriendly = String(p.childFriendly).toLowerCase() === 'yes';
+  const hasParking = String(p.parking).toLowerCase() === 'yes';
+  
+  if (isChildFriendly) {
     out.push(`<span class="pc-flag yes" title="Child friendly">👶 Child friendly${p.maxKids ? ' (Max '+p.maxKids+')' : ''}</span>`);
   } else {
     out.push('<span class="pc-flag no" title="Not child friendly">👶 Not child friendly</span>');
   }
+  
+  if (hasParking) {
+     out.push(`<span class="pc-flag yes">🚗 ${p.maxCars || 1} Car(s)</span>`);
+  } else {
+     out.push('<span class="pc-flag no">🚗 No Parking</span>');
+  }
+
   if ((p.toiletSharing || 'Private') === 'Shared') out.push('<span class="pc-flag no">🚻 Shared toilet</span>');
   else out.push('<span class="pc-flag yes">🚻 Private toilet</span>');
+  
   if ((p.bathroomSharing || 'Private') === 'Shared') out.push('<span class="pc-flag no">🛁 Shared bathroom</span>');
   else out.push('<span class="pc-flag yes">🛁 Private bathroom</span>');
+  
   return out.join('');
 }
 
@@ -793,7 +806,7 @@ function renderCard(p){
   const typeLabel = escapeHTML((p.type || p.roomType || 'property').replace(/^\w/, c => c.toUpperCase()));
   const bedrooms = Number(p.bedrooms) || 1;
   const bathrooms = Number(p.bathrooms) || 1;
-  const parking = Number(p.parkingSpaces) || (p.parking === 'Yes' ? 1 : 0);
+  const parking = Number(p.parkingSpaces) || (String(p.parking).toLowerCase() === 'yes' ? (p.maxCars || 1) : 0);
 
   return `
     <article class="pc-card" data-id="${escapeHTML(p.id)}" tabindex="0" role="button">
@@ -969,7 +982,7 @@ function openProp(id){
   const price = formatPrice(p.amount);
   const bedrooms = Number(p.bedrooms) || 1;
   const bathrooms = Number(p.bathrooms) || 1;
-  const parking = Number(p.parkingSpaces) || (p.parking === 'Yes' ? 1 : 0);
+  const parking = Number(p.parkingSpaces) || (String(p.parking).toLowerCase() === 'yes' ? (p.maxCars || 1) : 0);
   const hasMap = p.mapLat != null && p.mapLng != null;
 
   const waMessage = `Good day Vusani Ikhaya Properties.
@@ -1111,7 +1124,6 @@ function handleVideoSelect(ev){
   });
 }
 
-// FIXED FORM SUBMISSION
 $('#postForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('#postSubmitBtn');
@@ -1162,7 +1174,6 @@ $('#postForm')?.addEventListener('submit', async (e) => {
     const rawPhone = $('#pOwnerPhone').value;
     const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
 
-    // SAFELY GET VALUES THAT MIGHT NOT EXIST
     const childCountEl = document.getElementById('pChildCount');
     const carCountEl = document.getElementById('pCarCount');
 
