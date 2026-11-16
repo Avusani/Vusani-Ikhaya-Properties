@@ -11,16 +11,18 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // 1. PUBLIC API
+    // 1. PUBLIC API (Load approved rooms for the website)
     if (path === "/api/public" && request.method === "GET") {
       try {
+        // Track traffic silently
         const today = new Date().toISOString().split('T')[0];
         await env.DB.prepare(`
             INSERT INTO traffic (id, date, page, count) VALUES (?, 'home', 1)
             ON CONFLICT(id) DO UPDATE SET count = count + 1
         `).bind(today).run();
 
-        const { results } = await env.DB.prepare("SELECT * FROM rooms WHERE status = 'approved'").all();
+        // Fetch only approved rooms (ignoring case/spaces)
+        const { results } = await env.DB.prepare("SELECT * FROM rooms WHERE LOWER(TRIM(status)) = 'approved'").all();
         const parsedRooms = results.map(r => ({ ...r, images: r.images ? JSON.parse(r.images) : [] }));
         return Response.json({ rooms: parsedRooms }, { headers: corsHeaders });
       } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
@@ -37,7 +39,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 3. ADMIN DATA
+    // 3. ADMIN DATA (Dashboard Load)
     if (path === "/api/admin/data" && request.method === "GET") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
@@ -50,7 +52,8 @@ export default {
             const rooms = { pending: [], approved: [], taken: [], declined: [] };
             allRooms.forEach(r => {
                 r.images = r.images ? JSON.parse(r.images) : [];
-                if (rooms[r.status]) rooms[r.status].push(r);
+                const status = r.status ? r.status.trim().toLowerCase() : 'pending';
+                if (rooms[status]) rooms[status].push(r);
             });
             
             return Response.json({
@@ -116,6 +119,7 @@ export default {
             if (!file) return Response.json({ success: false, error: "No file" }, { status: 400, headers: corsHeaders });
             const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
             await env.BUCKET.put(filename, file.stream(), { httpMetadata: { contentType: file.type } });
+            
             const publicUrl = `https://pub-a1fed41b33a448038bb13c22ff962e9b.r2.dev/${filename}`; 
             return Response.json({ success: true, urls: [publicUrl] }, { headers: corsHeaders });
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
@@ -142,7 +146,8 @@ export default {
         try {
             const body = await request.json();
             if (body.action === "move") {
-                await env.DB.prepare("UPDATE rooms SET status = ? WHERE id = ?").bind(body.to, body.id).run();
+                // Save the status exactly as 'approved' or 'declined'
+                await env.DB.prepare("UPDATE rooms SET status = ? WHERE id = ?").bind(body.to.toLowerCase().trim(), body.id).run();
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
             } else if (body.action === "edit") {
