@@ -74,18 +74,24 @@ export default {
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 5. SUBMIT PROPERTY
+    // 5. SUBMIT PROPERTY (FIXED: Now saves all fields!)
     if (path === "/api/submit" && request.method === "POST") {
         try {
             const body = await request.json();
             const id = Date.now().toString();
+            
             await env.DB.prepare(`
-                INSERT INTO rooms (id, title, purpose, type, location, alexandraSuburb, address, amount, deposit, posterName, posterContact, notes, images, video, status, childFriendly, maxKids, parking, maxCars, petsFriendly, ceiling, tiles, kitchenType, furniture, wardrobe, kitchenUnit, toiletType) 
+                INSERT INTO rooms (
+                    id, title, purpose, type, location, alexandraSuburb, address, amount, deposit, posterName, posterContact, notes, images, video, status, 
+                    childFriendly, maxKids, parking, maxCars, petsFriendly, ceiling, tiles, kitchenType, furniture, wardrobe, kitchenUnit, toiletType
+                ) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
                 id, body.title, body.purpose, body.type, body.location, body.alexandraSuburb || '', body.address, body.amount, body.deposit, body.posterName, body.posterContact, body.notes || '', JSON.stringify(body.images || []), body.video || '',
-                body.childFriendly, body.maxKids, body.parking, body.maxCars, body.petsFriendly, body.ceiling, body.tiles, body.kitchenType, body.furniture, body.wardrobe, body.kitchenUnit, body.toiletType
+                body.childFriendly || 'No', body.maxKids || '0', body.parking || 'No', body.maxCars || '0', body.petsFriendly || 'No', body.ceiling || 'No', body.tiles || 'No', 
+                body.kitchenType || 'No Kitchen', body.furniture || 'Unfurnished', body.wardrobe || 'Not Available', body.kitchenUnit || 'Not Available', body.toiletType || 'Shared Toilet'
             ).run();
+            
             return Response.json({ success: true, id }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
@@ -102,7 +108,6 @@ export default {
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
             } else if (body.action === "edit") {
-                // Full update of ALL fields
                 await env.DB.prepare(`
                     UPDATE rooms SET 
                         title = ?, amount = ?, deposit = ?, location = ?, type = ?, notes = ?, images = ?, video = ?,
