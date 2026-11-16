@@ -60,7 +60,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 4. UPLOAD TO R2 (For both public and admin)
+    // 4. UPLOAD TO R2
     if (path === "/api/upload" && request.method === "POST") {
         try {
             const formData = await request.formData();
@@ -74,15 +74,18 @@ export default {
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 5. SUBMIT PROPERTY (Public)
+    // 5. SUBMIT PROPERTY
     if (path === "/api/submit" && request.method === "POST") {
         try {
             const body = await request.json();
             const id = Date.now().toString();
             await env.DB.prepare(`
-                INSERT INTO rooms (id, title, purpose, type, location, alexandraSuburb, address, amount, deposit, posterName, posterContact, notes, images, video, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-            `).bind(id, body.title, body.purpose, body.type, body.location, body.alexandraSuburb || '', body.address, body.amount, body.deposit, body.posterName, body.posterContact, body.notes || '', JSON.stringify(body.images || []), body.video || '').run();
+                INSERT INTO rooms (id, title, purpose, type, location, alexandraSuburb, address, amount, deposit, posterName, posterContact, notes, images, video, status, childFriendly, maxKids, parking, maxCars, petsFriendly, ceiling, tiles, kitchenType, furniture, wardrobe, kitchenUnit, toiletType) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(
+                id, body.title, body.purpose, body.type, body.location, body.alexandraSuburb || '', body.address, body.amount, body.deposit, body.posterName, body.posterContact, body.notes || '', JSON.stringify(body.images || []), body.video || '',
+                body.childFriendly, body.maxKids, body.parking, body.maxCars, body.petsFriendly, body.ceiling, body.tiles, body.kitchenType, body.furniture, body.wardrobe, body.kitchenUnit, body.toiletType
+            ).run();
             return Response.json({ success: true, id }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
@@ -99,19 +102,25 @@ export default {
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
             } else if (body.action === "edit") {
-                // Full update of all fields
+                // Full update of ALL fields
                 await env.DB.prepare(`
-                    UPDATE rooms SET title = ?, amount = ?, deposit = ?, location = ?, type = ?, notes = ?, images = ?, video = ? WHERE id = ?
+                    UPDATE rooms SET 
+                        title = ?, amount = ?, deposit = ?, location = ?, type = ?, notes = ?, images = ?, video = ?,
+                        childFriendly = ?, maxKids = ?, parking = ?, maxCars = ?, petsFriendly = ?, ceiling = ?, tiles = ?, 
+                        kitchenType = ?, furniture = ?, wardrobe = ?, kitchenUnit = ?, toiletType = ?
+                    WHERE id = ?
                 `).bind(
-                    body.data.title, body.data.amount, body.data.deposit, body.data.location, 
-                    body.data.type, body.data.notes, JSON.stringify(body.data.images || []), body.data.video || '', body.id
+                    body.data.title, body.data.amount, body.data.deposit, body.data.location, body.data.type, body.data.notes, JSON.stringify(body.data.images || []), body.data.video || '',
+                    body.data.childFriendly, body.data.maxKids, body.data.parking, body.data.maxCars, body.data.petsFriendly, body.data.ceiling, body.data.tiles,
+                    body.data.kitchenType, body.data.furniture, body.data.wardrobe, body.data.kitchenUnit, body.data.toiletType,
+                    body.id
                 ).run();
             }
             return Response.json({ success: true }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 7. RECORD TAKEN (Admin)
+    // 7. RECORD TAKEN
     if (path === "/api/admin/take" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
