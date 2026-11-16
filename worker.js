@@ -11,7 +11,7 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // 1. PUBLIC API (Fetch approved listings)
+    // 1. PUBLIC API (Fetch approved listings for website)
     if (path === "/api/public" && request.method === "GET") {
       try {
         const { results } = await env.DB.prepare("SELECT * FROM rooms WHERE status = 'approved'").all();
@@ -20,7 +20,7 @@ export default {
       } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 2. ADMIN LOGIN (Updated with your new credentials)
+    // 2. ADMIN LOGIN
     if (path === "/api/admin/login" && request.method === "POST") {
         try {
             const body = await request.json();
@@ -59,7 +59,7 @@ export default {
         }
     }
 
-    // 4. UPLOAD IMAGES TO R2 (Requires R2 binding 'BUCKET')
+    // 4. UPLOAD IMAGES TO R2
     if (path === "/api/upload" && request.method === "POST") {
         try {
             const formData = await request.formData();
@@ -71,13 +71,12 @@ export default {
                 httpMetadata: { contentType: file.type }
             });
             
-            // Note: You need to ensure your R2 bucket allows public access, or change this URL to your custom domain for R2.
             const publicUrl = `https://pub-689a28ae69db48e18112f4b260be5b23.r2.dev/${filename}`; 
             return Response.json({ success: true, urls: [publicUrl] }, { headers: corsHeaders });
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 5. SUBMIT PROPERTY (Public Form)
+    // 5. SUBMIT PROPERTY
     if (path === "/api/submit" && request.method === "POST") {
         try {
             const body = await request.json();
@@ -95,7 +94,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 6. ADMIN ACTIONS (Approve/Delete)
+    // 6. ADMIN ACTIONS (Move, Delete, Edit)
     if (path === "/api/admin/action" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") {
@@ -104,13 +103,25 @@ export default {
         
         try {
             const body = await request.json();
+            
             if (body.action === "move") {
-                await env.DB.prepare("UPDATE rooms SET status = ? WHERE id = ?").bind(body.to, body.id).run();
+                if (body.amount !== undefined) {
+                    await env.DB.prepare("UPDATE rooms SET status = ?, amount = ? WHERE id = ?")
+                        .bind(body.to, body.amount, body.id).run();
+                } else {
+                    await env.DB.prepare("UPDATE rooms SET status = ? WHERE id = ?")
+                        .bind(body.to, body.id).run();
+                }
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
+            } else if (body.action === "edit") {
+                await env.DB.prepare("UPDATE rooms SET title = ?, amount = ?, location = ?, type = ?, notes = ? WHERE id = ?")
+                    .bind(body.data.title, body.data.amount, body.data.location, body.data.type, body.data.notes, body.id).run();
             }
             return Response.json({ success: true }, { headers: corsHeaders });
-        } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
+        } catch (e) { 
+            return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); 
+        }
     }
 
     // Fallback to static files
