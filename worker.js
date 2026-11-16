@@ -14,12 +14,12 @@ export default {
     // 1. PUBLIC API (Load approved rooms for the website)
     if (path === "/api/public" && request.method === "GET") {
       try {
-        // Track traffic silently
+        // Track traffic silently (Fixed to pass exactly 4 values)
         const today = new Date().toISOString().split('T')[0];
         await env.DB.prepare(`
-            INSERT INTO traffic (id, date, page, count) VALUES (?, 'home', 1)
+            INSERT INTO traffic (id, date, page, count) VALUES (?, ?, 'home', 1)
             ON CONFLICT(id) DO UPDATE SET count = count + 1
-        `).bind(today).run();
+        `).bind(today, today).run();
 
         // Fetch only approved rooms (ignoring case/spaces)
         const { results } = await env.DB.prepare("SELECT * FROM rooms WHERE LOWER(TRIM(status)) = 'approved'").all();
