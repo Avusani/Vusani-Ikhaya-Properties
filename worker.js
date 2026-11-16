@@ -80,9 +80,8 @@ export default {
             const body = await request.json();
             const id = Date.now().toString();
             
-            // FORCE YES/NO
-            const childFriendly = String(body.childFriendly).toLowerCase().includes('yes') ? 'Yes' : 'No';
-            const parking = String(body.parking).toLowerCase().includes('yes') ? 'Yes' : 'No';
+            const childFriendly = String(body.childFriendly).toLowerCase() === 'yes' ? 'Yes' : 'No';
+            const parking = String(body.parking).toLowerCase() === 'yes' ? 'Yes' : 'No';
 
             await env.DB.prepare(`
                 INSERT INTO rooms (
@@ -108,13 +107,13 @@ export default {
         try {
             const body = await request.json();
             if (body.action === "move") {
+                // FORCE status to be exactly 'approved', 'taken', or 'declined'
                 await env.DB.prepare("UPDATE rooms SET status = ? WHERE id = ?").bind(body.to.toLowerCase().trim(), body.id).run();
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
             } else if (body.action === "edit") {
-                // FORCE YES/NO
-                const childFriendly = String(body.data.childFriendly).toLowerCase().includes('yes') ? 'Yes' : 'No';
-                const parking = String(body.data.parking).toLowerCase().includes('yes') ? 'Yes' : 'No';
+                const childFriendly = String(body.data.childFriendly).toLowerCase() === 'yes' ? 'Yes' : 'No';
+                const parking = String(body.data.parking).toLowerCase() === 'yes' ? 'Yes' : 'No';
 
                 await env.DB.prepare(`
                     UPDATE rooms SET 
@@ -133,16 +132,25 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 7. RECORD TAKEN
+    // 7. RECORD TAKEN (FIXED!)
     if (path === "/api/admin/take" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
         
         try {
             const body = await request.json();
+            // Explicitly set status to 'taken' alongside the financial details
             await env.DB.prepare(`
-                UPDATE rooms SET status = 'taken', amount = ?, tenantName = ?, rent = ?, deposit = ?, houseNumber = ? WHERE id = ?
+                UPDATE rooms SET 
+                    status = 'taken', 
+                    amount = ?, 
+                    tenantName = ?, 
+                    rent = ?, 
+                    deposit = ?, 
+                    houseNumber = ? 
+                WHERE id = ?
             `).bind(body.fee, body.tenantName, body.rent, body.deposit, body.houseNumber, body.id).run();
+            
             return Response.json({ success: true }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
