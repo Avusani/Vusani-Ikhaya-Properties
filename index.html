@@ -1111,6 +1111,7 @@ function handleVideoSelect(ev){
   });
 }
 
+// ✅ UPDATED FORM SUBMISSION FOR CLOUDFLARE WORKER
 $('#postForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('#postSubmitBtn');
@@ -1130,20 +1131,28 @@ $('#postForm')?.addEventListener('submit', async (e) => {
   btn.textContent = 'Uploading pictures...';
 
   try {
-    const formData = new FormData();
-    files.forEach(f => formData.append('images', f));
+    let uploadedImageUrls = [];
+    // Upload images one by one to R2 via the Worker
+    for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('images', files[i]); // Matches Worker expectation
 
-    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-    const uploadData = await uploadRes.json();
-    if (!uploadData.success) throw new Error("Image upload failed.");
-    const uploadedImageUrls = uploadData.urls;
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+        const uploadData = await uploadRes.json();
+        
+        if (uploadData.success && uploadData.urls && uploadData.urls[0]) {
+            uploadedImageUrls.push(uploadData.urls[0]);
+        } else {
+            throw new Error("Image upload failed: " + (uploadData.error || 'Unknown error'));
+        }
+    }
 
     let uploadedVideoUrl = "";
     const videoInput = document.getElementById('pVideo');
     if (videoInput.files && videoInput.files.length > 0) {
       btn.textContent = 'Uploading video...';
       const vFormData = new FormData();
-      vFormData.append('images', videoInput.files[0]);
+      vFormData.append('images', videoInput.files[0]); // Reusing 'images' key for single file upload
       const vRes = await fetch('/api/upload', { method: 'POST', body: vFormData });
       const vData = await vRes.json();
       if (vData.success && vData.urls && vData.urls[0]) uploadedVideoUrl = vData.urls[0];
@@ -1189,10 +1198,11 @@ $('#postForm')?.addEventListener('submit', async (e) => {
       mapLabel: $('#pMapLabel').value
     };
 
-    const res = await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    // ✅ Changed URL from /api/rooms to /api/submit
+    const res = await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json().catch(() => ({}));
     
-    if (res.ok && (data.ok || data.success || data.id)) {
+    if (res.ok && data.success) {
       notice.style.color = 'var(--green-dark)'; 
       notice.textContent = '✅ Property submitted successfully! It will appear once approved.';
       e.target.reset(); 
