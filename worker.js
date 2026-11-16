@@ -74,12 +74,16 @@ export default {
         } catch (e) { return Response.json({ success: false, error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 5. SUBMIT PROPERTY (FIXED: Now saves all fields!)
+    // 5. SUBMIT PROPERTY
     if (path === "/api/submit" && request.method === "POST") {
         try {
             const body = await request.json();
             const id = Date.now().toString();
             
+            // FORCE YES/NO
+            const childFriendly = String(body.childFriendly).toLowerCase().includes('yes') ? 'Yes' : 'No';
+            const parking = String(body.parking).toLowerCase().includes('yes') ? 'Yes' : 'No';
+
             await env.DB.prepare(`
                 INSERT INTO rooms (
                     id, title, purpose, type, location, alexandraSuburb, address, amount, deposit, posterName, posterContact, notes, images, video, status, 
@@ -88,7 +92,7 @@ export default {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
                 id, body.title, body.purpose, body.type, body.location, body.alexandraSuburb || '', body.address, body.amount, body.deposit, body.posterName, body.posterContact, body.notes || '', JSON.stringify(body.images || []), body.video || '',
-                body.childFriendly || 'No', body.maxKids || '0', body.parking || 'No', body.maxCars || '0', body.petsFriendly || 'No', body.ceiling || 'No', body.tiles || 'No', 
+                childFriendly, body.maxKids || '0', parking, body.maxCars || '0', body.petsFriendly || 'No', body.ceiling || 'No', body.tiles || 'No', 
                 body.kitchenType || 'No Kitchen', body.furniture || 'Unfurnished', body.wardrobe || 'Not Available', body.kitchenUnit || 'Not Available', body.toiletType || 'Shared Toilet'
             ).run();
             
@@ -108,6 +112,10 @@ export default {
             } else if (body.action === "delete") {
                 await env.DB.prepare("DELETE FROM rooms WHERE id = ?").bind(body.id).run();
             } else if (body.action === "edit") {
+                // FORCE YES/NO
+                const childFriendly = String(body.data.childFriendly).toLowerCase().includes('yes') ? 'Yes' : 'No';
+                const parking = String(body.data.parking).toLowerCase().includes('yes') ? 'Yes' : 'No';
+
                 await env.DB.prepare(`
                     UPDATE rooms SET 
                         title = ?, amount = ?, deposit = ?, location = ?, type = ?, notes = ?, images = ?, video = ?,
@@ -116,7 +124,7 @@ export default {
                     WHERE id = ?
                 `).bind(
                     body.data.title, body.data.amount, body.data.deposit, body.data.location, body.data.type, body.data.notes, JSON.stringify(body.data.images || []), body.data.video || '',
-                    body.data.childFriendly, body.data.maxKids, body.data.parking, body.data.maxCars, body.data.petsFriendly, body.data.ceiling, body.data.tiles,
+                    childFriendly, body.data.maxKids || '0', parking, body.data.maxCars || '0', body.data.petsFriendly, body.data.ceiling, body.data.tiles,
                     body.data.kitchenType, body.data.furniture, body.data.wardrobe, body.data.kitchenUnit, body.data.toiletType,
                     body.id
                 ).run();
