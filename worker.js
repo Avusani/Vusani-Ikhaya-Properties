@@ -11,7 +11,7 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // 1. PUBLIC API (Fetch approved listings for website)
+    // 1. PUBLIC API
     if (path === "/api/public" && request.method === "GET") {
       try {
         const { results } = await env.DB.prepare("SELECT * FROM rooms WHERE status = 'approved'").all();
@@ -31,7 +31,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 3. ADMIN DATA (Dashboard Load)
+    // 3. ADMIN DATA
     if (path === "/api/admin/data" && request.method === "GET") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") {
@@ -59,7 +59,7 @@ export default {
         }
     }
 
-    // 4. UPLOAD IMAGES TO R2
+    // 4. UPLOAD IMAGES
     if (path === "/api/upload" && request.method === "POST") {
         try {
             const formData = await request.formData();
@@ -94,7 +94,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 6. ADMIN ACTIONS (Move, Delete, Edit)
+    // 6. ADMIN ACTIONS
     if (path === "/api/admin/action" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") {
@@ -124,7 +124,6 @@ export default {
         }
     }
 
-    // Fallback to static files
     return env.ASSETS.fetch(request);
   }
 };
