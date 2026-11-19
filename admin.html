@@ -218,13 +218,52 @@
     <h2>✏️ Edit Property</h2>
     <form id="editForm">
       <input type="hidden" id="editId">
-      <div class="form-group"><label>Property Title</label><input type="text" id="editTitle" required></div>
-      <div class="modal-grid">
-        <div class="form-group"><label>Price (R)</label><input type="number" id="editAmount" required></div>
-        <div class="form-group"><label>Deposit (R)</label><input type="number" id="editDeposit"></div>
+      
+      <div class="form-group">
+        <label>Property Title</label>
+        <input type="text" id="editTitle" required>
       </div>
-      <div class="form-group"><label>Location</label><input type="text" id="editLocation" required></div>
-      <div class="form-group"><label>Description / Notes</label><textarea id="editNotes" rows="3"></textarea></div>
+      
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Purpose</label>
+          <select id="editPurpose">
+            <option value="rent">For Rent</option>
+            <option value="buy">For Sale</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Property Type</label>
+          <select id="editType">
+            <option value="room">Room</option>
+            <option value="bachelor">Bachelor</option>
+            <option value="flat">Flat / Apartment</option>
+            <option value="house">House</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-grid">
+        <div class="form-group">
+          <label>Price (R)</label>
+          <input type="number" id="editAmount" required>
+        </div>
+        <div class="form-group">
+          <label>Deposit (R)</label>
+          <input type="number" id="editDeposit">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="editLocation" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Description / Notes</label>
+        <textarea id="editNotes" rows="3"></textarea>
+      </div>
+
       <div class="modal-grid">
         <div class="form-group"><label>Bedrooms</label><input type="number" id="editBedrooms" min="1"></div>
         <div class="form-group"><label>Bathrooms</label><input type="number" id="editBathrooms" min="1"></div>
@@ -241,6 +280,7 @@
         <div class="form-group"><label>Wardrobe Available?</label><select id="editWardrobe"><option value="Not Available">Not Available</option><option value="Available">Available</option></select></div>
         <div class="form-group"><label>Kitchen Unit Available?</label><select id="editKitchenUnit"><option value="Not Available">Not Available</option><option value="Available">Available</option></select></div>
       </div>
+
       <div class="form-group"><label>Current Images & Video</label><div id="editMediaPreview" class="modal-media"></div></div>
       <div class="form-group"><label>Add New Pictures</label><input type="file" id="editImages" multiple accept="image/*" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%;"></div>
       <button type="submit" class="btn btn-approve" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 10px;">Save Changes</button>
@@ -502,6 +542,8 @@
   function openEditModal(room) {
     $('#editId').value = room.id;
     $('#editTitle').value = room.title;
+    $('#editPurpose').value = room.purpose || 'rent';
+    $('#editType').value = room.type || 'room';
     $('#editAmount').value = room.amount;
     $('#editDeposit').value = room.deposit || '';
     $('#editLocation').value = room.location;
@@ -563,9 +605,15 @@
       action: 'edit',
       id: id,
       data: {
-        title: $('#editTitle').value, amount: $('#editAmount').value, deposit: $('#editDeposit').value,
-        location: $('#editLocation').value, notes: $('#editNotes').value, type: originalRoom.type,
-        images: finalImages, video: originalRoom.video || '',
+        title: $('#editTitle').value, 
+        amount: $('#editAmount').value, 
+        deposit: $('#editDeposit').value,
+        location: $('#editLocation').value, 
+        notes: $('#editNotes').value, 
+        purpose: $('#editPurpose').value,
+        type: $('#editType').value, 
+        images: finalImages, 
+        video: originalRoom.video || '',
         childFriendly: $('#editChild').value, maxKids: $('#editMaxKids').value, parking: $('#editParking').value,
         maxCars: $('#editMaxCars').value, petsFriendly: $('#editPets').value, ceiling: $('#editCeiling').value,
         tiles: $('#editTiles').value, kitchenType: $('#editKitchen').value, furniture: $('#editFurniture').value,
