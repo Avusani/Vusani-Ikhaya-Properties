@@ -11,7 +11,7 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // AUTO-FIX: Silently adds missing columns to your D1 database so you never see that error again
+    // AUTO-FIX: Silently adds missing columns to your D1 database
     try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bedrooms TEXT DEFAULT '1'").run(); } catch (e) {}
     try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bathrooms TEXT DEFAULT '1'").run(); } catch (e) {}
     try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN hasBalance TEXT DEFAULT 'No'").run(); } catch (e) {}
@@ -106,7 +106,7 @@ export default {
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
     }
 
-    // 6. ADMIN ACTIONS
+    // 6. ADMIN ACTIONS (EDITED TO INCLUDE PURPOSE & TYPE)
     if (path === "/api/admin/action" && request.method === "POST") {
         const auth = request.headers.get("Authorization");
         if (auth !== "Bearer vusani-secret-token-2024") return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
@@ -123,12 +123,12 @@ export default {
 
                 await env.DB.prepare(`
                     UPDATE rooms SET 
-                        title = ?, amount = ?, deposit = ?, location = ?, type = ?, notes = ?, images = ?, video = ?,
+                        title = ?, amount = ?, deposit = ?, location = ?, type = ?, purpose = ?, notes = ?, images = ?, video = ?,
                         childFriendly = ?, maxKids = ?, parking = ?, maxCars = ?, petsFriendly = ?, ceiling = ?, tiles = ?, 
                         kitchenType = ?, furniture = ?, wardrobe = ?, kitchenUnit = ?, toiletType = ?, bedrooms = ?, bathrooms = ?
                     WHERE id = ?
                 `).bind(
-                    body.data.title, body.data.amount, body.data.deposit, body.data.location, body.data.type, body.data.notes, JSON.stringify(body.data.images || []), body.data.video || '',
+                    body.data.title, body.data.amount, body.data.deposit, body.data.location, body.data.type, body.data.purpose, body.data.notes, JSON.stringify(body.data.images || []), body.data.video || '',
                     childFriendly, body.data.maxKids || '0', parking, body.data.maxCars || '0', body.data.petsFriendly, body.data.ceiling, body.data.tiles,
                     body.data.kitchenType, body.data.furniture, body.data.wardrobe, body.data.kitchenUnit, body.data.toiletType, body.data.bedrooms, body.data.bathrooms,
                     body.id
