@@ -11,6 +11,27 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+    // AUTO-FIX: This ensures your database gets the missing columns automatically
+    try {
+      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bedrooms TEXT DEFAULT '1'").run();
+    } catch (e) {} // Ignore if it already exists
+    
+    try {
+      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bathrooms TEXT DEFAULT '1'").run();
+    } catch (e) {} // Ignore if it already exists
+
+    try {
+      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN depositMonths TEXT DEFAULT '1'").run();
+    } catch (e) {}
+    
+    try {
+      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN splitDeposit TEXT DEFAULT 'No'").run();
+    } catch (e) {}
+
+    try {
+      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN hasBalance TEXT DEFAULT 'No'").run();
+    } catch (e) {}
+
     // 1. PUBLIC API
     if (path === "/api/public" && request.method === "GET") {
       try {
@@ -148,9 +169,11 @@ export default {
                     deposit = ?, 
                     houseNumber = ?,
                     amountPaid = ?,
-                    balanceDate = ?
+                    balanceDate = ?,
+                    hasBalance = ?,
+                    splitDeposit = ?
                 WHERE id = ?
-            `).bind(body.fee, body.tenantName, body.rent, body.deposit, body.houseNumber, body.amountPaid, body.balanceDate, body.id).run();
+            `).bind(body.fee, body.tenantName, body.rent, body.deposit, body.houseNumber, body.amountPaid, body.balanceDate, body.hasBalance, body.splitDeposit, body.id).run();
             
             return Response.json({ success: true }, { headers: corsHeaders });
         } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: corsHeaders }); }
