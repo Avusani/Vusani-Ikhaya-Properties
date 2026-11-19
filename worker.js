@@ -11,26 +11,11 @@ export default {
     
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-    // AUTO-FIX: This ensures your database gets the missing columns automatically
-    try {
-      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bedrooms TEXT DEFAULT '1'").run();
-    } catch (e) {} // Ignore if it already exists
-    
-    try {
-      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bathrooms TEXT DEFAULT '1'").run();
-    } catch (e) {} // Ignore if it already exists
-
-    try {
-      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN depositMonths TEXT DEFAULT '1'").run();
-    } catch (e) {}
-    
-    try {
-      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN splitDeposit TEXT DEFAULT 'No'").run();
-    } catch (e) {}
-
-    try {
-      await env.DB.prepare("ALTER TABLE rooms ADD COLUMN hasBalance TEXT DEFAULT 'No'").run();
-    } catch (e) {}
+    // AUTO-FIX: Silently adds missing columns to your D1 database so you never see that error again
+    try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bedrooms TEXT DEFAULT '1'").run(); } catch (e) {}
+    try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN bathrooms TEXT DEFAULT '1'").run(); } catch (e) {}
+    try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN hasBalance TEXT DEFAULT 'No'").run(); } catch (e) {}
+    try { await env.DB.prepare("ALTER TABLE rooms ADD COLUMN splitDeposit TEXT DEFAULT 'No'").run(); } catch (e) {}
 
     // 1. PUBLIC API
     if (path === "/api/public" && request.method === "GET") {
