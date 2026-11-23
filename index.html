@@ -450,7 +450,7 @@ input,select,textarea{font-family:inherit;}
           <div style="display:flex; flex-direction:column; gap:12px; font-size:14.5px;">
             <div><strong>📞 Call:</strong> <a href="tel:0613642449">061 364 2449</a></div>
             <div><strong>💬 WhatsApp:</strong> <a href="https://wa.me/27685353186" target="_blank">068 535 3186</a></div>
-            <div><strong>📧 Email:</strong> <a href="mailto:avukilerooms@gmail.com">avukilerooms@gmail.com</a></div>
+            <div><strong>📧 Email:</strong> <a href="mailto:vusaniikhayaproperties@outlook.com">vusaniikhayaproperties@outlook.com</a></div>
             <div><strong>📍 Area:</strong> Alexandra, Johannesburg, Gauteng</div>
           </div>
         </div>
@@ -670,7 +670,7 @@ input,select,textarea{font-family:inherit;}
       <div>
         <h4>Get in touch</h4>
         <p style="font-size:13.5px;">Alexandra, Johannesburg, Gauteng, South Africa</p>
-        <a href="mailto:avukilerooms@gmail.com">📧 avukilerooms@gmail.com</a>
+        <a href="mailto:vusaniikhayaproperties@outlook.com">📧 vusaniikhayaproperties@outlook.com</a>
         <a href="https://wa.me/27685353186" target="_blank">💬 068 535 3186 (WhatsApp)</a>
         <a href="tel:0613642449">📞 061 364 2449 (Call)</a>
       </div>
@@ -993,10 +993,7 @@ function openProp(id){
   const subLocation = p.alexandraSuburb || p.sublocation || '';
   const firstImage = (p.images && p.images.length > 0) ? p.images[0] : '';
   
-  // Use the live website URL and the actual image URL
-  const siteUrl = window.location.origin;
-  const propertyUrl = `${siteUrl}/?id=${p.id}`; 
-
+  // Using only the image link to avoid SSL warnings
   const waMessage = `Good day Vusani Ikhaya Properties.
 
 I am interested in the property advertised on your website and would like to find out more information.
@@ -1009,8 +1006,7 @@ I am interested in the property advertised on your website and would like to fin
 - Area / Sublocation: ${subLocation}
 - Rental Price: ${price} per month
 
-${firstImage ? `- Property Picture: ${firstImage}\n` : ''}- Property Listing: ${propertyUrl}
-
+${firstImage ? `- Property Picture: ${firstImage}\n` : ''}
 Kindly provide me with more information regarding availability, deposit requirements and viewing arrangements.
 
 Thank you. I look forward to your response.`;
